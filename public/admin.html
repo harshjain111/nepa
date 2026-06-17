@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Mustard Oil Promotion Conclave 2026</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="admin-body">
+
+  <!-- ===================== LOGIN GATE ===================== -->
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-card__lock" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="4" y="10" width="16" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke-linecap="round" />
+        </svg>
+      </div>
+      <span class="eyebrow eyebrow--center">Conclave 2026</span>
+      <h1>Admin Access</h1>
+      <p class="login-card__sub">Sign in to manage registrations.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="adminId">Admin ID</label>
+          <input type="text" id="adminId" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="adminPassword">Password</label>
+          <input type="password" id="adminPassword" autocomplete="current-password" required />
+        </div>
+        <p class="login-error" id="loginError" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Sign In</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <div class="dashboard" id="dashboard" hidden>
+    <header class="admin-header">
+      <div class="container admin-header__inner">
+        <div class="brand">
+          <span class="brand__mark">M</span>
+          <span class="brand__text">
+            <span class="brand__name">Conclave Admin</span>
+            <span class="brand__sub">Registrations</span>
+          </span>
+        </div>
+        <div class="admin-header__actions">
+          <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+          <button class="btn btn-ghost" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container admin-main">
+      <!-- Stat cards -->
+      <section class="stat-grid" id="statGrid">
+        <div class="stat-card"><span class="stat-card__label">Total Registrations</span><span class="stat-card__value" data-count id="statTotal">0</span></div>
+        <div class="stat-card"><span class="stat-card__label">NEPA Members</span><span class="stat-card__value" data-count id="statMembers">0</span></div>
+        <div class="stat-card"><span class="stat-card__label">Early Bird / Spot</span><span class="stat-card__value" id="statFeeSplit">0 / 0</span></div>
+        <div class="stat-card stat-card--accent"><span class="stat-card__label">Total Revenue</span><span class="stat-card__value" id="statRevenue">₹0</span></div>
+        <div class="stat-card"><span class="stat-card__label">Confirmed</span><span class="stat-card__value" data-count id="statConfirmed">0</span><span class="stat-card__sub" id="statPending">0 pending</span></div>
+      </section>
+
+      <!-- Breakdown panels -->
+      <section class="breakdown-grid">
+        <div class="breakdown-card">
+          <h3>Payment Method</h3>
+          <ul id="breakMethod">
+            <li><span>UPI</span><strong data-method-upi>0</strong></li>
+            <li><span>Bank</span><strong data-method-bank>0</strong></li>
+            <li><span>Cash</span><strong data-method-cash>0</strong></li>
+          </ul>
+        </div>
+        <div class="breakdown-card">
+          <h3>Membership</h3>
+          <ul id="breakMember">
+            <li><span>Yes</span><strong data-member-yes>0</strong></li>
+            <li><span>No</span><strong data-member-no>0</strong></li>
+          </ul>
+        </div>
+        <div class="breakdown-card">
+          <h3>Status</h3>
+          <ul id="breakStatus">
+            <li><span>Confirmed</span><strong data-status-confirmed>0</strong></li>
+            <li><span>Pending</span><strong data-status-pending>0</strong></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Toolbar -->
+      <section class="toolbar">
+        <div class="toolbar__filters">
+          <input type="search" id="searchInput" class="toolbar__search" placeholder="Search name, mobile, org, email…" />
+          <select id="methodFilter" class="toolbar__select" aria-label="Filter by method">
+            <option value="">All methods</option>
+            <option value="UPI">UPI</option>
+            <option value="Bank">Bank</option>
+            <option value="Cash">Cash</option>
+          </select>
+          <select id="statusFilter" class="toolbar__select" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="exportBtn">Export to Excel</button>
+      </section>
+
+      <!-- Table -->
+      <section class="table-wrap">
+        <table class="reg-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Organization</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>NEPA</th>
+              <th>Fee</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Ref No.</th>
+              <th>Screenshot</th>
+              <th>Registered</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="regTbody"></tbody>
+        </table>
+        <div class="table-empty" id="tableEmpty" hidden>No registrations match your filters.</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===================== LIGHTBOX ===================== -->
+  <div class="lightbox" id="lightbox" hidden>
+    <div class="lightbox__overlay" data-close-lightbox></div>
+    <div class="lightbox__inner">
+      <button class="lightbox__close" data-close-lightbox aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <img id="lightboxImg" alt="Payment screenshot" />
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

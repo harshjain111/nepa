@@ -1,0 +1,15 @@
+{
+  "name": "nepa-conclave",
+  "version": "1.0.0",
+  "description": "Inaugural National Mustard Oil Promotion Conclave 2026 — event registration website + admin panel",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^2.2.0"
+  }
+}
