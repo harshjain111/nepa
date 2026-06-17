@@ -34,6 +34,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
  * ------------------------------------------------------------------ */
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'registrations.json');
+const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -60,6 +61,23 @@ function readRecords() {
 function writeRecords(records) {
   // Serialized synchronous write keeps the single-file store consistent.
   fs.writeFileSync(DATA_FILE, JSON.stringify(records, null, 2), 'utf8');
+}
+
+function readMessages() {
+  try {
+    if (!fs.existsSync(MESSAGES_FILE)) return [];
+    const raw = fs.readFileSync(MESSAGES_FILE, 'utf8').trim();
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Failed to read messages store, starting empty:', err.message);
+    return [];
+  }
+}
+
+function writeMessages(messages) {
+  fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2), 'utf8');
 }
 
 function nextRegId(records) {
@@ -226,6 +244,36 @@ app.post('/api/register', (req, res) => {
   });
 });
 
+// Public contact / enquiry form
+app.post('/api/contact', (req, res) => {
+  const body = req.body || {};
+  const name = (body.name || '').trim();
+  const email = (body.email || '').trim();
+  const phone = (body.phone || '').trim();
+  const subject = (body.subject || '').trim();
+  const message = (body.message || '').trim();
+
+  if (!name) return res.status(400).json({ ok: false, error: 'Name is required' });
+  if (!EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'A valid email is required' });
+  if (!message) return res.status(400).json({ ok: false, error: 'Message is required' });
+  if (phone && !/^\d{7,15}$/.test(phone)) return res.status(400).json({ ok: false, error: 'Phone must be 7–15 digits' });
+
+  const messages = readMessages();
+  const record = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    name,
+    email,
+    phone: phone || null,
+    subject: subject || null,
+    message,
+    read: false,
+  };
+  messages.push(record);
+  writeMessages(messages);
+  res.json({ ok: true });
+});
+
 // Admin login
 app.post('/api/admin/login', (req, res) => {
   const { id, password } = req.body || {};
@@ -281,6 +329,35 @@ app.delete('/api/registrations/:id', requireAuth, (req, res) => {
     const file = path.join(UPLOAD_DIR, path.basename(removed.screenshotUrl));
     fs.unlink(file, () => {});
   }
+  res.json({ ok: true });
+});
+
+// All enquiry messages, newest first
+app.get('/api/messages', requireAuth, (req, res) => {
+  const messages = readMessages()
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json({ ok: true, messages });
+});
+
+// Toggle / set read flag
+app.patch('/api/messages/:id/read', requireAuth, (req, res) => {
+  const messages = readMessages();
+  const msg = messages.find((m) => m.id === req.params.id);
+  if (!msg) return res.status(404).json({ ok: false, error: 'Not found' });
+  const requested = req.body && typeof req.body.read === 'boolean' ? req.body.read : !msg.read;
+  msg.read = requested;
+  writeMessages(messages);
+  res.json({ ok: true, read: msg.read });
+});
+
+// Delete an enquiry
+app.delete('/api/messages/:id', requireAuth, (req, res) => {
+  const messages = readMessages();
+  const idx = messages.findIndex((m) => m.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ ok: false, error: 'Not found' });
+  messages.splice(idx, 1);
+  writeMessages(messages);
   res.json({ ok: true });
 });
 

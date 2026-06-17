@@ -58,12 +58,23 @@
     },
   ];
 
+  // Tier names per the official deck; figures to be announced.
   const SPONSORS = [
-    { tier: 'Diamond', amount: '₹15,00,000 + GST' },
-    { tier: 'Platinum', amount: '₹10,00,000 + GST' },
-    { tier: 'Gold', amount: '₹5,00,000 + GST' },
-    { tier: 'Silver', amount: '₹2,50,000 + GST' },
-    { tier: 'Bronze', amount: '₹1,00,000 + GST' },
+    { tier: 'Major Sponsor', note: 'Premier presence across the Conclave' },
+    { tier: 'Diamond', note: 'Delegates · 5-star rooms · stalls' },
+    { tier: 'Gold', note: 'Delegates · 5-star rooms · stall' },
+    { tier: 'Silver', note: 'Delegate · 5-star room · stall' },
+    { tier: 'Bronze', note: 'Delegate · 5-star room' },
+  ];
+
+  // Conclave Organising Committee (from the official deck).
+  const COMMITTEE = [
+    'Shri Sanjay Goenka', 'Shri Harnish Jain', 'Shri Manish Jain', 'Shri Raju Khandelwal',
+    'Shri Satpal Lather', 'Smt. Rajni Aggarwal', 'Shri Yash Aggarwal', 'Shri Mahesh Rathore',
+    'Shri Satish Babbar', 'Shri Dinesh Goyal', 'Shri Lalit Goyal', 'Shri Vinod Rajput',
+    'Shri Gaurav Thakar', 'Shri Himanshu Aggarwal', 'Shri S.K. Jain', 'Shri Bharat Bhagat',
+    'Shri Kumar Krishan Goyal', 'Shri Ajay Gupta', 'Shri Deepak Kanda', 'Shri Inder Aggarwal',
+    'Shri Sandeep Aggarwal', 'Shri Sushil Tayal',
   ];
 
   /* ---------------- Escape helper ---------------- */
@@ -109,9 +120,16 @@
     grid.innerHTML = SPONSORS.map((s, i) => `
       <article class="sponsor-card reveal" data-tier="${esc(s.tier)}" data-delay="${(i % 4) + 1}">
         <span class="sponsor-card__tier">${esc(s.tier)}</span>
-        <span class="sponsor-card__amount">${esc(s.amount)}</span>
+        <span class="sponsor-card__amount sponsor-card__amount--soon">Coming soon</span>
+        <span class="sponsor-card__note">${esc(s.note)}</span>
         <a class="sponsor-card__btn" href="mailto:nepaconnect2026@gmail.com?subject=${encodeURIComponent('Sponsorship — ' + s.tier + ' — Mustard Conclave 2026')}">Contact Secretariat</a>
       </article>`).join('');
+  }
+
+  function renderCommittee() {
+    const list = document.getElementById('committeeList');
+    if (!list) return;
+    list.innerHTML = COMMITTEE.map((name) => `<li>${esc(name)}</li>`).join('');
   }
 
   /* ---------------- Reveal on scroll ---------------- */
@@ -418,14 +436,77 @@
     showStep(1);
   }
 
+  /* ============================================================
+     CONTACT FORM
+     ============================================================ */
+  function initContact() {
+    const form = document.getElementById('contactForm');
+    if (!form) return;
+    const success = document.getElementById('contactSuccess');
+    const submitBtn = document.getElementById('contactSubmit');
+
+    const setErr = (key, msg) => {
+      const span = form.querySelector(`[data-error-for="${key}"]`);
+      if (span) { span.textContent = msg || ''; span.classList.toggle('show', !!msg); }
+      const input = document.getElementById(key);
+      if (input) input.closest('.field')?.classList.toggle('field--invalid', !!msg);
+    };
+    const clearErrs = () => {
+      form.querySelectorAll('[data-error-for]').forEach((s) => { s.textContent = ''; s.classList.remove('show'); });
+      form.querySelectorAll('.field--invalid').forEach((f) => f.classList.remove('field--invalid'));
+    };
+
+    const phone = document.getElementById('cPhone');
+    phone.addEventListener('input', () => { phone.value = phone.value.replace(/\D/g, '').slice(0, 15); });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrs();
+      const name = document.getElementById('cName').value.trim();
+      const email = document.getElementById('cEmail').value.trim();
+      const phoneVal = phone.value.trim();
+      const subject = document.getElementById('cSubject').value.trim();
+      const message = document.getElementById('cMessage').value.trim();
+
+      let ok = true;
+      if (!name) { setErr('cName', 'Please enter your name.'); ok = false; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('cEmail', 'Enter a valid email address.'); ok = false; }
+      if (phoneVal && !/^\d{7,15}$/.test(phoneVal)) { setErr('cPhone', 'Enter 7–15 digits, or leave blank.'); ok = false; }
+      if (!message) { setErr('cMessage', 'Please enter a message.'); ok = false; }
+      if (!ok) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone: phoneVal, subject, message }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not send your message. Please try again.');
+        form.reset();
+        success.hidden = false;
+        setTimeout(() => { success.hidden = true; }, 8000);
+      } catch (err) {
+        setErr('cSubmit', err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+      }
+    });
+  }
+
   /* ---------------- Boot ---------------- */
   function boot(config) {
     renderCharter();
     renderProgramme();
     renderSponsors();
+    renderCommittee();
     initHeader();
     initParticles();
     initRegistration(config);
+    initContact();
     // reveal observes everything, including freshly-rendered cards
     initReveal();
   }

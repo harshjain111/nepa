@@ -38,6 +38,7 @@
 
   /* ---------------- state ---------------- */
   let records = [];
+  let messages = [];
 
   /* ============================================================
      LOGIN
@@ -51,6 +52,7 @@
     loginScreen.hidden = true;
     dashboard.hidden = false;
     loadRegistrations();
+    loadMessages();
   }
   function showLogin() {
     dashboard.hidden = true;
@@ -90,7 +92,17 @@
     showLogin();
   }
   $('logoutBtn').addEventListener('click', handleLogout);
-  $('refreshBtn').addEventListener('click', loadRegistrations);
+  $('refreshBtn').addEventListener('click', () => { loadRegistrations(); loadMessages(); });
+
+  /* ---------------- tabs ---------------- */
+  $('adminTabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    const view = btn.dataset.view;
+    document.querySelectorAll('.admin-tab').forEach((t) => t.classList.toggle('is-active', t === btn));
+    $('viewRegistrations').hidden = view !== 'registrations';
+    $('viewMessages').hidden = view !== 'messages';
+  });
 
   /* ============================================================
      DATA LOAD + RENDER
@@ -238,6 +250,95 @@
   /* ---------- filters wiring ---------- */
   ['searchInput', 'methodFilter', 'statusFilter'].forEach((id) =>
     $(id).addEventListener('input', renderTable));
+
+  /* ============================================================
+     ENQUIRY MESSAGES
+     ============================================================ */
+  async function loadMessages() {
+    try {
+      const res = await api('/api/messages');
+      const data = await res.json();
+      messages = data.messages || [];
+      renderMessages();
+      updateMsgBadge();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function updateMsgBadge() {
+    const unread = messages.filter((m) => !m.read).length;
+    const badge = $('msgBadge');
+    badge.textContent = unread;
+    badge.hidden = unread === 0;
+  }
+
+  function filteredMessages() {
+    const q = $('msgSearch').value.trim().toLowerCase();
+    const f = $('msgFilter').value;
+    return messages.filter((m) => {
+      if (f === 'unread' && m.read) return false;
+      if (f === 'read' && !m.read) return false;
+      if (q) {
+        const hay = `${m.name} ${m.email} ${m.subject || ''} ${m.message}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderMessages() {
+    const tbody = $('msgTbody');
+    const rows = filteredMessages();
+    $('msgEmpty').hidden = rows.length > 0;
+    tbody.innerHTML = rows.map((m) => `
+      <tr class="${m.read ? '' : 'msg-row--unread'}">
+        <td class="cell-name">${esc(m.name)}</td>
+        <td class="cell-muted">${esc(m.email)}</td>
+        <td>${m.phone ? esc(m.phone) : '<span class="cell-muted">—</span>'}</td>
+        <td>${m.subject ? esc(m.subject) : '<span class="cell-muted">—</span>'}</td>
+        <td class="msg-cell">${esc(m.message)}</td>
+        <td class="cell-muted">${esc(fmtDate(m.createdAt))}</td>
+        <td><button class="status-toggle ${m.read ? 'status-toggle--pending' : 'status-toggle--confirmed'}" data-msgread="${esc(m.id)}">${m.read ? 'Read' : 'Mark read'}</button></td>
+        <td><button class="btn-delete" data-msgdelete="${esc(m.id)}" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+        </button></td>
+      </tr>`).join('');
+  }
+
+  $('msgTbody').addEventListener('click', async (e) => {
+    const readBtn = e.target.closest('[data-msgread]');
+    const delBtn = e.target.closest('[data-msgdelete]');
+
+    if (readBtn) {
+      const id = readBtn.dataset.msgread;
+      const msg = messages.find((m) => m.id === id);
+      readBtn.disabled = true;
+      try {
+        const res = await api(`/api/messages/${id}/read`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ read: msg ? !msg.read : true }),
+        });
+        const data = await res.json();
+        if (data.ok) { if (msg) msg.read = data.read; renderMessages(); updateMsgBadge(); }
+      } catch (err) { alert(err.message); }
+      return;
+    }
+
+    if (delBtn) {
+      const id = delBtn.dataset.msgdelete;
+      const msg = messages.find((m) => m.id === id);
+      if (!confirm(`Delete the enquiry from "${msg ? msg.name : 'this person'}"? This cannot be undone.`)) return;
+      try {
+        const res = await api(`/api/messages/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.ok) { messages = messages.filter((m) => m.id !== id); renderMessages(); updateMsgBadge(); }
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  ['msgSearch', 'msgFilter'].forEach((id) => $(id).addEventListener('input', renderMessages));
 
   /* ============================================================
      LIGHTBOX

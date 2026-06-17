@@ -694,21 +694,203 @@
 .confirmation__meta strong { color: var(--green); font-family: var(--font-display); font-size: 1.05rem; }
 .confirmation__note { font-size: .9rem; color: var(--muted); margin-bottom: 22px; }
 
+/* ===================== LOGO ===================== */
+.brand__logo { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.footer-logo {
+  width: 64px; height: 64px; object-fit: contain;
+  background: rgba(255,255,255,.92);
+  border-radius: 10px;
+  padding: 6px;
+}
+
+/* ===================== PHOTO SLOTS (swap-in real images) ===================== */
+.photo {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  background: var(--ivory-2);
+  position: relative;
+}
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo--wide { aspect-ratio: 16 / 6; margin-bottom: 40px; }
+.photo--portrait { aspect-ratio: 4 / 5; }
+/* Placeholder shown until a real photo is dropped in (img onerror adds .photo--empty) */
+.photo--empty {
+  border: 1.5px dashed var(--gold);
+  box-shadow: none;
+  background:
+    repeating-linear-gradient(45deg, rgba(197,162,83,.05) 0 12px, transparent 12px 24px),
+    var(--ivory-2);
+}
+.photo--empty img { display: none; }
+.photo--empty::after {
+  content: '◆  ' attr(data-photo);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  color: var(--sienna);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  letter-spacing: .02em;
+}
+
+.invitation-split {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 30px;
+  align-items: stretch;
+  margin-top: 8px;
+  text-align: left;
+}
+.invitation-split .invitation-body { max-width: none; text-align: left; margin: 0; }
+
+/* ===================== DELEGATE (tariff) ===================== */
+.delegate-wrap { display: flex; justify-content: center; }
+.delegate-wrap .delegate-card { width: 100%; max-width: 480px; }
+
+/* ===================== SPONSORSHIP ===================== */
+.sponsorship { background: var(--ivory-2); }
+.sponsor-card__amount--soon {
+  display: inline-block;
+  background: rgba(197,162,83,.16);
+  color: var(--sienna);
+  border: 1px solid rgba(197,162,83,.4);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  margin: 6px 0 8px;
+}
+.sponsor-card__note { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 14px; min-height: 2.2em; }
+.sponsor-cta { text-align: center; color: var(--muted); margin: 22px 0 0; font-size: .95rem; }
+.sponsor-cta a { color: var(--green); font-weight: 600; }
+.sponsor-cta a:hover { color: var(--sienna); }
+
+/* ===================== STEWARDS (Council + Committee) ===================== */
+.council-principal {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.council-bearers {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 44px;
+}
+.leader {
+  background: #fff;
+  border: 1px solid rgba(197,162,83,.4);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+}
+.leader--lead { border-color: var(--gold); padding: 26px 20px; }
+.leader__name { display: block; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; color: var(--green); }
+.leader--lead .leader__name { font-size: 1.4rem; }
+.leader__role {
+  display: block; margin-top: 6px;
+  font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600;
+}
+.committee { border-top: 1px solid rgba(197,162,83,.35); padding-top: 36px; }
+.committee__head { text-align: center; margin-bottom: 24px; }
+.committee__note { color: var(--muted); font-size: .9rem; max-width: 620px; margin: 0 auto; }
+.committee__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px 22px;
+}
+.committee__list li {
+  position: relative;
+  padding-left: 18px;
+  font-size: .92rem;
+  color: var(--ink);
+}
+.committee__list li::before {
+  content: '◆';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-size: .6rem;
+  top: .35em;
+}
+
+/* ===================== CONTACT ===================== */
+.contact { background: var(--ivory-2); }
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 30px;
+  align-items: start;
+}
+.contact-info {
+  background: var(--green);
+  color: var(--ivory);
+  border-radius: var(--radius);
+  padding: 34px 30px;
+  background-image: radial-gradient(500px 240px at 100% 0%, rgba(197,162,83,.18), transparent 60%);
+}
+.contact-info h3 { color: var(--gold-soft); font-size: 1.5rem; }
+.contact-info p { color: rgba(251,246,234,.85); }
+.contact-info .contact-list span { color: var(--gold-soft); }
+.contact-info .contact-list a { color: var(--ivory); }
+.contact-info .contact-list a:hover { color: var(--gold-soft); }
+.contact-form {
+  background: #fff;
+  border: 1px solid rgba(197,162,83,.4);
+  border-radius: var(--radius);
+  padding: 30px;
+  box-shadow: var(--shadow-soft);
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.contact-success {
+  margin: 14px 0 0;
+  text-align: center;
+  color: var(--green-2);
+  font-weight: 600;
+  font-size: .92rem;
+}
+
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1024px) {
   .charter-grid { grid-template-columns: repeat(2, 1fr); }
   .sponsor-grid { grid-template-columns: repeat(3, 1fr); }
+  .council-bearers { grid-template-columns: repeat(3, 1fr); }
+  .committee__list { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 860px) {
   .org-row { grid-template-columns: 1fr; }
   .tariff-top { grid-template-columns: 1fr; }
   .programme-grid { grid-template-columns: 1fr; }
   .venue-grid { grid-template-columns: 1fr; }
+  .invitation-split { grid-template-columns: 1fr; }
+  .photo--portrait { aspect-ratio: 16 / 9; max-height: 320px; }
+  .council-principal { grid-template-columns: 1fr; }
+  .council-bearers { grid-template-columns: repeat(2, 1fr); }
+  .committee__list { grid-template-columns: repeat(2, 1fr); }
+  .contact-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .section { padding: 60px 0; }
   .charter-grid { grid-template-columns: 1fr; }
   .sponsor-grid { grid-template-columns: repeat(2, 1fr); }
+  .council-bearers { grid-template-columns: 1fr; }
+  .committee__list { grid-template-columns: 1fr; }
+  .field-row { grid-template-columns: 1fr; }
+  .photo--wide { aspect-ratio: 4 / 3; }
   .hero__chips { gap: 12px; }
   .chip { min-width: 0; width: 100%; }
   .modal__dialog { padding: 30px 20px 24px; }

@@ -16,7 +16,7 @@
   <header class="site-header" id="siteHeader">
     <div class="container">
       <a class="brand" href="#top" aria-label="Mustard Oil Promotion Conclave 2026 — home">
-        <span class="brand__mark">M</span>
+        <img class="brand__logo" src="/img/nepa-logo.png" alt="NEPA" width="40" height="40" />
         <span class="brand__text">
           <span class="brand__name">Mustard Conclave</span>
           <span class="brand__sub">Edition 2026</span>
@@ -25,10 +25,12 @@
 
       <nav class="nav" id="primaryNav">
         <a href="#invitation">Invitation</a>
-        <a href="#charter">The Charter</a>
+        <a href="#charter">Charter</a>
         <a href="#programme">Programme</a>
         <a href="#tariff">Tariff</a>
+        <a href="#sponsorship">Sponsorship</a>
         <a href="#venue">Venue</a>
+        <a href="#contact">Contact</a>
         <button class="btn btn-primary" data-open-register>Register Now</button>
       </nav>
 
@@ -92,9 +94,15 @@
         <h2>An Invitation to Honour India's<br />Most Indigenous Oil</h2>
       </div>
 
-      <div class="invitation-body reveal" data-delay="1">
-        <p>The Mustard Oil Promotion Council — newly constituted under the Central Organization for Oil Industry &amp; Trade (COOIT) — is honoured to invite you to the Inaugural National Mustard Oil Promotion Conclave 2026, on 19th–20th September 2026 at Guwahati, hosted by the National Edible Oil Promotion Association (NEPA).</p>
-        <p>Across two days, the Conclave brings together producers, refiners, kachi ghani millers, traders, retailers, the HoReCa segment, food scientists, doctors and nutritionists, FSSAI representatives, agricultural economists, farmer leaders and Government — to make a unified case for India's most strategically important indigenous edible oil. The Conclave concludes with the public reading of the Guwahati Mustard Charter.</p>
+      <div class="invitation-split">
+        <div class="invitation-body reveal" data-delay="1">
+          <p>The Mustard Oil Promotion Council — newly constituted under the Central Organization for Oil Industry &amp; Trade (COOIT) — is honoured to invite you to the Inaugural National Mustard Oil Promotion Conclave 2026, on 19th–20th September 2026 at Guwahati, hosted by the National Edible Oil Promotion Association (NEPA).</p>
+          <p>Across two days, the Conclave brings together producers, refiners, kachi ghani millers, traders, retailers, the HoReCa segment, food scientists, doctors and nutritionists, FSSAI representatives, agricultural economists, farmer leaders and Government — to make a unified case for India's most strategically important indigenous edible oil. The Conclave concludes with the public reading of the Guwahati Mustard Charter.</p>
+        </div>
+        <figure class="photo photo--portrait reveal" data-delay="2" data-photo="Kachi ghani mustard oil — golden &amp; pure">
+          <img src="/img/mustard-oil.jpg" alt="Golden kachi ghani mustard oil"
+               loading="lazy" onerror="this.closest('.photo').classList.add('photo--empty')" />
+        </figure>
       </div>
 
       <blockquote class="pull-quote reveal" data-delay="2">
@@ -150,7 +158,7 @@
     </div>
   </section>
 
-  <!-- ===================== TARIFF ===================== -->
+  <!-- ===================== TARIFF (delegate) ===================== -->
   <section class="section tariff" id="tariff">
     <div class="container">
       <div class="section-head reveal">
@@ -159,7 +167,7 @@
         <p>Delegate participation, with an optional NEPA membership add-on.</p>
       </div>
 
-      <div class="tariff-top">
+      <div class="delegate-wrap">
         <div class="delegate-card reveal">
           <span class="delegate-card__ribbon">Delegate Pass</span>
           <div class="delegate-rows">
@@ -188,25 +196,35 @@
           <button class="btn btn-primary btn-block" data-open-register>Register as Delegate</button>
           <p class="delegate-card__live" id="tariffLiveNote">Live pricing is applied at registration.</p>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="sponsor-intro reveal" data-delay="1">
-          <span class="eyebrow">Sponsorship</span>
-          <h3>Partner the Movement</h3>
-          <p>Align your brand with India's pre-eminent gathering for mustard oil. Sponsorship is arranged directly with the Secretariat.</p>
-          <p class="sponsor-note">⚠️ Tier values shown are the PDF figures; please confirm with the Secretariat before launch.</p>
-        </div>
+  <!-- ===================== SPONSORSHIP ===================== -->
+  <section class="section sponsorship" id="sponsorship">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow eyebrow--center">Sponsorship</span>
+        <h2>Partner the Movement</h2>
+        <p>Align your brand with India's pre-eminent gathering for mustard oil. Sponsorship is arranged directly with the Secretariat.</p>
       </div>
 
       <div class="sponsor-grid" id="sponsorGrid">
-        <!-- sponsor cards injected by main.js -->
+        <!-- sponsor tier cards injected by main.js -->
       </div>
 
       <div class="branding-line reveal" data-delay="1">
-        <span class="branding-line__label">Additional Branding</span>
+        <span class="branding-line__label">Also Available</span>
         <span class="branding-line__items">
-          Delegate Kit ₹3,00,000 · Lanyard ₹2,00,000 · Note Pad &amp; Pen ₹1,50,000 · Tea/Coffee Break ₹1,50,000 · Main Stage Branding ₹1,50,000 · Digital Branding ₹2,50,000
+          Exhibition Stalls · Lunch · Dinner · Cocktail · Hi-Tea · Gifts · Table Branding &amp; Kit-Bag sponsorships — tariffs to be announced.
         </span>
       </div>
+
+      <p class="sponsor-cta reveal" data-delay="1">
+        To partner the Conclave, write to
+        <a href="mailto:nepaconnect2026@gmail.com?subject=Sponsorship%20—%20Mustard%20Conclave%202026">nepaconnect2026@gmail.com</a>
+        or call <a href="tel:9435040234">94350-40234</a>.
+      </p>
     </div>
   </section>
 
@@ -218,6 +236,11 @@
         <h2>Mayfair Spring Valley Resort</h2>
         <p>Guwahati, Assam · North-East India</p>
       </div>
+
+      <figure class="photo photo--wide reveal" data-photo="Mayfair Spring Valley Resort, Guwahati">
+        <img src="/img/venue-mayfair.jpg" alt="Mayfair Spring Valley Resort, Guwahati"
+             loading="lazy" onerror="this.closest('.photo').classList.add('photo--empty')" />
+      </figure>
 
       <div class="venue-grid">
         <div class="venue-card reveal">
@@ -251,6 +274,104 @@
     </div>
   </section>
 
+  <!-- ===================== STEWARDS (Council + Committee) ===================== -->
+  <section class="section stewards" id="council">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow eyebrow--center">The Stewards</span>
+        <h2>The Mustard Oil Promotion Council</h2>
+        <p>Constituted under COOIT in May 2026, the Council is the apex body charged with championing pure mustard oil — convening this Inaugural Conclave is its first national act.</p>
+      </div>
+
+      <div class="council-principal reveal">
+        <div class="leader leader--lead">
+          <span class="leader__name">Shri Babu Lal Data</span>
+          <span class="leader__role">President · COOIT</span>
+        </div>
+        <div class="leader leader--lead">
+          <span class="leader__name">Shri Suresh Nagpal</span>
+          <span class="leader__role">Chairman · COOIT</span>
+        </div>
+        <div class="leader leader--lead">
+          <span class="leader__name">Shri Kailash Kabra</span>
+          <span class="leader__role">President · NEPA</span>
+        </div>
+      </div>
+
+      <div class="council-bearers reveal" data-delay="1">
+        <div class="leader"><span class="leader__name">Shri Krishna Kumar Aggarwal</span><span class="leader__role">Secretary &amp; Convenor</span></div>
+        <div class="leader"><span class="leader__name">Shri Gajender Jha</span><span class="leader__role">General Secretary · COOIT</span></div>
+        <div class="leader"><span class="leader__name">Shri Mahesh Goyal</span><span class="leader__role">Treasurer · COOIT</span></div>
+        <div class="leader"><span class="leader__name">Shri Prakash Kabra</span><span class="leader__role">Treasurer · NEPA</span></div>
+        <div class="leader"><span class="leader__name">Shri Neeraj Bothra</span><span class="leader__role">General Secretary · MOPA</span></div>
+      </div>
+
+      <div class="committee reveal" data-delay="1">
+        <div class="committee__head">
+          <span class="eyebrow eyebrow--center">Conclave Organising Committee</span>
+          <p class="committee__note">Constituted at the COOIT Executive Committee meeting, Hyatt Regency, Manesar — 1 May 2026.</p>
+        </div>
+        <ul class="committee__list" id="committeeList">
+          <!-- names injected by main.js -->
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONTACT ===================== -->
+  <section class="section contact" id="contact">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow eyebrow--center">Contact Us</span>
+        <h2>Write to the Secretariat</h2>
+        <p>Questions about delegate registration, sponsorship or the programme? Send us a note and the Secretariat will respond.</p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-info reveal">
+          <h3>Conclave Secretariat</h3>
+          <p>National Edible Oil Promotion Association (NEPA)<br />Ajit Singh Bothra &amp; Sons, Lakhi Gali,<br />Guwahati – 781001</p>
+          <ul class="contact-list">
+            <li><span>Phone</span><a href="tel:9435040234">94350-40234</a></li>
+            <li><span>Email</span><a href="mailto:nepaconnect2026@gmail.com">nepaconnect2026@gmail.com</a></li>
+          </ul>
+        </div>
+
+        <form class="contact-form reveal" data-delay="1" id="contactForm" novalidate>
+          <div class="field">
+            <label for="cName">Name</label>
+            <input type="text" id="cName" name="name" autocomplete="name" required />
+            <span class="field__error" data-error-for="cName"></span>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="cEmail">Email</label>
+              <input type="email" id="cEmail" name="email" autocomplete="email" required />
+              <span class="field__error" data-error-for="cEmail"></span>
+            </div>
+            <div class="field">
+              <label for="cPhone">Phone <span class="opt">optional</span></label>
+              <input type="tel" id="cPhone" name="phone" inputmode="numeric" maxlength="15" />
+              <span class="field__error" data-error-for="cPhone"></span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="cSubject">Subject <span class="opt">optional</span></label>
+            <input type="text" id="cSubject" name="subject" />
+          </div>
+          <div class="field">
+            <label for="cMessage">Message</label>
+            <textarea id="cMessage" name="message" rows="4" required></textarea>
+            <span class="field__error" data-error-for="cMessage"></span>
+          </div>
+          <span class="field__error field__error--submit" data-error-for="cSubmit"></span>
+          <button type="submit" class="btn btn-primary btn-block" id="contactSubmit">Send Message</button>
+          <p class="contact-success" id="contactSuccess" hidden>Thank you — your message has reached the Secretariat. We'll be in touch shortly.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== FOOTER ===================== -->
   <footer class="site-footer">
     <div class="container">
@@ -262,7 +383,7 @@
           <h4>The Mustard Oil Promotion Conclave 2026</h4>
           <p>Hosted by the National Edible Oil Promotion Association (NEPA), Guwahati — under the Mustard Oil Promotion Council, COOIT, New Delhi.</p>
           <div class="footer-logos">
-            <div class="logo-chip">NEPA logo</div>
+            <img class="footer-logo" src="/img/nepa-logo.png" alt="NEPA" width="64" height="64" />
             <div class="logo-chip">COOIT logo</div>
             <div class="logo-chip">MOPA logo</div>
           </div>
@@ -270,11 +391,12 @@
         <div>
           <h4>Quick Links</h4>
           <ul>
-            <li><a href="#invitation">The Invitation</a></li>
             <li><a href="#charter">The Charter</a></li>
             <li><a href="#programme">Programme</a></li>
-            <li><a href="#tariff">Tariff &amp; Sponsorship</a></li>
-            <li><a href="#venue">Venue</a></li>
+            <li><a href="#tariff">Tariff</a></li>
+            <li><a href="#sponsorship">Sponsorship</a></li>
+            <li><a href="#council">The Council</a></li>
+            <li><a href="#contact">Contact Us</a></li>
           </ul>
         </div>
         <div>

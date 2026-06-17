@@ -57,6 +57,14 @@
     </header>
 
     <main class="container admin-main">
+      <!-- View tabs -->
+      <nav class="admin-tabs" id="adminTabs">
+        <button class="admin-tab is-active" data-view="registrations">Registrations</button>
+        <button class="admin-tab" data-view="messages">Enquiries <span class="tab-badge" id="msgBadge" hidden>0</span></button>
+      </nav>
+
+      <!-- ===== REGISTRATIONS VIEW ===== -->
+      <div id="viewRegistrations">
       <!-- Stat cards -->
       <section class="stat-grid" id="statGrid">
         <div class="stat-card"><span class="stat-card__label">Total Registrations</span><span class="stat-card__value" data-count id="statTotal">0</span></div>
@@ -135,6 +143,40 @@
         </table>
         <div class="table-empty" id="tableEmpty" hidden>No registrations match your filters.</div>
       </section>
+      </div><!-- /viewRegistrations -->
+
+      <!-- ===== ENQUIRIES VIEW ===== -->
+      <div id="viewMessages" hidden>
+        <section class="toolbar">
+          <div class="toolbar__filters">
+            <input type="search" id="msgSearch" class="toolbar__search" placeholder="Search name, email, subject…" />
+            <select id="msgFilter" class="toolbar__select" aria-label="Filter enquiries">
+              <option value="">All enquiries</option>
+              <option value="unread">Unread</option>
+              <option value="read">Read</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="table-wrap">
+          <table class="reg-table msg-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Received</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="msgTbody"></tbody>
+          </table>
+          <div class="table-empty" id="msgEmpty" hidden>No enquiries yet.</div>
+        </section>
+      </div><!-- /viewMessages -->
     </main>
   </div>
 

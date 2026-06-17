@@ -74,6 +74,9 @@ The modal is a 3-step flow:
 - **Filters**: search (name/mobile/org/email), method dropdown, status dropdown.
 - **Export to Excel**: exports the **currently-filtered** rows to a real `.xlsx` (RegID, all
   fields, full screenshot URL, status, formatted date) via SheetJS.
+- **Enquiries tab**: messages sent through the site's Contact form land here (with an unread
+  count badge). Search/filter by read state, mark read/unread, and delete. Stored in
+  `data/messages.json`.
 
 ---
 
@@ -88,6 +91,10 @@ The modal is a 3-step flow:
 | GET | `/api/registrations` | bearer | all records, newest first |
 | PATCH | `/api/registrations/:id/status` | bearer | toggle/set Pending↔Confirmed |
 | DELETE | `/api/registrations/:id` | bearer | delete record + its screenshot file |
+| POST | `/api/contact` | public | `{name,email,phone?,subject?,message}` → stores an enquiry |
+| GET | `/api/messages` | bearer | all enquiries, newest first |
+| PATCH | `/api/messages/:id/read` | bearer | toggle/set the read flag |
+| DELETE | `/api/messages/:id` | bearer | delete an enquiry |
 | GET | `/admin` | public | serve `admin.html` |
 
 **Upload rules:** images only, 8 MB limit, random filenames in `uploads/`, served at `/uploads`.
@@ -122,10 +129,19 @@ These are intentionally left editable (search the codebase for them):
 | **Admin ID / password** | `server.js` → `ADMIN_ID`, `ADMIN_PASSWORD` (or set env vars) |
 | **UPI QR image + UPI ID** | `public/index.html` → `.qr-placeholder`, `#upiId` |
 | **Bank / NEFT details** (A/c name, A/c no., IFSC, branch) | `public/index.html` → `.bank-box` rows |
-| **NEPA / COOIT / MOPA logos** | `public/index.html` footer → `.logo-chip` placeholders |
+| **Photos** (drop real files into `public/img/`) | `mustard-oil.jpg` (Invitation), `venue-mayfair.jpg` (Venue). Until present, a tasteful labelled placeholder shows. |
+| **COOIT / MOPA logos** | `public/index.html` footer → remaining `.logo-chip` placeholders (the real **NEPA** logo is already in `public/img/nepa-logo.png`) |
 | **Empanelled hotels list** | `public/index.html` venue card ("to be added") |
 | **Early-bird cutoff** | `server.js` → `EARLY_BIRD_CUTOFF` |
-| **Sponsorship tier values** | `public/js/main.js` → `SPONSORS` (confirm figures with the Secretariat) |
+| **Sponsorship tier figures** | `public/js/main.js` → `SPONSORS` (currently shown as "Coming soon"; add amounts once confirmed) |
+
+### Adding the photos
+Drop image files with these exact names into `public/img/` and they appear automatically — no code change needed:
+
+- `public/img/mustard-oil.jpg` — a portrait-ish oil / kachi-ghani image (Invitation section).
+- `public/img/venue-mayfair.jpg` — a wide photo of Mayfair Spring Valley Resort (Venue section).
+
+Each slot shows a labelled dashed placeholder until its file exists, so the layout never looks broken.
 
 Set production admin credentials via environment variables rather than editing code:
 
