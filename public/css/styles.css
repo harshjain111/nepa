@@ -35,6 +35,10 @@
 
 * { box-sizing: border-box; }
 
+/* The hidden attribute must always win, even over elements that set
+   their own display (e.g. .login-screen uses display:flex). */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 16px); }
 
 body {
