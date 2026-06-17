@@ -424,4 +424,14 @@ p { margin: 0 0 1em; }
   .nav a::after { display: none; }
   .nav .btn { margin: 10px 24px; }
   .nav-toggle { display: inline-flex; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+}
+
+@media (max-width: 600px) {
+  .footer-grid { grid-template-columns: 1fr; gap: 26px; text-align: center; }
+  .footer-grid ul { justify-items: center; }
+  .footer-logos { justify-content: center; }
+  .section-motif { display: none; }      /* keep small screens uncluttered */
+  .marquee__track > span:not(.marquee__dot) { font-size: .95rem; }
+  .gold-rule { max-width: 220px; }
 }

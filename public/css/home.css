@@ -1007,15 +1007,17 @@
 /* animated gold-rule reveal */
 .gold-rule::before, .gold-rule::after { transform-origin: center; }
 
-/* delegate card sheen */
-.delegate-card { position: relative; overflow: hidden; }
+/* delegate card sheen — kept inside the card so the ribbon is never clipped */
+.delegate-card { position: relative; }
 .delegate-card::after {
   content: '';
-  position: absolute; top: -60%; right: -30%;
-  width: 60%; height: 200%;
-  background: radial-gradient(circle, rgba(230,180,34,.12), transparent 60%);
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(420px 240px at 100% 0%, rgba(230,180,34,.14), transparent 60%);
   pointer-events: none;
+  z-index: 0;
 }
+.delegate-card > * { position: relative; z-index: 1; }
 
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1024px) {
