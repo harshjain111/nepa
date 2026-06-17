@@ -12,6 +12,9 @@
 </head>
 <body>
 
+  <!-- scroll progress -->
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
   <!-- ===================== HEADER ===================== -->
   <header class="site-header" id="siteHeader">
     <div class="container">
@@ -79,15 +82,50 @@
       </div>
 
       <div class="hero__cta reveal" data-delay="4">
-        <button class="btn btn-primary" data-open-register>Register Now</button>
+        <button class="btn btn-primary btn-shine" data-open-register>Register Now</button>
         <a class="btn btn-ghost" href="#programme">View Programme</a>
       </div>
+
+      <div class="hero__countdown reveal" data-delay="4" id="countdown" aria-label="Time until the Conclave">
+        <span class="countdown__lead">The Conclave begins in</span>
+        <div class="countdown__units">
+          <div class="cd-unit"><span class="cd-num" data-cd="days">00</span><span class="cd-label">Days</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-num" data-cd="hours">00</span><span class="cd-label">Hours</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-num" data-cd="minutes">00</span><span class="cd-label">Minutes</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-num" data-cd="seconds">00</span><span class="cd-label">Seconds</span></div>
+        </div>
+        <span class="countdown__note" id="earlyBirdNote"></span>
+      </div>
     </div>
-    <div class="gold-rule"><span class="diamond"></span></div>
+    <a class="hero__scroll" href="#invitation" aria-label="Scroll down">
+      <span class="hero__scroll-dot"></span>
+    </a>
   </section>
+
+  <!-- ===================== MARQUEE ===================== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span>Pure by Tradition</span><span class="marquee__dot">◆</span>
+      <span>Powered by Science</span><span class="marquee__dot">◆</span>
+      <span>Proudly Indian</span><span class="marquee__dot">◆</span>
+      <span>Kachi Ghani</span><span class="marquee__dot">◆</span>
+      <span>One Collective Voice</span><span class="marquee__dot">◆</span>
+      <span>Sarson ka Tel</span><span class="marquee__dot">◆</span>
+      <span>Pure by Tradition</span><span class="marquee__dot">◆</span>
+      <span>Powered by Science</span><span class="marquee__dot">◆</span>
+      <span>Proudly Indian</span><span class="marquee__dot">◆</span>
+      <span>Kachi Ghani</span><span class="marquee__dot">◆</span>
+      <span>One Collective Voice</span><span class="marquee__dot">◆</span>
+      <span>Sarson ka Tel</span><span class="marquee__dot">◆</span>
+    </div>
+  </div>
 
   <!-- ===================== INVITATION ===================== -->
   <section class="section" id="invitation">
+    <span class="section-motif section-motif--tl" aria-hidden="true">❋</span>
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Invitation</span>
@@ -127,11 +165,32 @@
           <span class="org-card__sub">National Network</span>
         </div>
       </div>
+
+      <div class="stats-strip reveal" data-delay="1">
+        <div class="stat-fact">
+          <span class="stat-fact__num" data-count-to="2">0</span>
+          <span class="stat-fact__label">Days of Dialogue</span>
+        </div>
+        <div class="stat-fact">
+          <span class="stat-fact__num" data-count-to="8">0</span>
+          <span class="stat-fact__label">Charter Pillars</span>
+        </div>
+        <div class="stat-fact">
+          <span class="stat-fact__num" data-count-to="400" data-count-suffix="+">0</span>
+          <span class="stat-fact__label">Delegates</span>
+        </div>
+        <div class="stat-fact">
+          <span class="stat-fact__num" data-count-to="13">0</span>
+          <span class="stat-fact__label">Sessions &amp; Addresses</span>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ===================== CHARTER ===================== -->
   <section class="section charter" id="charter">
+    <span class="section-motif section-motif--tr section-motif--gold" aria-hidden="true">❋</span>
+    <span class="section-motif section-motif--bl section-motif--gold" aria-hidden="true">❋</span>
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Guwahati Mustard Charter</span>
@@ -276,6 +335,7 @@
 
   <!-- ===================== STEWARDS (Council + Committee) ===================== -->
   <section class="section stewards" id="council">
+    <span class="section-motif section-motif--tl" aria-hidden="true">❋</span>
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Stewards</span>

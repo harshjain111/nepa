@@ -497,6 +497,103 @@
     });
   }
 
+  /* ============================================================
+     SCROLL PROGRESS BAR
+     ============================================================ */
+  function initScrollProgress() {
+    const bar = document.getElementById('scrollProgress');
+    if (!bar) return;
+    const update = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      bar.style.width = pct + '%';
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+  }
+
+  /* ============================================================
+     COUNTDOWN TO THE CONCLAVE
+     ============================================================ */
+  function initCountdown(config) {
+    const root = document.getElementById('countdown');
+    if (!root) return;
+    const target = new Date('2026-09-19T09:00:00+05:30').getTime();
+    const set = (k, v) => {
+      const el = root.querySelector(`[data-cd="${k}"]`);
+      if (el) el.textContent = String(v).padStart(2, '0');
+    };
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        ['days', 'hours', 'minutes', 'seconds'].forEach((k) => set(k, 0));
+        root.querySelector('.countdown__lead').textContent = 'The Conclave is here';
+        return false;
+      }
+      const s = Math.floor(diff / 1000);
+      set('days', Math.floor(s / 86400));
+      set('hours', Math.floor((s % 86400) / 3600));
+      set('minutes', Math.floor((s % 3600) / 60));
+      set('seconds', s % 60);
+      return true;
+    };
+    tick();
+    const id = setInterval(() => { if (!tick()) clearInterval(id); }, 1000);
+
+    // Early-bird urgency note
+    const note = document.getElementById('earlyBirdNote');
+    if (note && config && config.earlyBirdCutoff) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (today <= config.earlyBirdCutoff) {
+        const d = new Date(config.earlyBirdCutoff + 'T00:00:00');
+        const nice = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+        note.textContent = `★ Early-bird rate ends ${nice}`;
+      } else {
+        note.textContent = '★ Spot registration open';
+      }
+    }
+  }
+
+  /* ============================================================
+     COUNT-UP STATS
+     ============================================================ */
+  function initCounters() {
+    const els = document.querySelectorAll('[data-count-to]');
+    if (!els.length) return;
+    const run = (el) => {
+      const to = parseInt(el.dataset.countTo, 10) || 0;
+      const suffix = el.dataset.countSuffix || '';
+      const dur = 1400;
+      const start = performance.now();
+      const step = (now) => {
+        const p = Math.min((now - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(to * eased) + (p === 1 ? suffix : '');
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    if (!('IntersectionObserver' in window)) { els.forEach(run); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { run(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.4 });
+    els.forEach((el) => io.observe(el));
+  }
+
+  /* ---------------- Charter card pointer glow ---------------- */
+  function initCharterGlow() {
+    const grid = document.getElementById('charterGrid');
+    if (!grid) return;
+    grid.addEventListener('pointermove', (e) => {
+      const card = e.target.closest('.charter-card');
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    });
+  }
+
   /* ---------------- Boot ---------------- */
   function boot(config) {
     renderCharter();
@@ -507,6 +604,12 @@
     initParticles();
     initRegistration(config);
     initContact();
+    initScrollProgress();
+    initCountdown(config);
+    initCounters();
+    initCharterGlow();
+    // primary register CTAs get the sheen sweep
+    document.querySelectorAll('[data-open-register].btn-primary').forEach((b) => b.classList.add('btn-shine'));
     // reveal observes everything, including freshly-rendered cards
     initReveal();
   }
