@@ -549,9 +549,9 @@
       if (today <= config.earlyBirdCutoff) {
         const d = new Date(config.earlyBirdCutoff + 'T00:00:00');
         const nice = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-        note.textContent = `★ Early-bird rate ends ${nice}`;
+        note.textContent = `Early-bird rate ends ${nice}`;
       } else {
-        note.textContent = '★ Spot registration open';
+        note.textContent = 'Spot registration open';
       }
     }
   }
@@ -601,7 +601,6 @@
     renderSponsors();
     renderCommittee();
     initHeader();
-    initParticles();
     initRegistration(config);
     initContact();
     initScrollProgress();

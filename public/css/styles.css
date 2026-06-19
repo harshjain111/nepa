@@ -159,7 +159,13 @@ p { margin: 0 0 1em; }
   color: var(--gold-soft);
   letter-spacing: .02em;
 }
-.marquee__dot { color: var(--gold); font-size: .7rem; }
+.marquee__dot {
+  width: 6px; height: 6px;
+  flex: none;
+  background: var(--gold);
+  transform: rotate(45deg);
+  display: inline-block;
+}
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---------- Decorative section motifs ---------- */

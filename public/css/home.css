@@ -5,16 +5,50 @@
 /* ===================== HERO ===================== */
 .hero {
   position: relative;
-  padding: calc(var(--header-h) + 70px) 0 30px;
-  min-height: 92vh;
+  padding: calc(var(--header-h) + 56px) 0 30px;
+  min-height: 96vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
   overflow: hidden;
   background:
-    radial-gradient(1100px 620px at 50% -8%, rgba(197,162,83,.16), transparent 60%),
+    radial-gradient(1000px 560px at 50% -6%, rgba(197,162,83,.12), transparent 62%),
+    /* fine linen weave for a printed, bespoke feel */
+    repeating-linear-gradient(90deg, rgba(140,110,60,.025) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(0deg, rgba(140,110,60,.025) 0 1px, transparent 1px 4px),
     linear-gradient(180deg, var(--ivory) 0%, var(--ivory-2) 100%);
+}
+
+/* NEPA crest */
+.hero__crest {
+  width: 108px; height: 108px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+  filter: drop-shadow(0 8px 18px rgba(140,110,40,.22));
+}
+
+/* refined ornament rule under the title */
+.hero__ornament {
+  display: block;
+  width: 200px;
+  height: 16px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+.hero__ornament::before {
+  content: '';
+  position: absolute; top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+}
+.hero__ornament::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 9px; height: 9px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--gold);
+  box-shadow: 0 0 0 4px var(--ivory), 0 0 0 5px rgba(197,162,83,.4);
 }
 .hero__arch {
   position: absolute;
@@ -725,7 +759,7 @@
 }
 .photo--empty img { display: none; }
 .photo--empty::after {
-  content: '◆  ' attr(data-photo);
+  content: attr(data-photo);
   position: absolute;
   inset: 0;
   display: flex;
@@ -820,12 +854,12 @@
   color: var(--ink);
 }
 .committee__list li::before {
-  content: '◆';
+  content: '';
   position: absolute;
-  left: 0;
-  color: var(--gold);
-  font-size: .6rem;
-  top: .35em;
+  left: 0; top: .62em;
+  width: 5px; height: 5px;
+  background: var(--gold);
+  transform: rotate(45deg);
 }
 
 /* ===================== CONTACT ===================== */
@@ -870,16 +904,6 @@
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(-12px); }
 }
-/* Gold shimmer sweep on the tagline */
-.hero__tag {
-  background: linear-gradient(100deg, var(--gold) 35%, #f3e3b0 50%, var(--gold) 65%);
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: tagShimmer 6s ease-in-out infinite;
-}
-@keyframes tagShimmer { 0%,100% { background-position: 130% 0; } 50% { background-position: -30% 0; } }
 
 /* Scroll-down indicator */
 .hero__scroll {
