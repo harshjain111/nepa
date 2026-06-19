@@ -355,9 +355,9 @@ p { margin: 0 0 1em; }
 .footer-grid h4 { color: var(--ivory); font-size: 1.05rem; }
 .footer-grid p, .footer-grid li { color: rgba(251,246,234,.82); font-size: .9rem; }
 .footer-grid ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-.footer-logos { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.footer-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 16px; }
 .logo-chip {
-  width: 64px; height: 64px;
+  width: 96px; height: 96px;
   border: 1px dashed rgba(216,192,138,.5);
   border-radius: 10px;
   display: grid; place-items: center;
@@ -376,6 +376,29 @@ p { margin: 0 0 1em; }
   font-size: .78rem;
   color: rgba(251,246,234,.6);
 }
+
+/* ---------- Credit bar (Developed by vibrnd) ---------- */
+.credit-bar {
+  background: #ffffff;
+  border-top: 1px solid rgba(197,162,83,.28);
+  padding: 13px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: .82rem;
+  color: var(--muted);
+}
+.credit-bar__text { letter-spacing: .03em; }
+.credit-bar__link { display: inline-flex; align-items: center; line-height: 0; }
+.credit-bar__logo { height: 24px; width: auto; object-fit: contain; display: block; }
+.credit-bar__word {
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--green);
+  line-height: 1;
+}
+.credit-bar__link:hover .credit-bar__word { color: var(--sienna); }
 
 /* ---------- Reveal-on-scroll ---------- */
 .reveal {

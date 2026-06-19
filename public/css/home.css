@@ -22,10 +22,10 @@
 
 /* NEPA crest */
 .hero__crest {
-  width: 108px; height: 108px;
+  width: 156px; height: 156px;
   object-fit: contain;
-  margin: 0 auto 18px;
-  filter: drop-shadow(0 8px 18px rgba(140,110,40,.22));
+  margin: 0 auto 16px;
+  filter: drop-shadow(0 10px 22px rgba(140,110,40,.24));
 }
 
 /* refined ornament rule under the title */
@@ -307,25 +307,31 @@
   background: #fff;
   border: 1px solid var(--gold);
   border-radius: var(--radius);
-  padding: 30px;
+  padding: 34px 30px 30px;
   position: relative;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
+  text-align: center;
 }
-.delegate-card__ribbon {
-  position: absolute;
-  top: -13px; left: 30px;
-  background: var(--mustard);
-  color: #3a2c05;
-  font-size: .68rem;
+.delegate-card__tag {
+  align-self: center;
+  font-size: .66rem;
   font-weight: 700;
-  letter-spacing: .18em;
+  letter-spacing: .24em;
   text-transform: uppercase;
-  padding: 6px 16px;
-  border-radius: 999px;
+  color: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: .7em;
 }
-.delegate-rows { margin: 14px 0 22px; }
+.delegate-card__tag::before,
+.delegate-card__tag::after {
+  content: '';
+  width: 22px; height: 1px;
+  background: var(--gold);
+}
+.delegate-rows { margin: 18px 0 22px; text-align: left; }
 .delegate-row {
   display: flex;
   align-items: center;
@@ -382,7 +388,6 @@
   padding-top: 12px;
   display: block;
 }
-.sponsor-card[data-tier="Diamond"] { border-color: var(--green); box-shadow: 0 0 0 1px rgba(197,162,83,.4) inset; }
 
 .branding-line {
   border: 1px dashed var(--gold);
@@ -729,12 +734,12 @@
 .confirmation__note { font-size: .9rem; color: var(--muted); margin-bottom: 22px; }
 
 /* ===================== LOGO ===================== */
-.brand__logo { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.brand__logo { width: 56px; height: 56px; object-fit: contain; flex: none; }
 .footer-logo {
-  width: 64px; height: 64px; object-fit: contain;
+  width: 96px; height: 96px; object-fit: contain;
   background: rgba(255,255,255,.92);
-  border-radius: 10px;
-  padding: 6px;
+  border-radius: 12px;
+  padding: 8px;
 }
 
 /* ===================== PHOTO SLOTS (swap-in real images) ===================== */
