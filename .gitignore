@@ -4,5 +4,7 @@ uploads/*
 !data/.gitkeep
 !uploads/.gitkeep
 .env
+.env*.local
+.vercel
 npm-debug.log*
 .DS_Store

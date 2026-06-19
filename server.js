@@ -3,98 +3,45 @@
 /**
  * NEPA — Mustard Oil Promotion Conclave 2026
  * Express backend: static hosting, REST API, file uploads, admin auth.
- * No database server — a JSON file is the datastore.
  *
- * Run: npm install && npm start  (PORT env or 3000)
+ * Storage is pluggable (see lib/store.js & lib/uploads.js):
+ *   - Local dev  -> JSON files + /uploads disk   (zero setup; `npm start`)
+ *   - Vercel     -> Postgres + Vercel Blob        (set DATABASE_URL + BLOB_READ_WRITE_TOKEN)
+ *
+ * This module exports the Express `app`. It only calls listen() when run
+ * directly (node server.js); on Vercel, api/index.js imports the app.
  */
 
 const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
+
+const store = require('./lib/store');
+const uploads = require('./lib/uploads');
+const auth = require('./lib/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* ------------------------------------------------------------------ *
- * CONFIG — single source of truth (see CLAUDE.md §5, §11)
+ * CONFIG — single source of truth
  * ------------------------------------------------------------------ */
-const EARLY_BIRD_CUTOFF = '2026-08-15'; // inclusive (YYYY-MM-DD)
+const EARLY_BIRD_CUTOFF = process.env.EARLY_BIRD_CUTOFF || '2026-08-15';
 const DELEGATE_FEE_EARLY = 8000;
 const DELEGATE_FEE_SPOT = 10000;
 const MEMBERSHIP_FEE = 3100;
 
-// Admin credentials — override via env in production (see README placeholders).
 const ADMIN_ID = process.env.ADMIN_ID || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
 
-/* ------------------------------------------------------------------ *
- * PATHS
- * ------------------------------------------------------------------ */
-const DATA_DIR = path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'registrations.json');
-const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const PUBLIC_DIR = path.join(__dirname, 'public');
-
-for (const dir of [DATA_DIR, UPLOAD_DIR]) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-/* ------------------------------------------------------------------ *
- * TINY JSON DATASTORE
- * ------------------------------------------------------------------ */
-function readRecords() {
-  try {
-    if (!fs.existsSync(DATA_FILE)) return [];
-    const raw = fs.readFileSync(DATA_FILE, 'utf8').trim();
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('Failed to read datastore, starting empty:', err.message);
-    return [];
-  }
-}
-
-function writeRecords(records) {
-  // Serialized synchronous write keeps the single-file store consistent.
-  fs.writeFileSync(DATA_FILE, JSON.stringify(records, null, 2), 'utf8');
-}
-
-function readMessages() {
-  try {
-    if (!fs.existsSync(MESSAGES_FILE)) return [];
-    const raw = fs.readFileSync(MESSAGES_FILE, 'utf8').trim();
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('Failed to read messages store, starting empty:', err.message);
-    return [];
-  }
-}
-
-function writeMessages(messages) {
-  fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2), 'utf8');
-}
-
-function nextRegId(records) {
-  // regId = "NEPA26-" + (1000 + sequence). Sequence is the count so far.
-  const seq = 1000 + records.length + 1;
-  return `NEPA26-${seq}`;
-}
 
 /* ------------------------------------------------------------------ *
  * PRICING
  * ------------------------------------------------------------------ */
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function currentFee() {
-  const isEarly = todayISO() <= EARLY_BIRD_CUTOFF;
+  const today = new Date().toISOString().slice(0, 10);
+  const isEarly = today <= EARLY_BIRD_CUTOFF;
   return {
     feeType: isEarly ? 'Early Bird' : 'Spot',
     delegateFee: isEarly ? DELEGATE_FEE_EARLY : DELEGATE_FEE_SPOT,
@@ -102,19 +49,10 @@ function currentFee() {
 }
 
 /* ------------------------------------------------------------------ *
- * MULTER — image uploads only, 8 MB, random filenames
+ * UPLOADS — in-memory (buffer goes to Blob or disk via lib/uploads)
  * ------------------------------------------------------------------ */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = (path.extname(file.originalname) || '').toLowerCase().slice(0, 10);
-    const safeExt = /^\.(png|jpg|jpeg|webp|gif|heic|heif)$/.test(ext) ? ext : '.png';
-    cb(null, crypto.randomBytes(16).toString('hex') + safeExt);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
   fileFilter: (req, file, cb) => {
     if (/^image\//.test(file.mimetype)) return cb(null, true);
@@ -123,33 +61,22 @@ const upload = multer({
 });
 
 /* ------------------------------------------------------------------ *
- * ADMIN TOKENS (in-memory)
- * ------------------------------------------------------------------ */
-const tokens = new Set();
-
-function requireAuth(req, res, next) {
-  const header = req.headers.authorization || '';
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  const token = match && match[1];
-  if (!token || !tokens.has(token)) {
-    return res.status(401).json({ ok: false, error: 'Unauthorized' });
-  }
-  next();
-}
-
-/* ------------------------------------------------------------------ *
  * APP SETUP
  * ------------------------------------------------------------------ */
 app.use(express.json());
-app.use('/uploads', express.static(UPLOAD_DIR));
+// Local-disk uploads (no-op on Vercel, where Blob serves absolute URLs).
+app.use('/uploads', express.static(uploads.UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR));
 
-/* ------------------------------------------------------------------ *
- * VALIDATION HELPERS
- * ------------------------------------------------------------------ */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MOBILE_RE = /^\d{10}$/;
 const VALID_METHODS = ['UPI', 'Bank', 'Cash'];
+
+// Wrap async handlers so rejected promises become clean 500s.
+const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
+  console.error(err);
+  if (!res.headersSent) res.status(500).json({ ok: false, error: 'Server error' });
+});
 
 /* ------------------------------------------------------------------ *
  * ROUTES
@@ -158,81 +85,42 @@ const VALID_METHODS = ['UPI', 'Bank', 'Cash'];
 // Pricing constants + cutoff
 app.get('/api/config', (req, res) => {
   const { feeType, delegateFee } = currentFee();
-  res.json({
-    earlyBirdCutoff: EARLY_BIRD_CUTOFF,
-    feeType,
-    delegateFee,
-    membershipFee: MEMBERSHIP_FEE,
-  });
+  res.json({ earlyBirdCutoff: EARLY_BIRD_CUTOFF, feeType, delegateFee, membershipFee: MEMBERSHIP_FEE });
 });
 
 // Public registration (multipart: optional "screenshot")
 app.post('/api/register', (req, res) => {
-  upload.single('screenshot')(req, res, (err) => {
-    if (err) {
-      return res.status(400).json({ ok: false, error: err.message });
-    }
+  upload.single('screenshot')(req, res, wrap(async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
 
-    const cleanupUpload = () => {
-      if (req.file) {
-        fs.unlink(path.join(UPLOAD_DIR, req.file.filename), () => {});
-      }
-    };
+    const b = req.body || {};
+    const fullName = (b.fullName || '').trim();
+    const mobile = (b.mobile || '').trim();
+    const email = (b.email || '').trim();
+    const organization = (b.organization || '').trim();
+    const paymentMethod = (b.paymentMethod || '').trim();
+    const referenceNo = (b.referenceNo || '').trim();
+    const note = (b.note || '').trim();
+    const nepaMember = b.nepaMember === 'true' || b.nepaMember === true;
 
-    const body = req.body || {};
-    const fullName = (body.fullName || '').trim();
-    const mobile = (body.mobile || '').trim();
-    const email = (body.email || '').trim();
-    const organization = (body.organization || '').trim();
-    const paymentMethod = (body.paymentMethod || '').trim();
-    const referenceNo = (body.referenceNo || '').trim();
-    const note = (body.note || '').trim();
-    const nepaMember = body.nepaMember === 'true' || body.nepaMember === true;
-
-    // --- validation ---
-    if (!fullName) return fail('Full name is required');
-    if (!MOBILE_RE.test(mobile)) return fail('Mobile must be exactly 10 digits');
-    if (!EMAIL_RE.test(email)) return fail('A valid email is required');
-    if (!organization) return fail('Organization is required');
-    if (!VALID_METHODS.includes(paymentMethod)) return fail('Invalid payment method');
-
+    if (!fullName) return res.status(400).json({ ok: false, error: 'Full name is required' });
+    if (!MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Mobile must be exactly 10 digits' });
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'A valid email is required' });
+    if (!organization) return res.status(400).json({ ok: false, error: 'Organization is required' });
+    if (!VALID_METHODS.includes(paymentMethod)) return res.status(400).json({ ok: false, error: 'Invalid payment method' });
     if ((paymentMethod === 'UPI' || paymentMethod === 'Bank') && !req.file) {
-      return fail('Payment screenshot is required for UPI and Bank Transfer');
+      return res.status(400).json({ ok: false, error: 'Payment screenshot is required for UPI and Bank Transfer' });
     }
 
-    function fail(message) {
-      cleanupUpload();
-      return res.status(400).json({ ok: false, error: message });
-    }
-
-    // --- build record ---
     const { feeType, delegateFee } = currentFee();
     const membershipFee = nepaMember ? MEMBERSHIP_FEE : 0;
-    const totalAmount = delegateFee + membershipFee;
+    const screenshotUrl = req.file ? await uploads.saveUpload(req.file) : null;
 
-    const records = readRecords();
-    const record = {
-      id: crypto.randomUUID(),
-      regId: nextRegId(records),
-      createdAt: new Date().toISOString(),
-      fullName,
-      mobile,
-      email,
-      organization,
-      nepaMember,
-      feeType,
-      delegateFee,
-      membershipFee,
-      totalAmount,
-      paymentMethod,
-      referenceNo: referenceNo || null,
-      screenshotUrl: req.file ? `/uploads/${req.file.filename}` : null,
-      note: note || null,
-      status: 'Pending',
-    };
-
-    records.push(record);
-    writeRecords(records);
+    const record = await store.addRegistration({
+      fullName, mobile, email, organization, nepaMember, feeType,
+      delegateFee, membershipFee, totalAmount: delegateFee + membershipFee,
+      paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note: note || null,
+    });
 
     res.json({
       ok: true,
@@ -241,131 +129,84 @@ app.post('/api/register', (req, res) => {
       feeType: record.feeType,
       fullName: record.fullName,
     });
-  });
+  }));
 });
 
 // Public contact / enquiry form
-app.post('/api/contact', (req, res) => {
-  const body = req.body || {};
-  const name = (body.name || '').trim();
-  const email = (body.email || '').trim();
-  const phone = (body.phone || '').trim();
-  const subject = (body.subject || '').trim();
-  const message = (body.message || '').trim();
+app.post('/api/contact', wrap(async (req, res) => {
+  const b = req.body || {};
+  const name = (b.name || '').trim();
+  const email = (b.email || '').trim();
+  const phone = (b.phone || '').trim();
+  const subject = (b.subject || '').trim();
+  const message = (b.message || '').trim();
 
   if (!name) return res.status(400).json({ ok: false, error: 'Name is required' });
   if (!EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'A valid email is required' });
   if (!message) return res.status(400).json({ ok: false, error: 'Message is required' });
   if (phone && !/^\d{7,15}$/.test(phone)) return res.status(400).json({ ok: false, error: 'Phone must be 7–15 digits' });
 
-  const messages = readMessages();
-  const record = {
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    name,
-    email,
-    phone: phone || null,
-    subject: subject || null,
-    message,
-    read: false,
-  };
-  messages.push(record);
-  writeMessages(messages);
+  await store.addMessage({ name, email, phone: phone || null, subject: subject || null, message });
   res.json({ ok: true });
-});
+}));
 
-// Admin login
+// Admin login -> stateless token
 app.post('/api/admin/login', (req, res) => {
   const { id, password } = req.body || {};
   if (id === ADMIN_ID && password === ADMIN_PASSWORD) {
-    const token = crypto.randomBytes(24).toString('hex');
-    tokens.add(token);
-    return res.json({ ok: true, token });
+    return res.json({ ok: true, token: auth.sign() });
   }
   res.status(401).json({ ok: false, error: 'Invalid credentials' });
 });
 
-// Admin logout
-app.post('/api/admin/logout', requireAuth, (req, res) => {
-  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-  tokens.delete(token);
+// Logout — tokens are stateless; the client clears its own session.
+app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
+
+// Registrations
+app.get('/api/registrations', auth.middleware, wrap(async (req, res) => {
+  res.json({ ok: true, registrations: await store.listRegistrations() });
+}));
+
+app.patch('/api/registrations/:id/status', auth.middleware, wrap(async (req, res) => {
+  const status = await store.setRegistrationStatus(req.params.id, (req.body && req.body.status) || null);
+  if (status === null) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, status });
+}));
+
+app.delete('/api/registrations/:id', auth.middleware, wrap(async (req, res) => {
+  const removed = await store.deleteRegistration(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  if (removed.screenshotUrl) await uploads.deleteUpload(removed.screenshotUrl);
   res.json({ ok: true });
-});
+}));
 
-// All registrations, newest first
-app.get('/api/registrations', requireAuth, (req, res) => {
-  const records = readRecords()
-    .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.json({ ok: true, registrations: records });
-});
+// Enquiry messages
+app.get('/api/messages', auth.middleware, wrap(async (req, res) => {
+  res.json({ ok: true, messages: await store.listMessages() });
+}));
 
-// Toggle / set status
-app.patch('/api/registrations/:id/status', requireAuth, (req, res) => {
-  const records = readRecords();
-  const rec = records.find((r) => r.id === req.params.id);
-  if (!rec) return res.status(404).json({ ok: false, error: 'Not found' });
+app.patch('/api/messages/:id/read', auth.middleware, wrap(async (req, res) => {
+  const read = await store.setMessageRead(req.params.id, req.body && typeof req.body.read === 'boolean' ? req.body.read : undefined);
+  if (read === null) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, read });
+}));
 
-  const requested = (req.body && req.body.status) || null;
-  if (requested === 'Pending' || requested === 'Confirmed') {
-    rec.status = requested;
-  } else {
-    rec.status = rec.status === 'Confirmed' ? 'Pending' : 'Confirmed';
-  }
-  writeRecords(records);
-  res.json({ ok: true, status: rec.status });
-});
-
-// Delete a record + its screenshot file
-app.delete('/api/registrations/:id', requireAuth, (req, res) => {
-  const records = readRecords();
-  const idx = records.findIndex((r) => r.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ ok: false, error: 'Not found' });
-
-  const [removed] = records.splice(idx, 1);
-  writeRecords(records);
-
-  if (removed.screenshotUrl) {
-    const file = path.join(UPLOAD_DIR, path.basename(removed.screenshotUrl));
-    fs.unlink(file, () => {});
-  }
+app.delete('/api/messages/:id', auth.middleware, wrap(async (req, res) => {
+  const ok = await store.deleteMessage(req.params.id);
+  if (!ok) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true });
-});
+}));
 
-// All enquiry messages, newest first
-app.get('/api/messages', requireAuth, (req, res) => {
-  const messages = readMessages()
-    .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.json({ ok: true, messages });
-});
+// Admin page (local convenience; on Vercel, vercel.json rewrites /admin -> /admin.html)
+app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
 
-// Toggle / set read flag
-app.patch('/api/messages/:id/read', requireAuth, (req, res) => {
-  const messages = readMessages();
-  const msg = messages.find((m) => m.id === req.params.id);
-  if (!msg) return res.status(404).json({ ok: false, error: 'Not found' });
-  const requested = req.body && typeof req.body.read === 'boolean' ? req.body.read : !msg.read;
-  msg.read = requested;
-  writeMessages(messages);
-  res.json({ ok: true, read: msg.read });
-});
+/* ------------------------------------------------------------------ *
+ * START (only when run directly; on Vercel the app is imported)
+ * ------------------------------------------------------------------ */
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`NEPA Conclave server running on http://localhost:${PORT}  [store: ${store.backend}, uploads: ${uploads.backend}]`);
+  });
+}
 
-// Delete an enquiry
-app.delete('/api/messages/:id', requireAuth, (req, res) => {
-  const messages = readMessages();
-  const idx = messages.findIndex((m) => m.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ ok: false, error: 'Not found' });
-  messages.splice(idx, 1);
-  writeMessages(messages);
-  res.json({ ok: true });
-});
-
-// Admin page
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`NEPA Conclave server running on http://localhost:${PORT}`);
-});
+module.exports = app;

@@ -8,8 +8,13 @@
     "start": "node server.js",
     "seed": "node scripts/seed.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
+    "@vercel/blob": "^2.4.1",
     "express": "^4.19.2",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "pg": "^8.13.0"
   }
 }
