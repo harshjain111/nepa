@@ -1,39 +1,57 @@
-# Deploying to Vercel
+# Deploying with Supabase + Vercel
 
-This app is **serverless-ready**. On Vercel it stores data in **Postgres** and
-payment screenshots in **Vercel Blob**; admin auth uses a stateless signed token.
-Locally (no env vars) it falls back to JSON files + the `uploads/` folder, so
-`npm start` still works with zero setup.
+This app is **serverless-ready**. It stores data in **Supabase Postgres** and
+payment screenshots in **Supabase Storage**; admin auth uses a stateless signed
+token. Locally (no env vars) it falls back to JSON files + the `uploads/` folder,
+so `npm start` still works with zero setup.
 
 > The Express app is exposed as one serverless function (`api/index.js`); the
 > static site in `public/` is served by Vercel's CDN. Routing is in `vercel.json`.
 
 ---
 
-## 1. Provision storage (one-time, in the Vercel dashboard)
+## 1. Set up Supabase (one-time)
 
-In your Vercel project → **Storage**:
+Create a **new Supabase project** for the Conclave (keep it separate from any
+other app). Then collect three values:
 
-1. **Create a Postgres database** (Vercel Postgres / Neon). When you connect it to
-   the project, Vercel auto-adds `POSTGRES_URL` (and friends) to the project's
-   environment variables. The app reads `DATABASE_URL` **or** `POSTGRES_URL`, and
-   **creates its tables automatically** on first request — no manual SQL needed.
-2. **Create a Blob store**. Connecting it auto-adds `BLOB_READ_WRITE_TOKEN`.
+1. **Database URL** — Project Settings → Database → *Connection string* → **URI**.
+   Use the **Transaction pooler** string (host `...pooler.supabase.com:6543`) for
+   serverless. This becomes `DATABASE_URL`.
+2. **Project URL** — Project Settings → API → *Project URL* → `SUPABASE_URL`.
+3. **service_role key** — Project Settings → API → *service_role* secret →
+   `SUPABASE_SERVICE_ROLE_KEY` (server-only; never expose to the browser).
 
-## 2. Set the remaining environment variables
+The app **creates its tables automatically** on first request, and **creates the
+Storage bucket** (`screenshots`, public) automatically too — no manual SQL or
+bucket setup needed.
 
-In your Vercel project → **Settings → Environment Variables** (Production + Preview):
+## 2. Test locally against Supabase (optional but recommended)
 
-| Variable | Value | Notes |
-|---|---|---|
-| `ADMIN_ID` | your admin username | defaults to `admin` if unset |
-| `ADMIN_PASSWORD` | a strong password | **change this** from the `nepa2026` default |
-| `AUTH_SECRET` | a long random string | signs admin tokens; e.g. `openssl rand -hex 32` |
-| `EARLY_BIRD_CUTOFF` | `2026-08-15` | optional; overrides the early-bird date |
-| `POSTGRES_URL` / `DATABASE_URL` | *(auto from step 1)* | the pooled connection string |
-| `BLOB_READ_WRITE_TOKEN` | *(auto from step 1)* | |
+Put the values in `nepa/.env.local` (see `.env.example`), then:
+```bash
+npm install
+npm start     # should log  [store: postgres, uploads: supabase-storage]
+```
+Register a test delegate with a screenshot, then check the row in Supabase
+(Table editor → registrations) and the file in Storage → screenshots.
 
-## 3. Deploy
+## 3. Set environment variables in Vercel
+
+Vercel project → **Settings → Environment Variables** (Production + Preview):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | the Supabase Transaction-pooler URI |
+| `SUPABASE_URL` | `https://<ref>.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | the service_role secret |
+| `SUPABASE_BUCKET` | `screenshots` (optional; this is the default) |
+| `ADMIN_ID` | your admin username (default `admin`) |
+| `ADMIN_PASSWORD` | **change this** from the `nepa2026` default |
+| `AUTH_SECRET` | a long random string (`openssl rand -hex 32`) |
+| `EARLY_BIRD_CUTOFF` | `2026-08-15` (optional) |
+
+## 4. Deploy
 
 **Option A — Vercel CLI (from this folder):**
 ```bash
@@ -55,19 +73,17 @@ After deploy:
 
 ```bash
 npm install
-npm start            # http://localhost:3000  (store: json-file, uploads: disk)
+npm start            # no .env.local -> http://localhost:3000  (store: json-file, uploads: disk)
 ```
 
-To test the **Postgres/Blob** path locally, pull the env vars and run:
-```bash
-vercel env pull .env.local
-# load .env.local into your shell, then:
-npm start            # now uses store: postgres, uploads: vercel-blob
-```
+With a `nepa/.env.local` present (see `.env.example`), `npm start` auto-loads it
+and switches to `store: postgres, uploads: supabase-storage`.
 
 ## Notes
 - `npm run seed` only populates the **local JSON** backend (demo data); it does
-  not write to Postgres.
+  not write to Supabase.
 - Admin tokens are stateless and expire after 12h; "logout" just clears the
   browser session.
-- Free Postgres/Blob tiers are ample for an event of this size.
+- The free Supabase tier is ample for an event of this size.
+- `DATABASE_URL`/`POSTGRES_URL` and `BLOB_READ_WRITE_TOKEN` are also supported,
+  so the app works on Vercel Postgres/Blob too if you ever switch.

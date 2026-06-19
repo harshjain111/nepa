@@ -12,6 +12,8 @@
  * directly (node server.js); on Vercel, api/index.js imports the app.
  */
 
+require('./lib/env'); // load .env.local for local dev (no-op on Vercel)
+
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
