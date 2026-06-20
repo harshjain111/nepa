@@ -83,12 +83,37 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
     );
 
+  /* ---------------- Charter pillar icons (line-art SVG) ---------------- */
+  // One per pillar, in CHARTER order. Stroke inherits currentColor (gold).
+  const ICON = (inner) =>
+    `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  const CHARTER_ICONS = [
+    // 1 — Bridge between B2B (exchange / bridge)
+    ICON('<path d="M4 22c4-7 20-7 24 0"/><path d="M4 22v3M28 22v3M11 19v6M16 17.5V25M21 19v6"/><path d="M9 9l3-3 3 3M11 6v6"/><path d="M23 15l-3 3-3-3M21 18v-6"/>'),
+    // 2 — Stand with farmers (wheat sheaf)
+    ICON('<path d="M16 28V13"/><path d="M16 13c0-3-2-5-4-6 0 3 1 5 4 6Zm0 0c0-3 2-5 4-6 0 3-1 5-4 6Z"/><path d="M16 18c0-2.5-2-4-3.5-4.8 0 2.4 1 4 3.5 4.8Zm0 0c0-2.5 2-4 3.5-4.8 0 2.4-1 4-3.5 4.8Z"/><path d="M10 28h12"/>'),
+    // 3 — Educate & counter misinformation (open book)
+    ICON('<path d="M16 9c-2.5-1.8-6-2-9-1.2V23c3-.8 6.5-.6 9 1.2 2.5-1.8 6-2 9-1.2V7.8c-3-.8-6.5-.6-9 1.2Z"/><path d="M16 9v15"/>'),
+    // 4 — Strengthen FSSAI standards (shield check)
+    ICON('<path d="M16 4l9 3v7c0 6-4 10-9 12-5-2-9-6-9-12V7l9-3Z"/><path d="M12 15.5l3 3 5-6"/>'),
+    // 5 — Build a heritage brand (rosette / medal)
+    ICON('<circle cx="16" cy="13" r="6"/><path d="M16 10.2l1.3 2.4 2.7.4-2 1.9.5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-1.9 2.7-.4Z"/><path d="M12.5 18l-2 9 5.5-3 5.5 3-2-9"/>'),
+    // 6 — Develop export markets (globe)
+    ICON('<circle cx="16" cy="16" r="11"/><path d="M5 16h22M16 5c3 3 4.5 7 4.5 11S19 24 16 27c-3-3-4.5-7-4.5-11S13 8 16 5Z"/>'),
+    // 7 — Modernise the ghani (gear / mill)
+    ICON('<circle cx="16" cy="16" r="4"/><path d="M16 5v3M16 24v3M5 16h3M24 16h3M8.2 8.2l2.1 2.1M21.7 21.7l2.1 2.1M23.8 8.2l-2.1 2.1M10.3 21.7l-2.1 2.1"/>'),
+    // 8 — Unify the value chain (links)
+    ICON('<rect x="5" y="13" width="11" height="6" rx="3"/><rect x="16" y="13" width="11" height="6" rx="3"/>'),
+  ];
+
   /* ---------------- Render cards ---------------- */
   function renderCharter() {
     const grid = document.getElementById('charterGrid');
     if (!grid) return;
     grid.innerHTML = CHARTER.map((c, i) => `
       <article class="charter-card reveal" data-delay="${(i % 4) + 1}">
+        <span class="charter-card__icon">${CHARTER_ICONS[i] || ''}</span>
         <span class="charter-card__no">${String(i + 1).padStart(2, '0')}</span>
         <h3>${esc(c.t)}</h3>
         <p>${esc(c.d)}</p>
@@ -607,6 +632,7 @@
     initCountdown(config);
     initCounters();
     initCharterGlow();
+    initParticles();
     // primary register CTAs get the sheen sweep
     document.querySelectorAll('[data-open-register].btn-primary').forEach((b) => b.classList.add('btn-shine'));
     // reveal observes everything, including freshly-rendered cards

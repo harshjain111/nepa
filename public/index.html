@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/home.css" />
+  <link rel="stylesheet" href="/css/enhance.css" />
 </head>
 <body>
 
@@ -53,6 +54,45 @@
               fill="none" stroke="currentColor" stroke-width="1.5" />
         <path d="M72 760 V300 Q72 72 300 72 Q528 72 528 300 V760"
               fill="none" stroke="currentColor" stroke-width="1" opacity=".55" />
+      </svg>
+    </div>
+    <div class="hero__particles" id="heroParticles" aria-hidden="true"></div>
+
+    <!-- Animated mustard-field horizon (motion graphic, CSS-driven sway) -->
+    <div class="hero__field" aria-hidden="true">
+      <svg viewBox="0 0 1440 260" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <linearGradient id="fieldHill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2F5D3A" stop-opacity=".22"/>
+            <stop offset="1" stop-color="#1F3D2E" stop-opacity=".40"/>
+          </linearGradient>
+          <linearGradient id="fieldHill2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C5A253" stop-opacity=".20"/>
+            <stop offset="1" stop-color="#8B5E3C" stop-opacity=".22"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 150 C 260 110, 520 120, 760 140 S 1240 120, 1440 140 V260 H0 Z" fill="url(#fieldHill2)"/>
+        <path d="M0 190 C 300 160, 600 175, 900 165 S 1320 175, 1440 180 V260 H0 Z" fill="url(#fieldHill)"/>
+        <g class="hero__stalks">
+          <g class="stalk" style="--x:120px;--d:0s">
+            <path d="M0 260 V196"/><circle cx="0" cy="190" r="4"/><circle cx="-7" cy="200" r="3"/><circle cx="7" cy="202" r="3"/>
+          </g>
+          <g class="stalk" style="--x:300px;--d:-1.2s">
+            <path d="M0 260 V186"/><circle cx="0" cy="180" r="4.5"/><circle cx="-8" cy="192" r="3"/><circle cx="8" cy="194" r="3"/>
+          </g>
+          <g class="stalk" style="--x:560px;--d:-.6s">
+            <path d="M0 260 V200"/><circle cx="0" cy="194" r="4"/><circle cx="-7" cy="204" r="3"/><circle cx="7" cy="206" r="3"/>
+          </g>
+          <g class="stalk" style="--x:880px;--d:-1.8s">
+            <path d="M0 260 V184"/><circle cx="0" cy="178" r="4.5"/><circle cx="-8" cy="190" r="3"/><circle cx="8" cy="192" r="3"/>
+          </g>
+          <g class="stalk" style="--x:1130px;--d:-.9s">
+            <path d="M0 260 V198"/><circle cx="0" cy="192" r="4"/><circle cx="-7" cy="202" r="3"/><circle cx="7" cy="204" r="3"/>
+          </g>
+          <g class="stalk" style="--x:1320px;--d:-1.5s">
+            <path d="M0 260 V190"/><circle cx="0" cy="184" r="4.5"/><circle cx="-8" cy="196" r="3"/><circle cx="8" cy="198" r="3"/>
+          </g>
+        </g>
       </svg>
     </div>
 
@@ -102,6 +142,10 @@
         <span class="countdown__note" id="earlyBirdNote"></span>
       </div>
     </div>
+
+    <a class="hero__scroll" href="#invitation" aria-label="Scroll to explore">
+      <span class="hero__scroll-dot"></span>
+    </a>
   </section>
 
   <!-- ===================== MARQUEE ===================== -->
@@ -123,7 +167,7 @@
   </div>
 
   <!-- ===================== INVITATION ===================== -->
-  <section class="section" id="invitation">
+  <section class="section" id="invitation" data-index="01">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Invitation</span>
@@ -186,7 +230,7 @@
   </section>
 
   <!-- ===================== CHARTER ===================== -->
-  <section class="section charter" id="charter">
+  <section class="section charter" id="charter" data-index="02">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Guwahati Mustard Charter</span>
@@ -200,7 +244,7 @@
   </section>
 
   <!-- ===================== PROGRAMME ===================== -->
-  <section class="section" id="programme">
+  <section class="section" id="programme" data-index="03">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Programme</span>
@@ -214,7 +258,7 @@
   </section>
 
   <!-- ===================== TARIFF (delegate) ===================== -->
-  <section class="section tariff" id="tariff">
+  <section class="section tariff" id="tariff" data-index="04">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">Participation &amp; Tariff</span>
@@ -256,7 +300,7 @@
   </section>
 
   <!-- ===================== SPONSORSHIP ===================== -->
-  <section class="section sponsorship" id="sponsorship">
+  <section class="section sponsorship" id="sponsorship" data-index="05">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">Sponsorship</span>
@@ -668,5 +712,6 @@
   </div>
 
   <script src="/js/main.js"></script>
+  <script src="/js/enhance.js"></script>
 </body>
 </html>

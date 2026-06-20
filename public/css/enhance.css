@@ -1,0 +1,480 @@
+/* ============================================================
+   enhance.css — Heritage-Editorial art direction layer
+   Loaded LAST. Adds atmosphere (grain, light), breaks the
+   uniform "white card" rhythm, and elevates motion.
+   Nothing here is required for function — purely the look.
+   ============================================================ */
+
+:root {
+  --gold-bright: #D4A93A;
+  --amber: #E9B949;
+  --green-deep: #16301F;
+  --paper-line: rgba(140, 110, 60, 0.10);
+  --ease-out: cubic-bezier(.22, .61, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --shadow-lift: 0 28px 60px -32px rgba(22, 48, 31, 0.55), 0 6px 18px -12px rgba(22, 48, 31, 0.25);
+  --shadow-deep: 0 40px 90px -40px rgba(22, 48, 31, 0.7);
+}
+
+/* ---------------------------------------------------------- *
+   1. ATMOSPHERE — film grain + warm vignette over everything.
+   This single layer is what removes the flat, "AI-flat" feel.
+ * ---------------------------------------------------------- */
+body::before {
+  /* warm corner vignette + faint top light */
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(212, 169, 58, 0.10), transparent 55%),
+    radial-gradient(100% 100% at 50% 120%, rgba(22, 48, 31, 0.14), transparent 60%);
+  mix-blend-mode: multiply;
+}
+body::after {
+  /* fine paper grain */
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+/* Keep interactive layers above the atmosphere */
+.site-header, .floating-register, .modal, .scroll-progress,
+.credit-bar, .marquee { z-index: 60; }
+.modal { z-index: 100; }
+
+/* ---------------------------------------------------------- *
+   2. TYPE & SELECTION — sharper, more deliberate.
+ * ---------------------------------------------------------- */
+::selection { background: rgba(212, 169, 58, 0.32); color: var(--green-deep); }
+
+/* Fraunces is a variable serif — let optical sizing + soft details shine */
+html { font-optical-sizing: auto; }
+body { font-weight: 400; letter-spacing: -0.002em; }
+h1, h2, h3, h4 {
+  text-wrap: balance;
+  font-optical-sizing: auto;
+  letter-spacing: -0.012em;       /* Fraunces sets tighter than Cinzel did */
+  font-variation-settings: "opsz" 96;
+}
+.section-head p, .invitation-body p { text-wrap: pretty; }
+
+/* Hero brand title — Fraunces black caps, optically large, tight */
+.hero__title {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variation-settings: "opsz" 144;
+  text-transform: uppercase;
+}
+.hero__pre, .hero__tag, .pull-quote { font-style: italic; }
+.pull-quote { font-weight: 400; }
+
+/* Eyebrows / labels read better in the grotesk at slightly tighter tracking */
+.eyebrow { font-family: var(--font-body); letter-spacing: .3em; }
+
+/* Refined gold scrollbar */
+* { scrollbar-width: thin; scrollbar-color: var(--gold) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--gold), var(--gold-bright));
+  border-radius: 99px; border: 2px solid var(--ivory);
+}
+
+/* Eyebrow: small gem instead of plain dash, tighter */
+.eyebrow { letter-spacing: .34em; font-size: .68rem; }
+
+/* ---------------------------------------------------------- *
+   3. SECTION RHYTHM — giant ghosted watermark numerals/words
+   give each section editorial identity & break the sameness.
+ * ---------------------------------------------------------- */
+.section { isolation: isolate; }
+.section-head { position: relative; }
+.section-head .eyebrow { position: relative; z-index: 1; }
+
+/* Decorative oversized index, set per-section via data attr */
+.section[data-index] .container::before {
+  content: attr(data-index);
+  position: absolute;
+  top: -2.2rem; right: 2%;
+  font-family: var(--font-title);
+  font-size: clamp(7rem, 18vw, 15rem);
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(31, 61, 46, 0.045);
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -.02em;
+}
+.charter[data-index] .container::before,
+.contact[data-index] .container::before { color: rgba(216, 192, 138, 0.07); }
+
+/* ---------------------------------------------------------- *
+   4. HERO — depth, light bloom, gold title accent, parallax.
+ * ---------------------------------------------------------- */
+.hero {
+  background:
+    radial-gradient(900px 520px at 50% 8%, rgba(233, 185, 73, 0.18), transparent 60%),
+    radial-gradient(700px 600px at 88% 80%, rgba(47, 93, 58, 0.10), transparent 60%),
+    repeating-linear-gradient(90deg, var(--paper-line) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(0deg, var(--paper-line) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, var(--ivory) 0%, var(--ivory-2) 100%);
+}
+/* soft golden ground glow behind the title */
+.hero__inner::before {
+  content: '';
+  position: absolute;
+  top: 34%; left: 50%;
+  width: min(720px, 90vw); height: 360px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(233, 185, 73, 0.22), transparent 72%);
+  filter: blur(8px);
+  z-index: -1;
+  pointer-events: none;
+}
+.hero__arch { color: rgba(197, 162, 83, 0.45); }
+.hero__crest { filter: drop-shadow(0 14px 30px rgba(140, 110, 40, 0.32)); }
+
+.edition-chip {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: var(--gold);
+  box-shadow: 0 2px 10px -4px rgba(140, 110, 40, .3), inset 0 1px 0 rgba(255,255,255,.6);
+  backdrop-filter: blur(6px);
+}
+
+/* Title: tighter, richer, with a drawn gold underline */
+.hero__title {
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, var(--green-2) 0%, var(--green-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Glassy info chips with gold corner ticks */
+.chip {
+  background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.55));
+  border-color: rgba(197, 162, 83, 0.55);
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(8px) saturate(120%);
+  position: relative;
+  overflow: hidden;
+}
+.chip::before {
+  content: '';
+  position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* Countdown tiles — premium "minted" look */
+.cd-unit {
+  background: linear-gradient(180deg, var(--green-2), var(--green-deep));
+  border-color: rgba(212, 169, 58, 0.45);
+  box-shadow: var(--shadow-lift), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.cd-num { color: var(--ivory); }
+.cd-label { color: var(--gold-soft); }
+
+/* ---------------------------------------------------------- *
+   5. UNIFIED "SPOTLIGHT CARD" — replaces the flat white cards.
+   Gold gradient hairline border + pointer-follow glow + ticks.
+ * ---------------------------------------------------------- */
+.org-card, .day-col, .venue-card, .leader, .sponsor-card,
+.contact-form, .delegate-card {
+  position: relative;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, rgba(212,169,58,.7), rgba(197,162,83,.15) 45%, rgba(212,169,58,.6)) border-box;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+/* pointer-follow spotlight */
+.org-card::after, .day-col::after, .venue-card::after,
+.leader::after, .sponsor-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(280px 200px at var(--mx, 50%) var(--my, -20%),
+              rgba(233, 185, 73, 0.16), transparent 70%);
+  opacity: 0; transition: opacity .4s ease;
+  pointer-events: none;
+}
+.org-card:hover::after, .day-col:hover::after, .venue-card:hover::after,
+.leader:hover::after, .sponsor-card:hover::after { opacity: 1; }
+
+.org-card:hover, .leader:hover, .sponsor-card:hover, .venue-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-deep);
+}
+
+/* corner tick marks — quiet luxury detail */
+.org-card, .leader--lead, .delegate-card, .day-col {
+  --tick: 11px;
+}
+.org-card::before, .day-col::before,
+.delegate-card .delegate-card__tag { z-index: 2; }
+
+/* ---------------------------------------------------------- *
+   6. CHARTER — giant numerals, lacquered cards.
+ * ---------------------------------------------------------- */
+.charter {
+  background:
+    radial-gradient(800px 360px at 100% -5%, rgba(212,169,58,.18), transparent 60%),
+    radial-gradient(700px 420px at -5% 105%, rgba(47,93,58,.7), transparent 60%),
+    linear-gradient(180deg, var(--green-2), var(--green-deep));
+}
+.charter-card {
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border: 1px solid rgba(216,192,138,.22);
+  backdrop-filter: blur(2px);
+}
+.charter-card__no {
+  font-size: 2.8rem;
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold-bright));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  position: relative;
+}
+.charter-card__no::after {
+  content: '';
+  display: block; width: 30px; height: 2px; margin-top: 10px;
+  background: linear-gradient(90deg, var(--gold-bright), transparent);
+}
+.charter-card:hover { box-shadow: 0 30px 60px -30px rgba(0,0,0,.5); }
+
+/* ---------------------------------------------------------- *
+   7. PROGRAMME — drawn gold spine with node dots.
+ * ---------------------------------------------------------- */
+.day-col__title { letter-spacing: .01em; }
+.timeline { position: relative; padding-left: 4px; }
+.timeline li { position: relative; align-items: baseline; }
+.timeline__time { color: var(--sienna); position: relative; }
+.timeline li::before {
+  content: '';
+  position: absolute; left: 84px; top: 1.05em;
+  width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg);
+  background: var(--gold-bright);
+  box-shadow: 0 0 0 3px rgba(212,169,58,.18);
+}
+@media (max-width: 560px) { .timeline li::before { display: none; } }
+
+/* ---------------------------------------------------------- *
+   8. TARIFF / DELEGATE — make it the clear hero card.
+ * ---------------------------------------------------------- */
+.delegate-card {
+  background:
+    linear-gradient(180deg, #fff, #fffdf6) padding-box,
+    linear-gradient(135deg, var(--gold-bright), rgba(212,169,58,.25) 50%, var(--gold-bright)) border-box;
+  box-shadow: var(--shadow-deep);
+}
+.delegate-row__price {
+  background: linear-gradient(135deg, var(--sienna), #a9743f);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.sponsor-card__tier { letter-spacing: .01em; }
+
+/* ---------------------------------------------------------- *
+   9. BUTTONS — layered gold, inset highlight, crisper hover.
+ * ---------------------------------------------------------- */
+.btn-primary {
+  background: linear-gradient(180deg, var(--amber), var(--mustard));
+  color: #3a2c05;
+  box-shadow: 0 12px 28px -12px rgba(230,180,34,.8), inset 0 1px 0 rgba(255,255,255,.55);
+  border: 1px solid rgba(180,130,10,.35);
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #f3c84a, var(--amber));
+  box-shadow: 0 18px 40px -12px rgba(230,180,34,.95), inset 0 1px 0 rgba(255,255,255,.6);
+}
+.btn { transition: transform .25s var(--ease-spring), box-shadow .25s ease, background .2s ease; }
+
+/* ---------------------------------------------------------- *
+   10. FOOTER & CTA — botanical hairline accents.
+ * ---------------------------------------------------------- */
+.final-cta {
+  background:
+    radial-gradient(700px 300px at 50% -10%, rgba(212,169,58,.26), transparent 60%),
+    linear-gradient(180deg, var(--green-2), var(--green-deep));
+  border: 1px solid rgba(212,169,58,.3);
+  box-shadow: var(--shadow-deep);
+}
+.site-footer {
+  background:
+    radial-gradient(900px 300px at 50% 0%, rgba(47,93,58,.7), transparent 60%),
+    linear-gradient(180deg, var(--green-deep), #11271a);
+}
+.site-footer::before {
+  content: '';
+  position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ---------------------------------------------------------- *
+   11. MOTION — blur-fade reveals + drawn dividers.
+ * ---------------------------------------------------------- */
+.reveal {
+  filter: blur(10px);
+  transform: translateY(34px) scale(.985);
+  transition:
+    opacity .9s var(--ease-out),
+    transform .9s var(--ease-out),
+    filter .9s var(--ease-out);
+}
+.reveal.is-visible { filter: blur(0); transform: none; }
+
+/* Floating pill: refine the glow, add gentle bob */
+.floating-register {
+  background: linear-gradient(180deg, var(--amber), var(--mustard));
+  animation: pillBob 3.4s var(--ease-out) infinite;
+}
+@keyframes pillBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.floating-register:hover { animation-play-state: paused; transform: translateY(-3px) scale(1.03); }
+
+/* Scroll cue (added to hero via JS/HTML) */
+.hero__scroll { color: var(--gold); border-color: var(--gold); }
+
+@media (prefers-reduced-motion: reduce) {
+  body::after { opacity: .35; }
+  .reveal { filter: none; transform: none; }
+  .floating-register { animation: none; }
+  .hero__stalks .stalk { animation: none; }
+}
+
+/* ---------------------------------------------------------- *
+   13. CHARTER PILLAR ICONS (custom line-art SVG)
+ * ---------------------------------------------------------- */
+.charter-card { padding-top: 28px; }
+.charter-card__icon {
+  position: absolute;
+  top: 24px; right: 22px;
+  width: 30px; height: 30px;
+  color: var(--gold-soft);
+  opacity: .85;
+  transition: transform .5s var(--ease-spring), color .3s ease;
+}
+.charter-card__icon svg { width: 100%; height: 100%; }
+/* draw-in: dash the strokes, then resolve when the card reveals */
+.charter-card__icon svg * {
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  transition: stroke-dashoffset 1.1s var(--ease-out);
+}
+.charter-card.is-visible .charter-card__icon svg * { stroke-dashoffset: 0; }
+.charter-card:hover .charter-card__icon { color: var(--gold-bright); transform: scale(1.12) rotate(-4deg); }
+
+/* ---------------------------------------------------------- *
+   14. HERO MUSTARD-FIELD MOTION GRAPHIC
+ * ---------------------------------------------------------- */
+.hero__field {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 240px;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 38%);
+  mask-image: linear-gradient(180deg, transparent, #000 38%);
+}
+.hero__field svg { width: 100%; height: 100%; display: block; }
+.hero__stalks .stalk {
+  fill: var(--gold);
+  stroke: var(--green-2);
+  stroke-width: 1.4;
+  transform-box: view-box;
+  transform-origin: bottom;
+  transform: translateX(var(--x)) rotate(0deg);
+  animation: sway 5.5s ease-in-out infinite;
+  animation-delay: var(--d);
+  opacity: .7;
+}
+.hero__stalks .stalk circle { stroke: none; }
+@keyframes sway {
+  0%, 100% { transform: translateX(var(--x)) rotate(-3.5deg); }
+  50%      { transform: translateX(var(--x)) rotate(3.5deg); }
+}
+
+/* ---------------------------------------------------------- *
+   15. SECTION ILLUSTRATIONS — shown when no real photo exists.
+   (Drop a real .jpg into /img and it takes over automatically.)
+ * ---------------------------------------------------------- */
+#invitation .photo--empty,
+#venue .photo--empty {
+  border: 1px solid rgba(197,162,83,.45);
+  box-shadow: var(--shadow-lift);
+  background-color: var(--ivory-2);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+/* Kachi-ghani oil — bottle, drop & mustard sprig (portrait) */
+#invitation .photo--empty {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'%3E%3Cdefs%3E%3ClinearGradient id='oil' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23E9B949'/%3E%3Cstop offset='1' stop-color='%23C5860F'/%3E%3C/linearGradient%3E%3CradialGradient id='bg' cx='50%25' cy='35%25' r='75%25'%3E%3Cstop offset='0' stop-color='%23F7EFD8'/%3E%3Cstop offset='1' stop-color='%23EBDDB8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='400' height='500' fill='url(%23bg)'/%3E%3Cg stroke='%231F3D2E' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M236 150 q60 -34 96 -14 q22 14 -2 30 q-40 22 -86 6' fill='%231F3D2E' fill-opacity='.06'/%3E%3Cpath d='M250 150 q40 -50 86 -54' /%3E%3Ccircle cx='318' cy='110' r='9' fill='%23E6B422' stroke='none'/%3E%3Ccircle cx='300' cy='128' r='7' fill='%23E6B422' stroke='none'/%3E%3Ccircle cx='332' cy='128' r='7' fill='%23E6B422' stroke='none'/%3E%3C/g%3E%3Cg transform='translate(150 200)'%3E%3Cpath d='M30 0 h40 v18 q24 8 24 40 v150 q0 26 -26 26 h-60 q-26 0 -26 -26 v-150 q0 -32 24 -40 z' fill='%23FBF6EA' stroke='%231F3D2E' stroke-width='3'/%3E%3Cpath d='M12 120 q0 -26 22 -34 h28 q22 8 22 34 v82 q0 18 -18 18 h-58 q-18 0 -18 -18 z' fill='url(%23oil)'/%3E%3Crect x='28' y='-12' width='44' height='16' rx='4' fill='%238B5E3C'/%3E%3Crect x='10' y='120' width='80' height='40' fill='%23FBF6EA' fill-opacity='.18'/%3E%3C/g%3E%3Cpath d='M200 430 q-16 22 0 36 q16 -14 0 -36z' fill='url(%23oil)'/%3E%3C/svg%3E");
+}
+/* Mayfair resort landscape (wide) */
+#venue .photo--empty {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 450'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23F7EFD8'/%3E%3Cstop offset='1' stop-color='%23F1E4C2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='450' fill='url(%23sky)'/%3E%3Ccircle cx='930' cy='130' r='62' fill='%23E9B949' fill-opacity='.5'/%3E%3Ccircle cx='930' cy='130' r='40' fill='%23E6B422' fill-opacity='.7'/%3E%3Cpath d='M0 270 q200 -70 420 -34 q260 42 480 -10 q160 -36 300 6 V450 H0Z' fill='%232F5D3A' fill-opacity='.28'/%3E%3Cpath d='M0 320 q260 -50 520 -16 q300 38 680 -8 V450 H0Z' fill='%231F3D2E' fill-opacity='.45'/%3E%3Cg fill='%231F3D2E' fill-opacity='.8'%3E%3Crect x='520' y='250' width='160' height='90'/%3E%3Cpath d='M512 250 L600 214 L688 250Z'/%3E%3Crect x='690' y='270' width='90' height='70'/%3E%3Cpath d='M684 270 L735 244 L786 270Z'/%3E%3Crect x='430' y='280' width='80' height='60'/%3E%3Cpath d='M424 280 L470 256 L516 280Z'/%3E%3C/g%3E%3Cg stroke='%231F3D2E' stroke-width='5' fill='none' stroke-linecap='round'%3E%3Cpath d='M180 340 V250'/%3E%3Cpath d='M180 252 q-34 -20 -58 -10 M180 252 q34 -20 58 -10 M180 256 q-30 6 -52 26 M180 256 q30 6 52 26'/%3E%3Cpath d='M1030 350 V268'/%3E%3Cpath d='M1030 270 q-28 -16 -48 -8 M1030 270 q28 -16 48 -8 M1030 274 q-24 6 -42 22 M1030 274 q24 6 42 22'/%3E%3C/g%3E%3C/svg%3E");
+}
+#invitation .photo--empty::after,
+#venue .photo--empty::after {
+  inset: auto 0 0 0;
+  background: linear-gradient(180deg, transparent, rgba(31,61,46,.78));
+  color: var(--ivory);
+  padding: 40px 24px 18px;
+  font-size: .92rem;
+}
+
+/* ---------------------------------------------------------- *
+   17. HERO CONDENSE — fit the whole hero in one desktop glance
+   and close the empty band above the marquee.
+ * ---------------------------------------------------------- */
+.hero {
+  min-height: 100vh;
+  padding: calc(var(--header-h) + 22px) 0 0;
+  justify-content: center;
+}
+.hero__crest { width: 92px; height: 92px; margin-bottom: 8px; }
+.edition-chip { margin-bottom: 12px; }
+.hero__pre { margin-bottom: 2px; }
+.hero__title {
+  font-size: clamp(2.2rem, 5.6vw, 4.6rem);
+  margin: 0 0 8px;
+  line-height: 1.02;
+}
+.hero__ornament { margin: 0 auto 12px; }
+.hero__tag { margin-bottom: 18px; }
+.hero__chips { gap: 14px; margin-bottom: 18px; }
+.chip { padding: 12px 20px; }
+.hero__countdown { margin-top: 16px; gap: 8px; }
+.cd-unit { min-width: 66px; padding: 9px 6px 6px; }
+.cd-num { font-size: 1.7rem; }
+.cd-sep { font-size: 1.4rem; }
+
+/* Field hugs the bottom edge so there's no empty gap before the marquee */
+.hero__field { height: 150px; }
+/* Scroll cue would now overlap the condensed content — retire it on desktop */
+.hero__scroll { display: none; }
+
+/* On shorter laptops, let it breathe rather than clip */
+@media (max-height: 740px) {
+  .hero { min-height: auto; padding-bottom: 24px; }
+  .hero__crest { width: 76px; height: 76px; }
+  .hero__title { font-size: clamp(2rem, 5vw, 3.8rem); }
+}
+
+/* Mobile keeps the original generous stacking (it scrolls anyway) */
+@media (max-width: 640px) {
+  .hero { min-height: auto; padding-bottom: 28px; }
+  .hero__scroll { display: grid; }
+}
+
+/* ---------------------------------------------------------- *
+   18. RESPONSIVE TUNING for the new decoration.
+ * ---------------------------------------------------------- */
+@media (max-width: 700px) {
+  .section[data-index] .container::before { font-size: 6rem; top: -1rem; opacity: .7; }
+  body::after { opacity: .4; }
+}
