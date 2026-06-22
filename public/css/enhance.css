@@ -379,18 +379,43 @@ h1, h2, h3, h4 {
   z-index: 0; pointer-events: none;
   opacity: 0; transition: opacity 1.2s var(--ease-out);
 }
-/* photo hero: show the poster (and video, when present) as a real backdrop */
-.hero--photo .hero__video { opacity: .55; }
-.hero--photo .hero__video.is-playing { opacity: .72; }
-/* ivory scrim so the green serif title stays crisp over the bright field */
+/* CINEMATIC photo/video hero — vivid media + dark veil + light type */
+.hero--photo .hero__video { opacity: .92; }
+.hero--photo .hero__video.is-playing { opacity: 1; }
+/* dark green veil: strong at top & bottom (behind nav/title/countdown),
+   lighter in the middle so the field stays vivid — gives real contrast */
 .hero--photo::before {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background:
-    radial-gradient(130% 100% at 50% 34%, rgba(251,246,234,.50), rgba(251,246,234,.74) 62%, rgba(245,236,214,.9) 100%);
+    linear-gradient(180deg, rgba(11,26,17,.74) 0%, rgba(11,26,17,.30) 30%, rgba(11,26,17,.34) 60%, rgba(11,26,17,.84) 100%),
+    radial-gradient(120% 78% at 50% 44%, rgba(11,26,17,.05), rgba(11,26,17,.42));
 }
-/* the photo replaces the illustrated field horizon */
 .hero--photo .hero__field { display: none; }
-.hero--photo .hero__arch { color: rgba(197,162,83,.55); }
+.hero--photo .hero__arch { color: rgba(216,192,138,.5); }
+
+/* light, high-contrast type over the media */
+.hero--photo .hero__title {
+  background: none; color: var(--ivory); -webkit-text-fill-color: var(--ivory);
+  text-shadow: 0 2px 30px rgba(0,0,0,.5);
+}
+.hero--photo .hero__pre,
+.hero--photo .hero__tag,
+.hero--photo .countdown__lead { color: var(--gold-soft); }
+.hero--photo .edition-chip {
+  background: rgba(255,255,255,.12); color: var(--ivory);
+  border-color: rgba(216,192,138,.6); backdrop-filter: blur(6px);
+}
+.hero--photo .theme-chip { background: rgba(11,26,17,.55); color: var(--ivory); border-color: var(--gold); }
+.hero--photo .chip {
+  background: rgba(255,255,255,.13); border-color: rgba(216,192,138,.5); backdrop-filter: blur(10px);
+}
+.hero--photo .chip__value { color: var(--ivory); }
+.hero--photo .chip__label { color: var(--gold-soft); }
+.hero--photo .chip__sub { color: rgba(251,246,234,.82); }
+.hero--photo .countdown__note:not(:empty) { background: rgba(11,26,17,.5); color: var(--gold-soft); border-color: rgba(212,169,58,.5); }
+.hero--photo .btn-ghost { color: var(--ivory); border-color: rgba(216,192,138,.65); }
+.hero--photo .btn-ghost:hover { background: rgba(255,255,255,.12); border-color: var(--gold); }
+.hero--photo .hero__inner::before { opacity: .5; }
 
 /* ---------------------------------------------------------- *
    14. HERO MUSTARD-FIELD MOTION GRAPHIC
@@ -542,6 +567,18 @@ h1, h2, h3, h4 {
   margin: 6px 0 12px;
 }
 .page-hero p { color: var(--muted); max-width: 640px; margin: 0 auto 22px; font-size: 1.05rem; }
+
+/* Cinematic page-hero with a photographic backdrop (image set via --ph-img) */
+.page-hero--photo {
+  background:
+    linear-gradient(180deg, rgba(11,26,17,.74) 0%, rgba(11,26,17,.52) 45%, rgba(11,26,17,.86) 100%),
+    var(--ph-img) center / cover no-repeat;
+  border-bottom: 1px solid rgba(212,169,58,.4);
+}
+.page-hero--photo .container { position: relative; z-index: 2; }
+.page-hero--photo h1 { color: var(--ivory); text-shadow: 0 2px 24px rgba(0,0,0,.45); }
+.page-hero--photo p { color: rgba(251,246,234,.86); }
+.page-hero--photo .eyebrow { color: var(--gold-soft); }
 
 /* ---- WHY ATTEND ---- */
 .why-grid {
