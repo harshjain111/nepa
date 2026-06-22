@@ -1064,3 +1064,25 @@ h1, h2, h3, h4 {
   :root { --header-h: 56px; }
   .site-header .brand__logo { width: 34px; height: 34px; }  /* ≈ brand text height */
 }
+
+/* ==========================================================
+   31. FLOATING REGISTER — bottom-center, only after the hero
+   ========================================================== */
+.floating-register {
+  left: 50%; right: auto;                       /* centre it */
+  transform: translateX(-50%) translateY(10px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  animation: none;                              /* drop the bob (conflicts with centring) */
+  transition: opacity .35s var(--ease-out), transform .35s var(--ease-out);
+}
+.floating-register.is-shown {
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.floating-register.is-shown:hover { transform: translateX(-50%) translateY(-3px) scale(1.03); }
+.floating-register::before { display: none; }   /* remove the pulse ring */
+/* keep the label on mobile too */
+.floating-register span { display: inline-block !important; }
+@media (max-width: 560px) {
+  .floating-register { padding: 13px 22px; }
+}

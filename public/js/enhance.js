@@ -16,6 +16,21 @@
   const fine = window.matchMedia &&
     window.matchMedia('(pointer: fine)').matches;
 
+  /* ---- 0. Floating register: show only after the top hero ---- */
+  const floatBtn = document.querySelector('.floating-register');
+  const topHero = document.querySelector('.hero, .page-hero');
+  if (floatBtn) {
+    if (topHero && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        ([e]) => floatBtn.classList.toggle('is-shown', !e.isIntersecting),
+        { threshold: 0 }
+      );
+      io.observe(topHero);
+    } else {
+      floatBtn.classList.add('is-shown'); // no hero on page → always available
+    }
+  }
+
   /* ---- 1. Card spotlight (delegated) ---- */
   const SPOT = '.org-card, .day-col, .venue-card, .leader, .sponsor-card, .charter-card';
   document.addEventListener('pointermove', (e) => {
