@@ -918,12 +918,15 @@ h1, h2, h3, h4 {
 
 /* Mobile: lift content toward the top + size down logo/crest */
 @media (max-width: 640px) {
-  :root { --header-h: 80px; }
+  :root { --header-h: 66px; }
   .hero { justify-content: flex-start; }
-  .hero__crest { width: 112px; height: 112px; }
-  .brand__logo { width: 62px; height: 62px; }
-  .brand__name { font-size: 1.2rem; }
-  .brand__sub { font-size: .5rem; letter-spacing: .2em; }
+  .hero__crest { width: 104px; height: 104px; }
+  .brand { gap: 10px; }
+  .brand__logo { width: 46px; height: 46px; }
+  .brand__name { font-size: 1.04rem; letter-spacing: 0; }
+  .brand__sub { font-size: .44rem; letter-spacing: .16em; }
+  /* declutter: drop the giant ghosted section numerals on phones */
+  .section[data-index] .container::before { display: none; }
 }
 @media (max-height: 700px) {
   .hero__crest { width: 92px; height: 92px; }
