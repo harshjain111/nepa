@@ -379,12 +379,18 @@ h1, h2, h3, h4 {
   z-index: 0; pointer-events: none;
   opacity: 0; transition: opacity 1.2s var(--ease-out);
 }
-.hero__video.is-playing { opacity: .34; }
-/* keep the title readable over any video */
-.hero.has-video::before {
-  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(120% 90% at 50% 30%, rgba(251,246,234,.55), rgba(251,246,234,.82));
+/* photo hero: show the poster (and video, when present) as a real backdrop */
+.hero--photo .hero__video { opacity: .55; }
+.hero--photo .hero__video.is-playing { opacity: .72; }
+/* ivory scrim so the green serif title stays crisp over the bright field */
+.hero--photo::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(130% 100% at 50% 34%, rgba(251,246,234,.50), rgba(251,246,234,.74) 62%, rgba(245,236,214,.9) 100%);
 }
+/* the photo replaces the illustrated field horizon */
+.hero--photo .hero__field { display: none; }
+.hero--photo .hero__arch { color: rgba(197,162,83,.55); }
 
 /* ---------------------------------------------------------- *
    14. HERO MUSTARD-FIELD MOTION GRAPHIC

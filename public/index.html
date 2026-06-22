@@ -16,16 +16,17 @@
   <!-- header injected by partials.js -->
 
   <!-- ===================== HERO ===================== -->
-  <section class="hero" id="top">
+  <section class="hero hero--photo" id="top">
     <div class="hero__arch" aria-hidden="true">
       <svg viewBox="0 0 600 760" preserveAspectRatio="xMidYMin meet">
         <path d="M40 760 V300 Q40 40 300 40 Q560 40 560 300 V760" fill="none" stroke="currentColor" stroke-width="1.5" />
         <path d="M72 760 V300 Q72 72 300 72 Q528 72 528 300 V760" fill="none" stroke="currentColor" stroke-width="1" opacity=".55" />
       </svg>
     </div>
-    <!-- Optional hero video: drop /video/hero.mp4 (or generate one) and it auto-plays;
-         until then it stays hidden and the animated field below shows instead. -->
-    <video class="hero__video" id="heroVideo" muted loop playsinline preload="auto" aria-hidden="true">
+    <!-- Hero backdrop: the mustard-field photo is the poster (shows immediately);
+         when /video/hero.mp4 exists it auto-plays over the same frame. -->
+    <video class="hero__video" id="heroVideo" muted loop playsinline preload="none"
+           poster="/img/hero-field.jpg" aria-hidden="true">
       <source src="/video/hero.mp4" type="video/mp4" />
     </video>
 
@@ -296,9 +297,10 @@
 
       <div class="final-cta final-cta--photo reveal" data-delay="1">
         <img class="final-cta__bg" src="/img/heritage-banner.jpg"
-             alt="One Industry, One Purpose, One Collective Voice — a traditional mustard-oil ghani at sunrise in Assam"
+             alt="An elegant inaugural conference evening — ceremonial lamp lighting in a green-and-gold ballroom"
              loading="lazy" />
         <div class="final-cta__inner">
+          <span class="eyebrow eyebrow--center">One Industry · One Purpose · One Collective Voice</span>
           <h2>Be Part of the Inaugural Conclave</h2>
           <p>Seats are limited to 400+ delegates. Register today to secure your place.</p>
           <button class="btn btn-primary" data-open-register>Register Now</button>

@@ -26,17 +26,20 @@
     card.style.setProperty('--my', `${e.clientY - r.top}px`);
   }, { passive: true });
 
-  /* ---- Hero video: reveal + play only if a real clip actually loads ---- */
+  /* ---- Hero video: desktop only (mobile keeps the lightweight poster) ---- */
   const heroVideo = document.getElementById('heroVideo');
   if (heroVideo) {
-    heroVideo.addEventListener('loadeddata', () => {
-      if (heroVideo.videoWidth > 0) {
-        heroVideo.classList.add('is-playing');
-        document.querySelector('.hero')?.classList.add('has-video');
-        if (!reduce) { const p = heroVideo.play(); if (p && p.catch) p.catch(() => {}); }
-      }
-    });
-    // a missing source fires 'error' on the <source>; nothing else to do — it stays hidden.
+    const wantVideo = !reduce &&
+      window.matchMedia && window.matchMedia('(min-width: 760px)').matches;
+    if (wantVideo) {
+      heroVideo.addEventListener('loadeddata', () => {
+        if (heroVideo.videoWidth > 0) heroVideo.classList.add('is-playing');
+      });
+      heroVideo.preload = 'auto';     // allow the source to fetch
+      const p = heroVideo.play();      // triggers load + playback
+      if (p && p.catch) p.catch(() => {});
+    }
+    // On mobile / reduced-motion the poster (hero-field.jpg) remains the backdrop.
   }
 
   if (reduce) return; // skip the heavier motion below
