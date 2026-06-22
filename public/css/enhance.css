@@ -668,7 +668,19 @@ h1, h2, h3, h4 {
 .perk-list li::before {
   content: '✦'; position: absolute; left: 0; top: 0; color: var(--gold-bright); font-size: .9rem;
 }
-.contact-list__plain { color: var(--green); font-weight: 600; }
+/* labels need room for "HELPLINE"/"CONTACT"; reduce tracking so they fit */
+.contact-list span { width: 78px; letter-spacing: .12em; }
+/* plain-text values must NOT inherit the gold uppercase label styling */
+.contact-list .contact-list__plain {
+  width: auto; flex: 1; text-transform: none; letter-spacing: normal;
+  color: var(--green); font-weight: 600; font-size: .92rem;
+}
+.contact-info .contact-list .contact-list__plain { color: var(--ivory); }
+/* on phones, stack each row (label above value) so nothing collides */
+@media (max-width: 560px) {
+  .contact-list li { flex-direction: column; gap: 2px; }
+  .contact-list span { width: auto; }
+}
 
 /* ==========================================================
    20. SPONSORSHIP PAGE — tiers with amounts & inclusions
