@@ -918,10 +918,10 @@ h1, h2, h3, h4 {
 
 /* Mobile: lift content toward the top + size down logo/crest */
 @media (max-width: 640px) {
-  :root { --header-h: 74px; }
+  :root { --header-h: 84px; }
   .hero { justify-content: flex-start; }
   .hero__crest { width: 84px; height: 84px; }
-  .brand__logo { width: 48px; height: 48px; }
+  .brand__logo { width: 66px; height: 66px; }
   .brand__name { font-size: 1.2rem; }
   .brand__sub { font-size: .5rem; letter-spacing: .2em; }
 }
@@ -950,12 +950,13 @@ h1, h2, h3, h4 {
   opacity: .8;
 }
 
-/* NEPA logo as a clean cream badge with a gold ring → clearly visible */
+/* Big, plain NEPA logo (no badge) — a soft shadow lifts it off the green */
+:root { --header-h: 102px; }
 .brand__logo {
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #fffdf6, #f3ead2);
-  padding: 5px;
-  box-shadow: 0 0 0 1.5px rgba(212,169,58,.7), 0 6px 16px -6px rgba(0,0,0,.5);
+  width: 86px; height: 86px;
+  object-fit: contain;
+  background: none; padding: 0; border-radius: 0;
+  filter: drop-shadow(0 3px 9px rgba(0,0,0,.5));
 }
 
 /* light brand + nav type on the green header */
