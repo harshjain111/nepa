@@ -918,10 +918,10 @@ h1, h2, h3, h4 {
 
 /* Mobile: lift content toward the top + size down logo/crest */
 @media (max-width: 640px) {
-  :root { --header-h: 92px; }
+  :root { --header-h: 80px; }
   .hero { justify-content: flex-start; }
   .hero__crest { width: 112px; height: 112px; }
-  .brand__logo { width: 78px; height: 78px; }
+  .brand__logo { width: 62px; height: 62px; }
   .brand__name { font-size: 1.2rem; }
   .brand__sub { font-size: .5rem; letter-spacing: .2em; }
 }
@@ -951,9 +951,9 @@ h1, h2, h3, h4 {
 }
 
 /* Big, plain NEPA logo (no badge) — a soft shadow lifts it off the green */
-:root { --header-h: 122px; }
+:root { --header-h: 106px; }
 .brand__logo {
-  width: 108px; height: 108px;
+  width: 86px; height: 86px;
   object-fit: contain;
   background: none; padding: 0; border-radius: 0;
   filter: drop-shadow(0 3px 9px rgba(0,0,0,.5));
