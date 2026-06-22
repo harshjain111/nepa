@@ -482,43 +482,75 @@ h1, h2, h3, h4 {
    and close the empty band above the marquee.
  * ---------------------------------------------------------- */
 .hero {
-  min-height: 100vh;
-  padding: calc(var(--header-h) + 22px) 0 0;
+  min-height: 100vh; min-height: 100svh;   /* one viewport on every device */
+  padding: calc(var(--header-h) + 18px) 0 16px;
   justify-content: center;
 }
-.hero__crest { width: 92px; height: 92px; margin-bottom: 8px; }
-.edition-chip { margin-bottom: 12px; }
-.hero__pre { margin-bottom: 2px; }
+.hero__crest { width: 82px; height: 82px; margin-bottom: 6px; }
+.hero__pre { margin: 0 0 2px; }
 .hero__title {
-  font-size: clamp(2.2rem, 5.6vw, 4.6rem);
-  margin: 0 0 8px;
+  font-size: clamp(2rem, 5.4vw, 4.4rem);
+  margin: 0 0 6px;
   line-height: 1.02;
 }
-.hero__ornament { margin: 0 auto 12px; }
-.hero__tag { margin-bottom: 18px; }
-.hero__chips { gap: 14px; margin-bottom: 18px; }
-.chip { padding: 12px 20px; }
-.hero__countdown { margin-top: 16px; gap: 8px; }
-.cd-unit { min-width: 66px; padding: 9px 6px 6px; }
-.cd-num { font-size: 1.7rem; }
-.cd-sep { font-size: 1.4rem; }
-
-/* Field hugs the bottom edge so there's no empty gap before the marquee */
-.hero__field { height: 150px; }
-/* Scroll cue would now overlap the condensed content — retire it on desktop */
+.hero__ornament { margin: 0 auto 10px; }
+.hero__tag { margin-bottom: 16px; }
+.hero__cta { margin-bottom: 0; }
+.hero__countdown { margin-top: 14px; gap: 6px; }
+.cd-unit { min-width: 62px; padding: 8px 6px 5px; }
+.cd-num { font-size: 1.6rem; }
+.cd-sep { font-size: 1.3rem; }
+.hero__field { height: 140px; }
 .hero__scroll { display: none; }
 
-/* On shorter laptops, let it breathe rather than clip */
-@media (max-height: 740px) {
-  .hero { min-height: auto; padding-bottom: 24px; }
-  .hero__crest { width: 76px; height: 76px; }
-  .hero__title { font-size: clamp(2rem, 5vw, 3.8rem); }
+/* compact info chips with icons (icon · label · value) */
+.hero__chips { display: flex; flex-wrap: nowrap; gap: 10px; justify-content: center; margin-bottom: 16px; }
+.chip {
+  flex: 1 1 0; min-width: 0; max-width: 188px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 11px 9px; text-align: center;
+}
+.chip::before { display: none; }   /* drop the old top hairline on the compact chip */
+.chip__ic { width: 22px; height: 22px; color: var(--gold-bright); margin-bottom: 3px; }
+.chip__label { font-size: .56rem; letter-spacing: .2em; margin-bottom: 0; }
+.chip__value { font-size: .92rem; line-height: 1.15; }
+
+/* phones: keep the whole hero on one screen */
+@media (max-width: 640px) {
+  .hero { padding: calc(var(--header-h) + 12px) 0 12px; }
+  .hero__crest { width: 58px; height: 58px; }
+  .hero__title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
+  .hero__tag { font-size: 1rem; margin-bottom: 12px; }
+  .hero__chips { gap: 7px; margin-bottom: 14px; }
+  .chip { padding: 9px 5px; }
+  .chip__ic { width: 18px; height: 18px; margin-bottom: 2px; }
+  .chip__label { font-size: .48rem; letter-spacing: .12em; }
+  .chip__value { font-size: .74rem; }
+  .hero__cta { flex-direction: row; gap: 8px; flex-wrap: nowrap; }
+  .hero__cta .btn { padding: 11px 14px; font-size: .8rem; }
+  .hero__countdown { margin-top: 10px; }
+  .cd-unit { min-width: 0; flex: 1; padding: 6px 2px 4px; }
+  .cd-num { font-size: 1.25rem; }
+  .countdown__units { gap: 5px; width: 100%; max-width: 320px; }
+  .countdown__lead, .countdown__note { font-size: .58rem; }
 }
 
-/* Mobile keeps the original generous stacking (it scrolls anyway) */
-@media (max-width: 640px) {
-  .hero { min-height: auto; padding-bottom: 28px; }
-  .hero__scroll { display: grid; }
+/* very short viewports (small laptops, landscape) — squeeze to fit */
+@media (max-height: 700px) {
+  .hero { padding: calc(var(--header-h) + 8px) 0 8px; }
+  .hero__crest { width: 48px; height: 48px; margin-bottom: 2px; }
+  .hero__pre { font-size: 1rem; }
+  .hero__title { font-size: clamp(1.4rem, 4vw, 2.4rem); margin-bottom: 4px; }
+  .hero__ornament { margin-bottom: 6px; }
+  .hero__tag { font-size: .95rem; margin-bottom: 8px; }
+  .hero__chips { margin-bottom: 8px; }
+  .chip { padding: 7px 8px; }
+  .hero__cta .btn { padding: 10px 18px; }
+  .hero__countdown { margin-top: 6px; gap: 3px; }
+  .cd-unit { min-width: 52px; padding: 5px 5px 3px; }
+  .cd-num { font-size: 1.25rem; }
+  .cd-sep { font-size: 1.1rem; }
+  .countdown__lead { font-size: .56rem; }
 }
 
 /* ==========================================================
