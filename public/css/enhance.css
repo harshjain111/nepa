@@ -79,6 +79,11 @@ h1, h2, h3, h4 {
 /* Eyebrows / labels read better in the grotesk at slightly tighter tracking */
 .eyebrow { font-family: var(--font-body); letter-spacing: .3em; }
 
+/* Hide the small category labels above section / page-hero titles —
+   the headings carry the meaning; the kickers read as clutter. */
+.section-head .eyebrow,
+.page-hero .eyebrow { display: none; }
+
 /* Refined gold scrollbar */
 * { scrollbar-width: thin; scrollbar-color: var(--gold) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
