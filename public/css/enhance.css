@@ -928,3 +928,50 @@ h1, h2, h3, h4 {
 @media (max-height: 700px) {
   .hero__crest { width: 70px; height: 70px; }
 }
+
+/* ==========================================================
+   26. HEADER — deep-green bar so the gold NEPA logo + type pop
+   ========================================================== */
+.site-header {
+  background: linear-gradient(180deg, rgba(16,38,25,.94), rgba(16,38,25,.84));
+  backdrop-filter: saturate(150%) blur(14px);
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  border-bottom: 1px solid rgba(212,169,58,.34);
+}
+.site-header.scrolled {
+  background: rgba(12,30,20,.96);
+  border-bottom-color: rgba(212,169,58,.55);
+  box-shadow: 0 12px 34px -18px rgba(0,0,0,.65);
+}
+/* thin gold top accent line */
+.site-header::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-bright), var(--gold), transparent);
+  opacity: .8;
+}
+
+/* NEPA logo as a clean cream badge with a gold ring → clearly visible */
+.brand__logo {
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #fffdf6, #f3ead2);
+  padding: 5px;
+  box-shadow: 0 0 0 1.5px rgba(212,169,58,.7), 0 6px 16px -6px rgba(0,0,0,.5);
+}
+
+/* light brand + nav type on the green header */
+.brand__name { color: var(--ivory); }
+.brand__sub { color: var(--gold-soft); }
+.brand__yr { color: var(--gold-bright); }
+.nav a { color: rgba(251,246,234,.84); }
+.nav a:hover, .nav a.is-active { color: var(--ivory); }
+.nav-toggle span { background: var(--ivory); }
+
+/* mobile dropdown panel matches the green header */
+@media (max-width: 860px) {
+  .nav {
+    background: rgba(12,30,20,.98);
+    border-bottom-color: rgba(212,169,58,.4);
+    backdrop-filter: blur(14px);
+  }
+  .nav a { color: rgba(251,246,234,.9); }
+}
