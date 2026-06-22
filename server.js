@@ -200,7 +200,7 @@ app.delete('/api/messages/:id', auth.middleware, wrap(async (req, res) => {
 }));
 
 // Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
-const PAGES = { '/admin': 'admin.html', '/programme': 'programme.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html' };
+const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html' };
 for (const [route, file] of Object.entries(PAGES)) {
   app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
 }

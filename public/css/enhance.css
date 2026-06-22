@@ -847,3 +847,84 @@ h1, h2, h3, h4 {
   .section[data-index] .container::before { font-size: 6rem; top: -1rem; opacity: .7; }
   body::after { opacity: .4; }
 }
+
+/* ==========================================================
+   25. HEADER + NAV REWORK — bigger logo, Sampark lockup,
+       creative nav, plus hero crest/chip/mobile polish
+   ========================================================== */
+:root { --header-h: 88px; }
+
+/* Brand lockup: Sampark 2026 (display) over Edible Oil Conclave (label) */
+.brand { gap: 14px; }
+.brand__logo { width: 60px; height: 60px; }
+.brand__text { gap: 1px; }
+.brand__name {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+  text-transform: none; letter-spacing: .005em; line-height: 1; color: var(--green);
+  white-space: nowrap;
+}
+.brand__yr { color: var(--gold-bright); }
+.brand__sub {
+  font-size: .58rem; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600;
+}
+
+/* Nav links — uppercase with a sliding gold underline */
+.nav { gap: 30px; }
+.nav a {
+  font-family: var(--font-body); font-size: .74rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; opacity: .82;
+  position: relative; padding: 4px 0;
+}
+.nav a:hover { opacity: 1; }
+.nav a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -4px; width: auto;
+  height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+  transform: scaleX(0); transform-origin: center;
+  transition: transform .3s var(--ease-out);
+}
+.nav a:hover::after, .nav a.is-active::after { transform: scaleX(1); }
+.nav a.is-active { opacity: 1; color: var(--green); }
+
+/* Register CTA with animated arrow */
+.nav__cta { display: inline-flex; align-items: center; gap: 7px; }
+.nav__cta svg { width: 15px; height: 15px; transition: transform .25s var(--ease-out); }
+.nav__cta:hover svg { transform: translateX(3px); }
+
+/* Animated hamburger (three bars → X) */
+.nav-toggle {
+  display: none; flex-direction: column; justify-content: center; gap: 5px;
+  width: 36px; height: 36px; background: none; border: 0; cursor: pointer; padding: 0;
+}
+.nav-toggle span { display: block; width: 24px; height: 2px; margin: 0 auto; background: var(--green); border-radius: 2px; transition: transform .3s var(--ease-out), opacity .2s; }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+@media (max-width: 860px) { .nav-toggle { display: flex; } }
+
+/* Bigger NEPA crest in the hero */
+.hero__crest { width: 112px; height: 112px; margin-bottom: 8px; }
+
+/* Hero info chips: dark glass so the text is clearly legible */
+.hero--photo .chip {
+  background: rgba(11, 26, 17, 0.5);
+  border-color: rgba(212, 169, 58, 0.5);
+  backdrop-filter: blur(8px);
+}
+.hero--photo .chip__value { color: var(--ivory); font-weight: 600; }
+.hero--photo .chip__label { color: var(--gold-soft); }
+.chip__ic { color: var(--gold-bright); }
+
+/* Mobile: lift content toward the top + size down logo/crest */
+@media (max-width: 640px) {
+  :root { --header-h: 74px; }
+  .hero { justify-content: flex-start; }
+  .hero__crest { width: 84px; height: 84px; }
+  .brand__logo { width: 48px; height: 48px; }
+  .brand__name { font-size: 1.2rem; }
+  .brand__sub { font-size: .5rem; letter-spacing: .2em; }
+}
+@media (max-height: 700px) {
+  .hero__crest { width: 70px; height: 70px; }
+}

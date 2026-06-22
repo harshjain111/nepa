@@ -9,8 +9,8 @@
 
 (function () {
   const NAV = [
-    { href: '/#why', label: 'Why Attend' },
-    { href: '/programme', label: 'Programme', path: '/programme' },
+    { href: '/#about', label: 'About' },
+    { href: '/#programme', label: 'Programme' },
     { href: '/#tariff', label: 'Tariff' },
     { href: '/sponsorship', label: 'Sponsorship', path: '/sponsorship' },
     { href: '/people', label: 'Council', path: '/people' },
@@ -18,26 +18,26 @@
   ];
   const here = location.pathname.replace(/\.html$/, '') || '/';
   const navLinks = NAV.map((n) =>
-    `<a href="${n.href}"${n.path && n.path === here ? ' class="is-active"' : ''}>${n.label}</a>`
+    `<a href="${n.href}"${n.path && n.path === here ? ' class="is-active"' : ''}><span>${n.label}</span></a>`
   ).join('');
 
   const HEADER = `
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <header class="site-header" id="siteHeader">
     <div class="container">
-      <a class="brand" href="/" aria-label="National Edible Oil Conclave 2026 — home">
-        <img class="brand__logo" src="/img/nepa-logo.png" alt="NEPA" width="56" height="56" />
+      <a class="brand" href="/" aria-label="Sampark 2026 — National Edible Oil Conclave — home">
+        <img class="brand__logo" src="/img/nepa-logo.png" alt="NEPA" width="72" height="72" />
         <span class="brand__text">
-          <span class="brand__name">Edible Oil Conclave</span>
-          <span class="brand__sub">संपर्क · Sampark 2026</span>
+          <span class="brand__name">Sampark <span class="brand__yr">2026</span></span>
+          <span class="brand__sub">Edible Oil Conclave</span>
         </span>
       </a>
       <nav class="nav" id="primaryNav">
         ${navLinks}
-        <button class="btn btn-primary" data-open-register>Register Now</button>
+        <button class="btn btn-primary nav__cta" data-open-register>Register<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="primaryNav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round" /></svg>
+        <span></span><span></span><span></span>
       </button>
     </div>
   </header>`;
@@ -61,7 +61,7 @@
           <h4>Explore</h4>
           <ul>
             <li><a href="/#why">Why Attend</a></li>
-            <li><a href="/programme">Programme</a></li>
+            <li><a href="/#programme">Programme</a></li>
             <li><a href="/#tariff">Delegate Tariff</a></li>
             <li><a href="/sponsorship">Sponsorship</a></li>
             <li><a href="/people">Council &amp; Committee</a></li>

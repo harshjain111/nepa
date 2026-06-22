@@ -79,7 +79,7 @@
 
       <div class="hero__cta reveal" data-delay="4">
         <button class="btn btn-primary btn-shine" data-open-register>Register as Delegate</button>
-        <a class="btn btn-ghost" href="/programme">View Programme</a>
+        <a class="btn btn-ghost" href="#programme">View Programme</a>
       </div>
 
       <div class="hero__countdown reveal" data-delay="4" id="countdown" aria-label="Time until the Conclave">
@@ -134,7 +134,7 @@
   </section>
 
   <!-- ===================== INVITATION ===================== -->
-  <section class="section invitation" id="invitation" data-index="02">
+  <section class="section invitation" id="about" data-index="02">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Invitation</span>
@@ -184,29 +184,15 @@
     </div>
   </section>
 
-  <!-- ===================== PROGRAMME TEASER ===================== -->
-  <section class="section programme-teaser" id="programme-teaser" data-index="03">
+  <!-- ===================== PROGRAMME ===================== -->
+  <section class="section programme" id="programme" data-index="03">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Programme</span>
         <h2>Two Days of Innovation &amp; Impact</h2>
         <p>From an Assamese welcome to the closing felicitations.</p>
       </div>
-      <div class="prog-teaser">
-        <div class="prog-teaser__day reveal">
-          <span class="day-col__tag">Day 01 · Saturday 19 Sep</span>
-          <h3 class="day-col__title">Arrival &amp; Welcome</h3>
-          <p>Registration &amp; Welcome · Panel Session · Cultural Evening followed by a Gala Dinner.</p>
-        </div>
-        <div class="prog-teaser__day reveal" data-delay="1">
-          <span class="day-col__tag">Day 02 · Sunday 20 Sep</span>
-          <h3 class="day-col__title">The Main Conclave</h3>
-          <p>Lamp Lighting · Panel Session · Addresses by the President, Guest of Honour &amp; Chief Guest · Felicitation · Lunch.</p>
-        </div>
-      </div>
-      <div class="text-center reveal" data-delay="1">
-        <a class="btn btn-ghost" href="/programme">View the full programme</a>
-      </div>
+      <div class="programme-grid" id="programmeGrid"><!-- injected by main.js --></div>
     </div>
   </section>
 
