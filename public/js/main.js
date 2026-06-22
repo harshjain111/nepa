@@ -81,15 +81,15 @@
 
   // The Mustard Oil Promotion Council (brochure p.2) — 9 members, verified roles.
   const COUNCIL = [
-    { name: 'Shri Babu Lal Data', role: 'President · COOIT', org: 'MOPA · Central Organization for Oil Industry & Trade', lead: true },
-    { name: 'Shri Suresh Nagpal', role: 'Chairman · COOIT', org: 'Mustard Oil Producers Association (MOPA)', lead: true },
-    { name: 'Shri Kailash Kabra', role: 'President · NEPA', org: 'National Edible Oil Promotion Association', lead: true },
-    { name: 'Shri Gajender Jha', role: 'General Secretary · COOIT', org: 'Central Organization for Oil Industry & Trade' },
-    { name: 'Shri Mahesh Goyal', role: 'Treasurer · COOIT', org: 'Central Organization for Oil Industry & Trade' },
-    { name: 'Shri Krishna Kumar Aggarwal', role: 'General Secretary · MOPA', org: 'Mustard Oil Producers Association (MOPA)' },
-    { name: 'Shri Dinesh Rathore', role: 'Advisor · NEPA', org: "UP Oil Miller's Association" },
-    { name: 'Shri Neeraj Bothra', role: 'Secretary & Convenor · NEPA', org: 'National Edible Oil Promotion Association' },
-    { name: 'Shri Prakash Kabra', role: 'Treasurer · NEPA', org: 'National Edible Oil Promotion Association' },
+    { name: 'Shri Babu Lal Data', role: 'President · COOIT', org: 'MOPA · Central Organization for Oil Industry & Trade', lead: true, img: '/img/council/babu-lal-data.jpg' },
+    { name: 'Shri Suresh Nagpal', role: 'Chairman · COOIT', org: 'Mustard Oil Producers Association (MOPA)', lead: true, img: '/img/council/suresh-nagpal.jpg' },
+    { name: 'Shri Kailash Kabra', role: 'President · NEPA', org: 'National Edible Oil Promotion Association', lead: true, img: '/img/council/kailash-kabra.jpg' },
+    { name: 'Shri Gajender Jha', role: 'General Secretary · COOIT', org: 'Central Organization for Oil Industry & Trade', img: '/img/council/gajender-jha.jpg' },
+    { name: 'Shri Mahesh Goyal', role: 'Treasurer · COOIT', org: 'Central Organization for Oil Industry & Trade', img: '/img/council/mahesh-goyal.jpg' },
+    { name: 'Shri Krishna Kumar Aggarwal', role: 'General Secretary · MOPA', org: 'Mustard Oil Producers Association (MOPA)', img: '/img/council/krishna-kumar-aggarwal.jpg' },
+    { name: 'Shri Dinesh Rathore', role: 'Advisor · NEPA', org: "UP Oil Miller's Association", img: '/img/council/dinesh-rathore.jpg' },
+    { name: 'Shri Neeraj Bothra', role: 'Secretary & Convenor · NEPA', org: 'National Edible Oil Promotion Association', img: '/img/council/neeraj-bothra.jpg' },
+    { name: 'Shri Prakash Kabra', role: 'Treasurer · NEPA', org: 'National Edible Oil Promotion Association', img: '/img/council/prakash-kabra.jpg' },
   ];
 
   // Conclave Organising Committee (brochure p.4) — 37 members, verified.
@@ -223,6 +223,7 @@
     if (!grid) return;
     grid.innerHTML = COUNCIL.map((m, i) => `
       <article class="leader${m.lead ? ' leader--lead' : ''} reveal" data-delay="${(i % 3) + 1}">
+        ${m.img ? `<img class="leader__photo" src="${m.img}" alt="${esc(m.name)}" loading="lazy" />` : ''}
         <span class="leader__name">${esc(m.name)}</span>
         <span class="leader__role">${esc(m.role)}</span>
         <span class="leader__org">${esc(m.org)}</span>
