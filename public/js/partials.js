@@ -26,7 +26,7 @@
   <header class="site-header" id="siteHeader">
     <div class="container">
       <a class="brand" href="/" aria-label="Sampark 2026 — National Edible Oil Conclave — home">
-        <img class="brand__logo" src="/img/nepa-logo.png" alt="NEPA" width="72" height="72" />
+        <img class="brand__logo" src="/img/nepa-mark.png" alt="NEPA" width="108" height="108" />
         <span class="brand__text">
           <span class="brand__name">Sampark <span class="brand__yr">2026</span></span>
           <span class="brand__sub">Edible Oil Conclave</span>
