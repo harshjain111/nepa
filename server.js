@@ -199,8 +199,11 @@ app.delete('/api/messages/:id', auth.middleware, wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
-// Admin page (local convenience; on Vercel, vercel.json rewrites /admin -> /admin.html)
-app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
+// Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
+const PAGES = { '/admin': 'admin.html', '/programme': 'programme.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html' };
+for (const [route, file] of Object.entries(PAGES)) {
+  app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
+}
 
 /* ------------------------------------------------------------------ *
  * START (only when run directly; on Vercel the app is imported)

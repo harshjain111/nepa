@@ -5,7 +5,7 @@
    Palette & type per CLAUDE.md §3.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Hanken+Grotesk:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap');
 
 :root {
   /* Palette */
@@ -23,7 +23,7 @@
   /* Type */
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-title: 'Fraunces', Georgia, serif;
-  --font-body: 'Hanken Grotesk', system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-body: 'Newsreader', Georgia, 'Times New Roman', serif;
 
   /* Layout */
   --maxw: 1180px;

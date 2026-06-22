@@ -15,66 +15,122 @@
       maximumFractionDigits: 0,
     }).format(n);
 
-  /* ---------------- Data arrays ---------------- */
-  const CHARTER = [
-    { t: 'Bridge between B2B Channel', d: 'Channelise cold-pressed, single-origin mustard oil through a unified network between manufacturers and distributors.' },
-    { t: 'Stand with the Mustard Farmers', d: 'Strengthen MSP support, ensure fair price discovery, and integrate the smallholder farmer into the National Mission on Edible Oils–Oilseeds.' },
-    { t: 'Educate & Counter Misinformation', d: 'Articulate, with evidence, the health virtues of mustard oil — its omega-3 content, low saturated fat, and place in Ayurveda and modern nutrition.' },
-    { t: 'Strengthen FSSAI Standards', d: 'Advocate robust standards, swift enforcement against adulteration, and preservation of the ban on blending in mustard oil.' },
-    { t: 'Build a Heritage Brand', d: 'Pursue Geographical Indication (GI) tags for regional varieties and project Indian mustard oil on the world stage.' },
-    { t: 'Develop Export Markets', d: 'Open new corridors for Indian mustard oil — to the diaspora, specialty retail, and global culinary traditions.' },
-    { t: 'Modernise the Ghani', d: 'Support technology adoption in extraction, packaging, traceability and food-safety without compromising the kachi ghani process.' },
-    { t: 'Unify the Value Chain', d: 'Bring producers, millers, refiners, packers, traders and retailers under one collective voice.' },
+  /* ============================================================
+     DATA — verified against the official NEPA brochure (8pp).
+     Event: National Edible Oil Conclave 2026 · "संपर्क / Sampark"
+     ============================================================ */
+
+  // Key Reasons to Attend (brochure p.3) — replaces the old "Charter".
+  const WHY = [
+    { t: 'Connect', d: 'Meet 400+ traders, manufacturers, buyers & industry stakeholders.' },
+    { t: 'Grow', d: 'Unlock sourcing, trade & distribution opportunities.' },
+    { t: 'Learn', d: 'Gain insights on markets, policy & future trends.' },
+    { t: 'Network', d: 'Build meaningful business relationships nationwide.' },
+    { t: 'Lead', d: "Be part of India's evolving edible oil ecosystem." },
   ];
 
+  // Two days of Innovation and Impact (brochure p.7).
   const PROGRAMME = [
     {
-      tag: 'Day One',
-      title: 'Saturday, 19 Sept 2026',
+      tag: 'Day 01',
+      title: 'Saturday, 19 September 2026',
+      note: 'Saturday is reserved for arrival, the opening dialogue between industry and trade, and the warmth of an Assamese welcome.',
       items: [
-        { time: '1:15 pm', event: 'Registration & Welcome Lunch' },
-        { time: '4:30 pm', event: 'Panel Session: Bridge between B2B Channel' },
-        { time: '7:30 pm', event: 'Cultural Evening: Bihu Performance & Gala Dinner' },
+        { time: '1:15 PM', event: 'Registration & Welcome' },
+        { time: '4:30 PM', event: 'Panel Session' },
+        { time: '7:30 PM', event: 'Cultural Evening, Followed by Gala Dinner' },
       ],
     },
     {
-      tag: 'Day Two',
-      title: 'Sunday, 20 Sept 2026',
+      tag: 'Day 02',
+      title: 'Sunday, 20 September 2026',
       items: [
-        { time: '8:30 am', event: 'Registration & Breakfast' },
-        { time: '10:00 am', event: 'Opening & Lamp Lighting' },
-        { time: '10:30 am', event: 'Panel: Pure Kachi Ghani — FSSAI Standards' },
-        { time: '11:00 am', event: 'Presidential Address — Shri Babu Lal Data, President, COOIT' },
-        { time: '11:15 am', event: 'Address — Shri Kailash Kabra, President, NEPA' },
-        { time: '11:30 am', event: 'Address — Shri Suresh Nagpal, Chairman, COOIT' },
-        { time: '11:45 am', event: "Chief Guest Address — Hon'ble Minister" },
-        { time: '12:45 pm', event: 'Industry–Government Dialogue' },
-        { time: '1:30 pm', event: 'Lunch' },
-        { time: '2:30 pm', event: 'Open Discussions' },
-        { time: '3:30 pm', event: 'Mustard Oil Excellence Awards' },
-        { time: '4:00 pm', event: 'The Guwahati Mustard Charter: Public Reading' },
-        { time: '4:30 pm', event: 'High Tea & Vote of Thanks' },
+        { time: '8:30 AM', event: 'Breakfast' },
+        { time: '10:00 AM', event: 'Opening Ceremony & Lighting of the Lamp' },
+        { time: '10:30 AM', event: 'Panel Session' },
+        { time: '11:00 AM', event: 'Address by President' },
+        { time: '11:30 AM', event: 'Address by Guest of Honour' },
+        { time: '11:45 AM', event: 'Address by Chief Guest' },
+        { time: '12:00 PM', event: 'Felicitation' },
+        { time: '1:30 PM', event: 'Lunch' },
       ],
     },
   ];
 
-  // Tier names per the official deck; figures to be announced.
-  const SPONSORS = [
-    { tier: 'Major Sponsor', note: 'Premier presence across the Conclave' },
-    { tier: 'Diamond', note: 'Delegates · 5-star rooms · stalls' },
-    { tier: 'Gold', note: 'Delegates · 5-star rooms · stall' },
-    { tier: 'Silver', note: 'Delegate · 5-star room · stall' },
-    { tier: 'Bronze', note: 'Delegate · 5-star room' },
+  // Sponsorship tariff (brochure p.5). All amounts + GST.
+  const SPONSOR_TIERS = [
+    { tier: 'Diamond', amount: '₹15,00,000', rank: 'diamond', inclusions: ['Premier presence across the Conclave', 'Top-tier branding & visibility'] },
+    { tier: 'Platinum', amount: '₹10,00,000', rank: 'platinum', inclusions: ['08 Delegates', '4 Rooms · 5 Star', 'Banners', 'Electronic Media', 'Souvenirs', '2 Stalls'] },
+    { tier: 'Gold', amount: '₹5,00,000', rank: 'gold', inclusions: ['04 Delegates', '2 Rooms · 5 Star', 'Banners', 'Electronic Media', 'Souvenirs', '1 Stall'] },
+    { tier: 'Silver', amount: '₹3,00,000', rank: 'silver', inclusions: ['02 Delegates', '1 Room · 5 Star', 'Banners', 'Electronic Media', 'Souvenirs', '1 Stall'] },
+    { tier: 'Bronze', amount: '₹1,00,000', rank: 'bronze', inclusions: ['02 Delegates', '1 Room · 5 Star', 'Banners', 'Electronic Media', 'Souvenirs'] },
+    { tier: 'Kit Bag Sponsor', amount: '₹5,00,000', rank: 'kit', inclusions: ['Delegate kit branding', 'Logo on every conclave bag'] },
   ];
 
-  // Conclave Organising Committee (from the official deck).
+  // Associate / category sponsorships (brochure p.5). All + GST.
+  const SPONSOR_OTHER = [
+    { tier: 'Cocktail Sponsor', amount: '₹8,00,000' },
+    { tier: 'Dinner Sponsor', amount: '₹7,00,000' },
+    { tier: 'Lunch Sponsor', amount: '₹6,00,000' },
+    { tier: 'Table Branding', amount: '₹2,00,000' },
+    { tier: 'Gift Sponsor', amount: '₹2,00,000' },
+    { tier: 'Hi-Tea Sponsor', amount: '₹2,00,000' },
+    { tier: 'Exhibition Stall', amount: '₹70,000', note: 'Per stall · 3m × 3m · incl. 1 delegate + 1 room (3 Star)' },
+    { tier: 'Magazine Ad', amount: '₹25,000' },
+  ];
+
+  // The Mustard Oil Promotion Council (brochure p.2) — 9 members, verified roles.
+  const COUNCIL = [
+    { name: 'Shri Babu Lal Data', role: 'President · COOIT', org: 'MOPA · Central Organization for Oil Industry & Trade', lead: true },
+    { name: 'Shri Suresh Nagpal', role: 'Chairman · COOIT', org: 'Mustard Oil Producers Association (MOPA)', lead: true },
+    { name: 'Shri Kailash Kabra', role: 'President · NEPA', org: 'National Edible Oil Promotion Association', lead: true },
+    { name: 'Shri Gajender Jha', role: 'General Secretary · COOIT', org: 'Central Organization for Oil Industry & Trade' },
+    { name: 'Shri Mahesh Goyal', role: 'Treasurer · COOIT', org: 'Central Organization for Oil Industry & Trade' },
+    { name: 'Shri Krishna Kumar Aggarwal', role: 'General Secretary · MOPA', org: 'Mustard Oil Producers Association (MOPA)' },
+    { name: 'Shri Dinesh Rathore', role: 'Advisor · NEPA', org: "UP Oil Miller's Association" },
+    { name: 'Shri Neeraj Bothra', role: 'Secretary & Convenor · NEPA', org: 'National Edible Oil Promotion Association' },
+    { name: 'Shri Prakash Kabra', role: 'Treasurer · NEPA', org: 'National Edible Oil Promotion Association' },
+  ];
+
+  // Conclave Organising Committee (brochure p.4) — 37 members, verified.
   const COMMITTEE = [
-    'Shri Sanjay Goenka', 'Shri Harnish Jain', 'Shri Manish Jain', 'Shri Raju Khandelwal',
-    'Shri Satpal Lather', 'Smt. Rajni Aggarwal', 'Shri Yash Aggarwal', 'Shri Mahesh Rathore',
-    'Shri Satish Babbar', 'Shri Dinesh Goyal', 'Shri Lalit Goyal', 'Shri Vinod Rajput',
-    'Shri Gaurav Thakar', 'Shri Himanshu Aggarwal', 'Shri S.K. Jain', 'Shri Bharat Bhagat',
-    'Shri Kumar Krishan Goyal', 'Shri Ajay Gupta', 'Shri Deepak Kanda', 'Shri Inder Aggarwal',
-    'Shri Sandeep Aggarwal', 'Shri Sushil Tayal',
+    { name: 'Shri Dilip Khandelwal', city: 'Cuttack', role: 'Vice President' },
+    { name: 'Shri Mukesh Agarwal', city: 'Kolkata', role: 'Vice President' },
+    { name: 'Shri Mulchand Baid', city: 'Silchar', role: 'Vice President' },
+    { name: 'Shri Dinesh Rathi', city: 'Guwahati', role: 'Joint Secretary' },
+    { name: 'Shri Gautam Deorah', city: 'Guwahati', role: 'Joint Treasurer' },
+    { name: 'Shri Praveen Kothari', city: 'Guwahati', role: 'Editor' },
+    { name: 'Shri Mohit Baid', city: 'Guwahati', role: 'Sub Editor' },
+    { name: 'Shri Vineet Golcha', city: 'Karimganj' },
+    { name: 'Shri Moses Zanunsiama', city: 'Aizawl' },
+    { name: 'Shri Vaibhav Jain', city: 'Guwahati' },
+    { name: 'Shri Gagan Deorah', city: 'Shillong' },
+    { name: 'Shri Balram Choudhary', city: 'Barpeta' },
+    { name: 'Shri Mukul Deka', city: 'Mangaldoi' },
+    { name: 'Shri Siyaram Jaiswal', city: 'Tezpur' },
+    { name: 'Shri Mahendra Chandak', city: 'Dhekiajuli' },
+    { name: 'Shri Vivek Goel', city: 'Siliguri' },
+    { name: 'Shri Shiv (Dabbu) Agarwal', city: 'Guwahati' },
+    { name: 'Shri Kamal Jain', city: 'Guwahati' },
+    { name: 'Shri Rahul Gangh', city: 'Guwahati' },
+    { name: 'Shri Niru Jain', city: 'Guwahati' },
+    { name: 'Shri Rakesh Surana', city: 'Guwahati' },
+    { name: 'Shri Kapil Jha', city: 'Guwahati' },
+    { name: 'Shri Navin Jain', city: 'Siliguri' },
+    { name: 'Shri Vishal Sharma', city: 'Jaipur' },
+    { name: 'Shri Khokha Mandal', city: 'Guwahati' },
+    { name: 'Shri Suresh Harlalka', city: 'Dhubri' },
+    { name: 'Shri Anil Jain', city: 'Guwahati' },
+    { name: 'Shri Naresh Somani', city: 'Guwahati' },
+    { name: 'Shri Arvind Mour', city: 'Guwahati' },
+    { name: 'Shri Manoj Sethia', city: 'Guwahati' },
+    { name: 'Shri Sanjay Deorah', city: 'Dibrugarh' },
+    { name: 'Shri Binod Ghorawat', city: 'Tinsukia' },
+    { name: 'Shri Sawarmal Agarwal', city: 'Tinsukia' },
+    { name: 'Shri Deepu Beria', city: 'Jorhat' },
+    { name: 'Shri Nirmal Kumar Dargar', city: 'Jaipur' },
+    { name: 'Shri Amit Choudhury', city: 'Guwahati' },
+    { name: 'Shri Arun Kedia', city: 'Kolkata' },
   ];
 
   /* ---------------- Escape helper ---------------- */
@@ -83,43 +139,36 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
     );
 
-  /* ---------------- Charter pillar icons (line-art SVG) ---------------- */
-  // One per pillar, in CHARTER order. Stroke inherits currentColor (gold).
+  /* ---------------- Icons (line-art SVG; stroke = currentColor) ---------------- */
   const ICON = (inner) =>
     `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
-  const CHARTER_ICONS = [
-    // 1 — Bridge between B2B (exchange / bridge)
-    ICON('<path d="M4 22c4-7 20-7 24 0"/><path d="M4 22v3M28 22v3M11 19v6M16 17.5V25M21 19v6"/><path d="M9 9l3-3 3 3M11 6v6"/><path d="M23 15l-3 3-3-3M21 18v-6"/>'),
-    // 2 — Stand with farmers (wheat sheaf)
-    ICON('<path d="M16 28V13"/><path d="M16 13c0-3-2-5-4-6 0 3 1 5 4 6Zm0 0c0-3 2-5 4-6 0 3-1 5-4 6Z"/><path d="M16 18c0-2.5-2-4-3.5-4.8 0 2.4 1 4 3.5 4.8Zm0 0c0-2.5 2-4 3.5-4.8 0 2.4-1 4-3.5 4.8Z"/><path d="M10 28h12"/>'),
-    // 3 — Educate & counter misinformation (open book)
-    ICON('<path d="M16 9c-2.5-1.8-6-2-9-1.2V23c3-.8 6.5-.6 9 1.2 2.5-1.8 6-2 9-1.2V7.8c-3-.8-6.5-.6-9 1.2Z"/><path d="M16 9v15"/>'),
-    // 4 — Strengthen FSSAI standards (shield check)
-    ICON('<path d="M16 4l9 3v7c0 6-4 10-9 12-5-2-9-6-9-12V7l9-3Z"/><path d="M12 15.5l3 3 5-6"/>'),
-    // 5 — Build a heritage brand (rosette / medal)
-    ICON('<circle cx="16" cy="13" r="6"/><path d="M16 10.2l1.3 2.4 2.7.4-2 1.9.5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-1.9 2.7-.4Z"/><path d="M12.5 18l-2 9 5.5-3 5.5 3-2-9"/>'),
-    // 6 — Develop export markets (globe)
-    ICON('<circle cx="16" cy="16" r="11"/><path d="M5 16h22M16 5c3 3 4.5 7 4.5 11S19 24 16 27c-3-3-4.5-7-4.5-11S13 8 16 5Z"/>'),
-    // 7 — Modernise the ghani (gear / mill)
-    ICON('<circle cx="16" cy="16" r="4"/><path d="M16 5v3M16 24v3M5 16h3M24 16h3M8.2 8.2l2.1 2.1M21.7 21.7l2.1 2.1M23.8 8.2l-2.1 2.1M10.3 21.7l-2.1 2.1"/>'),
-    // 8 — Unify the value chain (links)
-    ICON('<rect x="5" y="13" width="11" height="6" rx="3"/><rect x="16" y="13" width="11" height="6" rx="3"/>'),
+  const WHY_ICONS = [
+    // Connect — interlocking rings
+    ICON('<circle cx="13" cy="16" r="7"/><circle cx="19" cy="16" r="7"/>'),
+    // Grow — upward trend
+    ICON('<path d="M5 22h22"/><path d="M6 21l7-7 4 4 9-10"/><path d="M22 8h4v4"/>'),
+    // Learn — lightbulb
+    ICON('<path d="M16 4a8 8 0 0 0-5 14c1 .9 1.5 2 1.5 3h7c0-1 .5-2.1 1.5-3a8 8 0 0 0-5-14Z"/><path d="M13 25h6M14 28h4"/>'),
+    // Network — connected nodes
+    ICON('<circle cx="16" cy="7" r="3"/><circle cx="7" cy="23" r="3"/><circle cx="25" cy="23" r="3"/><path d="M16 10l-7 10M16 10l7 10M10 23h12"/>'),
+    // Lead — flag
+    ICON('<path d="M9 5v23"/><path d="M9 6h15l-3.5 4.5L24 15H9"/>'),
   ];
 
-  /* ---------------- Render cards ---------------- */
-  function renderCharter() {
-    const grid = document.getElementById('charterGrid');
+  /* ---------------- Render: Why Attend ---------------- */
+  function renderWhy() {
+    const grid = document.getElementById('whyGrid');
     if (!grid) return;
-    grid.innerHTML = CHARTER.map((c, i) => `
-      <article class="charter-card reveal" data-delay="${(i % 4) + 1}">
-        <span class="charter-card__icon">${CHARTER_ICONS[i] || ''}</span>
-        <span class="charter-card__no">${String(i + 1).padStart(2, '0')}</span>
+    grid.innerHTML = WHY.map((c, i) => `
+      <article class="why-card reveal" data-delay="${(i % 4) + 1}">
+        <span class="why-card__icon">${WHY_ICONS[i] || ''}</span>
         <h3>${esc(c.t)}</h3>
         <p>${esc(c.d)}</p>
       </article>`).join('');
   }
 
+  /* ---------------- Render: Programme ---------------- */
   function renderProgramme() {
     const grid = document.getElementById('programmeGrid');
     if (!grid) return;
@@ -136,25 +185,59 @@
               <span class="timeline__event">${esc(it.event)}</span>
             </li>`).join('')}
         </ul>
+        ${day.note ? `<p class="day-col__note">${esc(day.note)}</p>` : ''}
       </div>`).join('');
   }
 
+  /* ---------------- Render: Sponsorship ---------------- */
+  const sponsorMailto = (tier) =>
+    `mailto:nepaconnect2026@gmail.com?subject=${encodeURIComponent('Sponsorship — ' + tier + ' — National Edible Oil Conclave 2026')}`;
+
   function renderSponsors() {
     const grid = document.getElementById('sponsorGrid');
+    if (grid) {
+      grid.innerHTML = SPONSOR_TIERS.map((s, i) => `
+        <article class="sponsor-card sponsor-card--${s.rank} reveal" data-tier="${esc(s.tier)}" data-delay="${(i % 3) + 1}">
+          <span class="sponsor-card__tier">${esc(s.tier)}</span>
+          <span class="sponsor-card__amount">${esc(s.amount)} <em>+ GST</em></span>
+          <ul class="sponsor-card__incl">
+            ${s.inclusions.map((x) => `<li>${esc(x)}</li>`).join('')}
+          </ul>
+          <a class="btn btn-ghost btn-block sponsor-card__btn" href="${sponsorMailto(s.tier)}">Enquire</a>
+        </article>`).join('');
+    }
+    const other = document.getElementById('sponsorOther');
+    if (other) {
+      other.innerHTML = SPONSOR_OTHER.map((s, i) => `
+        <article class="sponsor-mini reveal" data-delay="${(i % 4) + 1}">
+          <span class="sponsor-mini__tier">${esc(s.tier)}</span>
+          <span class="sponsor-mini__amount">${esc(s.amount)} <em>+ GST</em></span>
+          ${s.note ? `<span class="sponsor-mini__note">${esc(s.note)}</span>` : ''}
+        </article>`).join('');
+    }
+  }
+
+  /* ---------------- Render: Council ---------------- */
+  function renderCouncil() {
+    const grid = document.getElementById('councilGrid');
     if (!grid) return;
-    grid.innerHTML = SPONSORS.map((s, i) => `
-      <article class="sponsor-card reveal" data-tier="${esc(s.tier)}" data-delay="${(i % 4) + 1}">
-        <span class="sponsor-card__tier">${esc(s.tier)}</span>
-        <span class="sponsor-card__amount sponsor-card__amount--soon">Coming soon</span>
-        <span class="sponsor-card__note">${esc(s.note)}</span>
-        <a class="sponsor-card__btn" href="mailto:nepaconnect2026@gmail.com?subject=${encodeURIComponent('Sponsorship — ' + s.tier + ' — Mustard Conclave 2026')}">Contact Secretariat</a>
+    grid.innerHTML = COUNCIL.map((m, i) => `
+      <article class="leader${m.lead ? ' leader--lead' : ''} reveal" data-delay="${(i % 3) + 1}">
+        <span class="leader__name">${esc(m.name)}</span>
+        <span class="leader__role">${esc(m.role)}</span>
+        <span class="leader__org">${esc(m.org)}</span>
       </article>`).join('');
   }
 
+  /* ---------------- Render: Organising Committee ---------------- */
   function renderCommittee() {
     const list = document.getElementById('committeeList');
     if (!list) return;
-    list.innerHTML = COMMITTEE.map((name) => `<li>${esc(name)}</li>`).join('');
+    list.innerHTML = COMMITTEE.map((m) => `
+      <li class="committee-item">
+        <span class="committee-item__name">${esc(m.name)}</span>
+        <span class="committee-item__meta">${m.role ? esc(m.role) + ' · ' : ''}${esc(m.city)}</span>
+      </li>`).join('');
   }
 
   /* ---------------- Reveal on scroll ---------------- */
@@ -607,23 +690,12 @@
     els.forEach((el) => io.observe(el));
   }
 
-  /* ---------------- Charter card pointer glow ---------------- */
-  function initCharterGlow() {
-    const grid = document.getElementById('charterGrid');
-    if (!grid) return;
-    grid.addEventListener('pointermove', (e) => {
-      const card = e.target.closest('.charter-card');
-      if (!card) return;
-      const r = card.getBoundingClientRect();
-      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    });
-  }
-
   /* ---------------- Boot ---------------- */
   function boot(config) {
-    renderCharter();
+    renderWhy();
     renderProgramme();
     renderSponsors();
+    renderCouncil();
     renderCommittee();
     initHeader();
     initRegistration(config);
@@ -631,7 +703,6 @@
     initScrollProgress();
     initCountdown(config);
     initCounters();
-    initCharterGlow();
     initParticles();
     // primary register CTAs get the sheen sweep
     document.querySelectorAll('[data-open-register].btn-primary').forEach((b) => b.classList.add('btn-shine'));

@@ -26,6 +26,19 @@
     card.style.setProperty('--my', `${e.clientY - r.top}px`);
   }, { passive: true });
 
+  /* ---- Hero video: reveal + play only if a real clip actually loads ---- */
+  const heroVideo = document.getElementById('heroVideo');
+  if (heroVideo) {
+    heroVideo.addEventListener('loadeddata', () => {
+      if (heroVideo.videoWidth > 0) {
+        heroVideo.classList.add('is-playing');
+        document.querySelector('.hero')?.classList.add('has-video');
+        if (!reduce) { const p = heroVideo.play(); if (p && p.catch) p.catch(() => {}); }
+      }
+    });
+    // a missing source fires 'error' on the <source>; nothing else to do — it stays hidden.
+  }
+
   if (reduce) return; // skip the heavier motion below
 
   /* ---- 2. Hero parallax ---- */

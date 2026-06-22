@@ -53,9 +53,11 @@ body::after {
  * ---------------------------------------------------------- */
 ::selection { background: rgba(212, 169, 58, 0.32); color: var(--green-deep); }
 
-/* Fraunces is a variable serif — let optical sizing + soft details shine */
+/* All-serif system: Fraunces (display) + Newsreader (text). Let optical sizing shine. */
 html { font-optical-sizing: auto; }
-body { font-weight: 400; letter-spacing: -0.002em; }
+body { font-weight: 400; letter-spacing: 0; font-size: 1.02rem; }
+/* Newsreader reads best with a touch more leading for body copy */
+p, li, .invitation-body, .field input, .field textarea { font-optical-sizing: auto; }
 h1, h2, h3, h4 {
   text-wrap: balance;
   font-optical-sizing: auto;
@@ -368,6 +370,23 @@ h1, h2, h3, h4 {
 .charter-card:hover .charter-card__icon { color: var(--gold-bright); transform: scale(1.12) rotate(-4deg); }
 
 /* ---------------------------------------------------------- *
+   14a. OPTIONAL HERO VIDEO (auto-plays only once it loads)
+ * ---------------------------------------------------------- */
+.hero__video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0; pointer-events: none;
+  opacity: 0; transition: opacity 1.2s var(--ease-out);
+}
+.hero__video.is-playing { opacity: .34; }
+/* keep the title readable over any video */
+.hero.has-video::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 30%, rgba(251,246,234,.55), rgba(251,246,234,.82));
+}
+
+/* ---------------------------------------------------------- *
    14. HERO MUSTARD-FIELD MOTION GRAPHIC
  * ---------------------------------------------------------- */
 .hero__field {
@@ -469,6 +488,264 @@ h1, h2, h3, h4 {
 @media (max-width: 640px) {
   .hero { min-height: auto; padding-bottom: 28px; }
   .hero__scroll { display: grid; }
+}
+
+/* ==========================================================
+   19. BROCHURE ALIGNMENT — new identity, pages & components
+   ========================================================== */
+
+/* Active nav link */
+.nav a.is-active { opacity: 1; }
+.nav a.is-active::after { width: 100%; }
+
+/* Hero theme line + Sampark kicker (Devanagari sits well in Hanken) */
+.theme-chip {
+  display: inline-block;
+  margin: 0 auto 22px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--green); background: rgba(212,169,58,.16);
+  border: 1px solid var(--gold); border-radius: 999px; padding: 6px 16px;
+}
+.hero__pre { letter-spacing: .12em; }
+
+/* Assamese "gamosa" woven accent — red/ivory/gold repeating rule */
+.gamosa-rule, .page-hero::after, .site-footer::after {
+  content: '';
+  display: block; height: 6px;
+  background:
+    repeating-linear-gradient(90deg, #B23A2E 0 10px, transparent 10px 13px),
+    linear-gradient(90deg, transparent, rgba(197,162,83,.5), transparent);
+  opacity: .55;
+}
+.site-footer { position: relative; }
+.site-footer::after { position: absolute; inset: 0 0 auto 0; opacity: .5; }
+
+/* ---- Sub-page hero ---- */
+.page-hero {
+  position: relative;
+  padding: calc(var(--header-h) + 64px) 0 52px;
+  text-align: center;
+  background:
+    radial-gradient(800px 360px at 50% -10%, rgba(233,185,73,.22), transparent 60%),
+    linear-gradient(180deg, var(--ivory), var(--ivory-2));
+  border-bottom: 1px solid rgba(197,162,83,.25);
+}
+.page-hero::after { position: absolute; inset: auto 0 0 0; }
+.page-hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  margin: 6px 0 12px;
+}
+.page-hero p { color: var(--muted); max-width: 640px; margin: 0 auto 22px; font-size: 1.05rem; }
+
+/* ---- WHY ATTEND ---- */
+.why-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(5, 1fr);
+  margin-bottom: 40px;
+}
+.why-card {
+  position: relative; overflow: hidden;
+  text-align: center;
+  padding: 30px 20px;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, #fff, #fffdf6) padding-box,
+    linear-gradient(160deg, rgba(212,169,58,.7), rgba(197,162,83,.15) 50%, rgba(212,169,58,.6)) border-box;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-lift);
+  transition: transform .35s var(--ease-spring), box-shadow .35s ease;
+}
+.why-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-deep); }
+.why-card__icon {
+  width: 46px; height: 46px; margin: 0 auto 14px;
+  display: grid; place-items: center;
+  color: var(--gold-bright);
+  border: 1px solid rgba(212,169,58,.5); border-radius: 50%;
+  background: rgba(212,169,58,.08);
+}
+.why-card__icon svg { width: 24px; height: 24px; }
+.why-card h3 { font-size: 1.25rem; margin: 0 0 6px; }
+.why-card p { font-size: .9rem; color: var(--muted); margin: 0; }
+
+/* ---- PROGRAMME teaser + note ---- */
+.prog-teaser {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 28px;
+}
+.prog-teaser__day {
+  padding: 28px 26px; border-radius: var(--radius);
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(135deg, rgba(212,169,58,.6), rgba(197,162,83,.12) 50%, rgba(212,169,58,.5)) border-box;
+  border: 1px solid transparent; box-shadow: var(--shadow-lift);
+}
+.prog-teaser__day .day-col__title { margin: 6px 0 8px; }
+.prog-teaser__day p { color: var(--muted); margin: 0; }
+.day-col__note {
+  margin: 18px 0 0; padding: 14px 16px;
+  background: rgba(31,61,46,.05); border-left: 3px solid var(--gold);
+  border-radius: 8px; font-size: .88rem; font-style: italic; color: var(--green-2);
+}
+
+/* ---- TARIFF split (delegate + sponsor teaser) ---- */
+.tariff-split {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: stretch;
+  max-width: 940px; margin: 0 auto;
+}
+.tariff-split .delegate-card { max-width: none; width: auto; }
+.delegate-row__price em {
+  font-style: normal; font-size: .72rem; color: var(--muted);
+  font-family: var(--font-body); margin-left: 3px; letter-spacing: .04em;
+}
+.price-gst-note { font-size: .76rem; color: var(--muted); text-align: center; margin: 10px 0 0; }
+
+.sponsor-teaser {
+  display: flex; flex-direction: column;
+  padding: 30px 28px; border-radius: var(--radius);
+  background:
+    radial-gradient(420px 240px at 100% 0%, rgba(233,185,73,.18), transparent 60%),
+    linear-gradient(180deg, var(--green-2), var(--green-deep));
+  color: var(--ivory);
+  border: 1px solid rgba(212,169,58,.4);
+  box-shadow: var(--shadow-deep);
+  transition: transform .35s var(--ease-spring), box-shadow .35s ease;
+}
+.sponsor-teaser:hover { transform: translateY(-6px); box-shadow: var(--shadow-deep), 0 0 0 1px var(--gold); }
+.sponsor-teaser .eyebrow { color: var(--gold-soft); }
+.sponsor-teaser h3 { color: var(--ivory); font-size: 1.6rem; margin: 0 0 8px; }
+.sponsor-teaser p { color: rgba(251,246,234,.85); font-size: .95rem; }
+.sponsor-teaser p strong { color: var(--gold-soft); }
+.sponsor-teaser__list { list-style: none; padding: 0; margin: 6px 0 18px; display: grid; gap: 8px; }
+.sponsor-teaser__list li { font-size: .86rem; color: rgba(251,246,234,.82); padding-left: 18px; position: relative; }
+.sponsor-teaser__list li::before { content: ''; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
+.sponsor-teaser__cta { margin-top: auto; font-weight: 700; color: var(--gold-soft); letter-spacing: .02em; }
+
+/* ---- VENUE perk list / contact plain ---- */
+.perk-list { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 12px; }
+.perk-list li { position: relative; padding-left: 26px; color: #41463a; }
+.perk-list li::before {
+  content: '✦'; position: absolute; left: 0; top: 0; color: var(--gold-bright); font-size: .9rem;
+}
+.contact-list__plain { color: var(--green); font-weight: 600; }
+
+/* ==========================================================
+   20. SPONSORSHIP PAGE — tiers with amounts & inclusions
+   ========================================================== */
+.sponsor-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.sponsor-card {
+  text-align: left; padding: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.sponsor-card__tier {
+  display: block; padding: 16px 20px 12px;
+  font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; color: var(--ivory);
+  background: linear-gradient(135deg, var(--green-2), var(--green-deep));
+}
+.sponsor-card--diamond .sponsor-card__tier { background: linear-gradient(135deg, #2C5C6E, #16313b); }
+.sponsor-card--platinum .sponsor-card__tier { background: linear-gradient(135deg, #5b6168, #2f3338); }
+.sponsor-card--gold .sponsor-card__tier { background: linear-gradient(135deg, #C99A2E, #8a6512); }
+.sponsor-card--silver .sponsor-card__tier { background: linear-gradient(135deg, #7d828a, #4a4e54); }
+.sponsor-card--bronze .sponsor-card__tier { background: linear-gradient(135deg, #A66A38, #6e421f); }
+.sponsor-card--kit .sponsor-card__tier { background: linear-gradient(135deg, #2F5D3A, #16301f); }
+.sponsor-card__amount {
+  display: block; padding: 14px 20px 6px;
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--sienna);
+}
+.sponsor-card__amount em { font-style: normal; font-size: .72rem; color: var(--muted); font-family: var(--font-body); }
+.sponsor-card__incl { list-style: none; margin: 0; padding: 4px 20px 12px; display: grid; gap: 7px; flex: 1; }
+.sponsor-card__incl li { font-size: .86rem; color: #41463a; padding-left: 18px; position: relative; }
+.sponsor-card__incl li::before { content: ''; position: absolute; left: 0; top: .5em; width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
+.sponsor-card__btn { margin: 0 20px 18px; }
+
+/* Other / category sponsorships */
+.sponsor-other { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.sponsor-mini {
+  padding: 18px 18px; border-radius: var(--radius); text-align: center;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(135deg, rgba(212,169,58,.55), rgba(197,162,83,.12) 50%, rgba(212,169,58,.5)) border-box;
+  border: 1px solid transparent; box-shadow: var(--shadow-lift);
+}
+.sponsor-mini__tier { display: block; font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--green); }
+.sponsor-mini__amount { display: block; color: var(--sienna); font-weight: 700; margin-top: 4px; }
+.sponsor-mini__amount em { font-style: normal; font-size: .7rem; color: var(--muted); font-weight: 500; }
+.sponsor-mini__note { display: block; font-size: .76rem; color: var(--muted); margin-top: 6px; }
+
+.delegate-strip {
+  display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap;
+  padding: 24px 28px; border-radius: var(--radius);
+  background:
+    linear-gradient(#fff,#fffdf6) padding-box,
+    linear-gradient(135deg, var(--gold-bright), rgba(212,169,58,.2) 50%, var(--gold-bright)) border-box;
+  border: 1px solid transparent; box-shadow: var(--shadow-lift);
+}
+.delegate-strip h3 { margin: 4px 0 6px; }
+.delegate-strip p { margin: 0; color: var(--muted); font-size: .92rem; }
+.delegate-strip p strong { color: var(--sienna); }
+
+/* ==========================================================
+   21. PEOPLE PAGE — council + committee
+   ========================================================== */
+.council-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.leader__org { display: block; margin-top: 6px; font-size: .78rem; color: var(--muted); line-height: 1.4; }
+.committee-section { background: var(--ivory-2); }
+.committee-item { display: flex; flex-direction: column; }
+.committee-item__name { font-weight: 600; color: var(--green); }
+.committee-item__meta { font-size: .78rem; color: var(--muted); }
+.committee__list { gap: 16px 22px; }
+
+/* ==========================================================
+   23. HERITAGE PHOTO BANNER — real brochure artwork CTA
+   ========================================================== */
+.final-cta--photo {
+  position: relative;
+  overflow: hidden;
+  min-height: 460px;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(212,169,58,.4);
+  background: var(--green-deep);
+}
+.final-cta__bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transform: scale(1.02);
+  transition: transform 8s ease;
+}
+.final-cta--photo:hover .final-cta__bg { transform: scale(1.08); }
+/* legibility scrim at the bottom for the CTA block */
+.final-cta--photo::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, transparent 38%, rgba(13,32,22,.18) 58%, rgba(13,32,22,.86) 100%);
+}
+.final-cta--photo .final-cta__inner {
+  position: relative; z-index: 2;
+  text-align: center; padding: 0 24px 34px;
+}
+.final-cta--photo .final-cta__inner h2 { color: var(--ivory); margin: 0 0 6px; }
+.final-cta--photo .final-cta__inner p { color: rgba(251,246,234,.9); margin: 0 0 18px; }
+@media (max-width: 560px) { .final-cta--photo { min-height: 380px; } }
+
+/* ==========================================================
+   24. RESPONSIVE — new components
+   ========================================================== */
+@media (max-width: 1024px) {
+  .why-grid { grid-template-columns: repeat(3, 1fr); }
+  .sponsor-grid { grid-template-columns: repeat(2, 1fr); }
+  .sponsor-other { grid-template-columns: repeat(2, 1fr); }
+  .council-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .tariff-split { grid-template-columns: 1fr; }
+  .prog-teaser { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .why-grid { grid-template-columns: 1fr 1fr; }
+  .sponsor-grid { grid-template-columns: 1fr; }
+  .sponsor-other { grid-template-columns: 1fr 1fr; }
+  .council-grid { grid-template-columns: 1fr; }
+  .delegate-strip { flex-direction: column; align-items: stretch; text-align: center; }
 }
 
 /* ---------------------------------------------------------- *

@@ -5,6 +5,9 @@
   },
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/programme", "destination": "/programme.html" },
+    { "source": "/sponsorship", "destination": "/sponsorship.html" },
+    { "source": "/people", "destination": "/people.html" },
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }

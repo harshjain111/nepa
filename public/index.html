@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Mustard Oil Promotion Conclave 2026 · NEPA, Guwahati</title>
-  <meta name="description" content="Inaugural National Mustard Oil Promotion Conclave 2026 — 19–20 September 2026, Mayfair Spring Valley Resort, Guwahati. For the Authentic. For the Pure. For Bharat." />
+  <title>National Edible Oil Conclave 2026 · संपर्क Sampark · NEPA, Guwahati</title>
+  <meta name="description" content="संपर्क — the Inaugural National Edible Oil Conclave 2026. 19–20 September 2026, Mayfair Spring Valley Resort, Sonapur, Guwahati. Theme: Mustard Oil Promotion. Hosted by NEPA. Register as a delegate." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/css/styles.css" />
@@ -13,97 +13,52 @@
 </head>
 <body>
 
-  <!-- scroll progress -->
-  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
-
-  <!-- ===================== HEADER ===================== -->
-  <header class="site-header" id="siteHeader">
-    <div class="container">
-      <a class="brand" href="#top" aria-label="Mustard Oil Promotion Conclave 2026 — home">
-        <img class="brand__logo" src="/img/nepa-logo.png" alt="NEPA" width="56" height="56" />
-        <span class="brand__text">
-          <span class="brand__name">Mustard Conclave</span>
-          <span class="brand__sub">Edition 2026</span>
-        </span>
-      </a>
-
-      <nav class="nav" id="primaryNav">
-        <a href="#invitation">Invitation</a>
-        <a href="#charter">Charter</a>
-        <a href="#programme">Programme</a>
-        <a href="#tariff">Tariff</a>
-        <a href="#sponsorship">Sponsorship</a>
-        <a href="#venue">Venue</a>
-        <a href="#contact">Contact</a>
-        <button class="btn btn-primary" data-open-register>Register Now</button>
-      </nav>
-
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="primaryNav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round" />
-        </svg>
-      </button>
-    </div>
-  </header>
+  <!-- header injected by partials.js -->
 
   <!-- ===================== HERO ===================== -->
   <section class="hero" id="top">
     <div class="hero__arch" aria-hidden="true">
       <svg viewBox="0 0 600 760" preserveAspectRatio="xMidYMin meet">
-        <path d="M40 760 V300 Q40 40 300 40 Q560 40 560 300 V760"
-              fill="none" stroke="currentColor" stroke-width="1.5" />
-        <path d="M72 760 V300 Q72 72 300 72 Q528 72 528 300 V760"
-              fill="none" stroke="currentColor" stroke-width="1" opacity=".55" />
+        <path d="M40 760 V300 Q40 40 300 40 Q560 40 560 300 V760" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M72 760 V300 Q72 72 300 72 Q528 72 528 300 V760" fill="none" stroke="currentColor" stroke-width="1" opacity=".55" />
       </svg>
     </div>
+    <!-- Optional hero video: drop /video/hero.mp4 (or generate one) and it auto-plays;
+         until then it stays hidden and the animated field below shows instead. -->
+    <video class="hero__video" id="heroVideo" muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="/video/hero.mp4" type="video/mp4" />
+    </video>
+
     <div class="hero__particles" id="heroParticles" aria-hidden="true"></div>
 
-    <!-- Animated mustard-field horizon (motion graphic, CSS-driven sway) -->
+    <!-- Animated mustard-field horizon -->
     <div class="hero__field" aria-hidden="true">
       <svg viewBox="0 0 1440 260" preserveAspectRatio="xMidYMax slice">
         <defs>
-          <linearGradient id="fieldHill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#2F5D3A" stop-opacity=".22"/>
-            <stop offset="1" stop-color="#1F3D2E" stop-opacity=".40"/>
-          </linearGradient>
-          <linearGradient id="fieldHill2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#C5A253" stop-opacity=".20"/>
-            <stop offset="1" stop-color="#8B5E3C" stop-opacity=".22"/>
-          </linearGradient>
+          <linearGradient id="fieldHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F5D3A" stop-opacity=".22"/><stop offset="1" stop-color="#1F3D2E" stop-opacity=".40"/></linearGradient>
+          <linearGradient id="fieldHill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C5A253" stop-opacity=".20"/><stop offset="1" stop-color="#8B5E3C" stop-opacity=".22"/></linearGradient>
         </defs>
         <path d="M0 150 C 260 110, 520 120, 760 140 S 1240 120, 1440 140 V260 H0 Z" fill="url(#fieldHill2)"/>
         <path d="M0 190 C 300 160, 600 175, 900 165 S 1320 175, 1440 180 V260 H0 Z" fill="url(#fieldHill)"/>
         <g class="hero__stalks">
-          <g class="stalk" style="--x:120px;--d:0s">
-            <path d="M0 260 V196"/><circle cx="0" cy="190" r="4"/><circle cx="-7" cy="200" r="3"/><circle cx="7" cy="202" r="3"/>
-          </g>
-          <g class="stalk" style="--x:300px;--d:-1.2s">
-            <path d="M0 260 V186"/><circle cx="0" cy="180" r="4.5"/><circle cx="-8" cy="192" r="3"/><circle cx="8" cy="194" r="3"/>
-          </g>
-          <g class="stalk" style="--x:560px;--d:-.6s">
-            <path d="M0 260 V200"/><circle cx="0" cy="194" r="4"/><circle cx="-7" cy="204" r="3"/><circle cx="7" cy="206" r="3"/>
-          </g>
-          <g class="stalk" style="--x:880px;--d:-1.8s">
-            <path d="M0 260 V184"/><circle cx="0" cy="178" r="4.5"/><circle cx="-8" cy="190" r="3"/><circle cx="8" cy="192" r="3"/>
-          </g>
-          <g class="stalk" style="--x:1130px;--d:-.9s">
-            <path d="M0 260 V198"/><circle cx="0" cy="192" r="4"/><circle cx="-7" cy="202" r="3"/><circle cx="7" cy="204" r="3"/>
-          </g>
-          <g class="stalk" style="--x:1320px;--d:-1.5s">
-            <path d="M0 260 V190"/><circle cx="0" cy="184" r="4.5"/><circle cx="-8" cy="196" r="3"/><circle cx="8" cy="198" r="3"/>
-          </g>
+          <g class="stalk" style="--x:120px;--d:0s"><path d="M0 260 V196"/><circle cx="0" cy="190" r="4"/><circle cx="-7" cy="200" r="3"/><circle cx="7" cy="202" r="3"/></g>
+          <g class="stalk" style="--x:300px;--d:-1.2s"><path d="M0 260 V186"/><circle cx="0" cy="180" r="4.5"/><circle cx="-8" cy="192" r="3"/><circle cx="8" cy="194" r="3"/></g>
+          <g class="stalk" style="--x:560px;--d:-.6s"><path d="M0 260 V200"/><circle cx="0" cy="194" r="4"/><circle cx="-7" cy="204" r="3"/><circle cx="7" cy="206" r="3"/></g>
+          <g class="stalk" style="--x:880px;--d:-1.8s"><path d="M0 260 V184"/><circle cx="0" cy="178" r="4.5"/><circle cx="-8" cy="190" r="3"/><circle cx="8" cy="192" r="3"/></g>
+          <g class="stalk" style="--x:1130px;--d:-.9s"><path d="M0 260 V198"/><circle cx="0" cy="192" r="4"/><circle cx="-7" cy="202" r="3"/><circle cx="7" cy="204" r="3"/></g>
+          <g class="stalk" style="--x:1320px;--d:-1.5s"><path d="M0 260 V190"/><circle cx="0" cy="184" r="4.5"/><circle cx="-8" cy="196" r="3"/><circle cx="8" cy="198" r="3"/></g>
         </g>
       </svg>
     </div>
 
     <div class="container hero__inner">
-      <img class="hero__crest reveal" src="/img/nepa-logo.png"
-           alt="NEPA — National Edible Oil Promotion Association" width="156" height="156" />
-      <span class="edition-chip reveal" data-delay="1">Edition 2026 · By Invitation</span>
-      <p class="hero__pre reveal" data-delay="1">The Inaugural National</p>
-      <h1 class="hero__title reveal" data-delay="2">Mustard Oil<br />Promotion Conclave</h1>
+      <img class="hero__crest reveal" src="/img/nepa-logo.png" alt="National Edible Oil Promotion Association" width="156" height="156" />
+      <span class="edition-chip reveal" data-delay="1">The Inaugural Conference · By Invitation</span>
+      <p class="hero__pre reveal" data-delay="1">संपर्क · Sampark</p>
+      <h1 class="hero__title reveal" data-delay="2">National Edible Oil<br />Conclave 2026</h1>
       <span class="hero__ornament reveal" data-delay="2" aria-hidden="true"></span>
-      <p class="hero__tag reveal" data-delay="3">For the Authentic. For the Pure. For Bharat.</p>
+      <p class="hero__tag reveal" data-delay="3">A conclave for the soul oil of Bharat.</p>
+      <span class="theme-chip reveal" data-delay="3">Theme · Mustard Oil Promotion</span>
 
       <div class="hero__chips reveal" data-delay="3">
         <div class="chip">
@@ -114,18 +69,18 @@
         <div class="chip">
           <span class="chip__label">Venue</span>
           <span class="chip__value">Mayfair Spring Valley Resort</span>
-          <span class="chip__sub">Guwahati, Assam</span>
+          <span class="chip__sub">Sonapur, Guwahati · Assam</span>
         </div>
         <div class="chip">
           <span class="chip__label">Gathering</span>
           <span class="chip__value">400+ Delegates</span>
-          <span class="chip__sub">Producers · Traders · Doctors · Govt.</span>
+          <span class="chip__sub">Traders · Manufacturers · Buyers</span>
         </div>
       </div>
 
       <div class="hero__cta reveal" data-delay="4">
-        <button class="btn btn-primary btn-shine" data-open-register>Register Now</button>
-        <a class="btn btn-ghost" href="#programme">View Programme</a>
+        <button class="btn btn-primary btn-shine" data-open-register>Register as Delegate</button>
+        <a class="btn btn-ghost" href="/programme">View Programme</a>
       </div>
 
       <div class="hero__countdown reveal" data-delay="4" id="countdown" aria-label="Time until the Conclave">
@@ -143,51 +98,64 @@
       </div>
     </div>
 
-    <a class="hero__scroll" href="#invitation" aria-label="Scroll to explore">
-      <span class="hero__scroll-dot"></span>
-    </a>
+    <a class="hero__scroll" href="#why" aria-label="Scroll to explore"><span class="hero__scroll-dot"></span></a>
   </section>
 
   <!-- ===================== MARQUEE ===================== -->
   <div class="marquee" aria-hidden="true">
     <div class="marquee__track">
-      <span>Pure by Tradition</span><i class="marquee__dot"></i>
-      <span>Powered by Science</span><i class="marquee__dot"></i>
-      <span>Proudly Indian</span><i class="marquee__dot"></i>
-      <span>Kachi Ghani</span><i class="marquee__dot"></i>
+      <span>One Industry</span><i class="marquee__dot"></i>
+      <span>One Purpose</span><i class="marquee__dot"></i>
       <span>One Collective Voice</span><i class="marquee__dot"></i>
-      <span>Sarson ka Tel</span><i class="marquee__dot"></i>
-      <span>Pure by Tradition</span><i class="marquee__dot"></i>
-      <span>Powered by Science</span><i class="marquee__dot"></i>
-      <span>Proudly Indian</span><i class="marquee__dot"></i>
-      <span>Kachi Ghani</span><i class="marquee__dot"></i>
+      <span>The Soul Oil of Bharat</span><i class="marquee__dot"></i>
+      <span>संपर्क · Sampark</span><i class="marquee__dot"></i>
+      <span>Mustard Oil Promotion</span><i class="marquee__dot"></i>
+      <span>One Industry</span><i class="marquee__dot"></i>
+      <span>One Purpose</span><i class="marquee__dot"></i>
       <span>One Collective Voice</span><i class="marquee__dot"></i>
-      <span>Sarson ka Tel</span><i class="marquee__dot"></i>
+      <span>The Soul Oil of Bharat</span><i class="marquee__dot"></i>
+      <span>संपर्क · Sampark</span><i class="marquee__dot"></i>
+      <span>Mustard Oil Promotion</span><i class="marquee__dot"></i>
     </div>
   </div>
 
+  <!-- ===================== WHY ATTEND ===================== -->
+  <section class="section why" id="why" data-index="01">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow eyebrow--center">Key Reasons to Attend</span>
+        <h2>Five Reasons to Be in Guwahati</h2>
+        <p>India's edible-oil trade, under one roof, for two days.</p>
+      </div>
+      <div class="why-grid" id="whyGrid"><!-- injected by main.js --></div>
+      <div class="text-center reveal" data-delay="1">
+        <button class="btn btn-primary btn-shine" data-open-register>Secure Your Delegate Pass</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== INVITATION ===================== -->
-  <section class="section" id="invitation" data-index="01">
+  <section class="section invitation" id="invitation" data-index="02">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Invitation</span>
-        <h2>An Invitation to Honour India's<br />Most Indigenous Oil</h2>
+        <h2>A Conclave for the Soul Oil of Bharat</h2>
       </div>
 
       <div class="invitation-split">
         <div class="invitation-body reveal" data-delay="1">
-          <p>The Mustard Oil Promotion Council — newly constituted under the Central Organization for Oil Industry &amp; Trade (COOIT) — is honoured to invite you to the Inaugural National Mustard Oil Promotion Conclave 2026, on 19th–20th September 2026 at Guwahati, hosted by the National Edible Oil Promotion Association (NEPA).</p>
-          <p>Across two days, the Conclave brings together producers, refiners, kachi ghani millers, traders, retailers, the HoReCa segment, food scientists, doctors and nutritionists, FSSAI representatives, agricultural economists, farmer leaders and Government — to make a unified case for India's most strategically important indigenous edible oil. The Conclave concludes with the public reading of the Guwahati Mustard Charter.</p>
+          <p>It is our privilege to invite you to the <strong>National Edible Oil Conclave 2026</strong>, to be held on 19th &amp; 20th September 2026 in Guwahati, Assam.</p>
+          <p>We are honoured to host this prestigious conclave under the aegis of the Mustard Oil Promotion Council, and sincerely thank COOIT for entrusting us with this responsibility. Your gracious presence and valuable participation will make this landmark event truly memorable.</p>
+          <p class="invitation-sign">With warm regards,<br /><strong>Team NEPA</strong> — Shri Kailash Kabra (President), Shri Neeraj Bothra (Secretary &amp; Convenor), Shri Prakash Kabra (Treasurer)</p>
         </div>
         <figure class="photo photo--portrait reveal" data-delay="2" data-photo="Kachi ghani mustard oil — golden &amp; pure">
-          <img src="/img/mustard-oil.jpg" alt="Golden kachi ghani mustard oil"
-               loading="lazy" onerror="this.closest('.photo').classList.add('photo--empty')" />
+          <img src="/img/mustard-oil.jpg" alt="Golden kachi ghani mustard oil" loading="lazy" onerror="this.closest('.photo').classList.add('photo--empty')" />
         </figure>
       </div>
 
       <blockquote class="pull-quote reveal" data-delay="2">
         <span class="pull-quote__mark">“</span>
-        Where mustard oil is honored, the Indian kitchen remembers itself. Where it is forgotten, both health and heritage diminish.
+        One Industry. One Purpose. One Collective Voice.
       </blockquote>
 
       <div class="org-row reveal" data-delay="2">
@@ -202,57 +170,43 @@
           <span class="org-card__sub">Guwahati</span>
         </div>
         <div class="org-card">
-          <span class="org-card__role">In collaboration with</span>
+          <span class="org-card__role">Supported by</span>
           <span class="org-card__name">Mustard Oil Producers Association of India (MOPA)</span>
           <span class="org-card__sub">National Network</span>
         </div>
       </div>
 
       <div class="stats-strip reveal" data-delay="1">
-        <div class="stat-fact">
-          <span class="stat-fact__num" data-count-to="2">0</span>
-          <span class="stat-fact__label">Days of Dialogue</span>
-        </div>
-        <div class="stat-fact">
-          <span class="stat-fact__num" data-count-to="8">0</span>
-          <span class="stat-fact__label">Charter Pillars</span>
-        </div>
-        <div class="stat-fact">
-          <span class="stat-fact__num" data-count-to="400" data-count-suffix="+">0</span>
-          <span class="stat-fact__label">Delegates</span>
-        </div>
-        <div class="stat-fact">
-          <span class="stat-fact__num" data-count-to="13">0</span>
-          <span class="stat-fact__label">Sessions &amp; Addresses</span>
-        </div>
+        <div class="stat-fact"><span class="stat-fact__num" data-count-to="400" data-count-suffix="+">0</span><span class="stat-fact__label">Delegates</span></div>
+        <div class="stat-fact"><span class="stat-fact__num" data-count-to="2">0</span><span class="stat-fact__label">Days of Dialogue</span></div>
+        <div class="stat-fact"><span class="stat-fact__num" data-count-to="5">0</span><span class="stat-fact__label">Reasons to Attend</span></div>
+        <div class="stat-fact"><span class="stat-fact__num" data-count-to="1">0</span><span class="stat-fact__label">Collective Voice</span></div>
       </div>
     </div>
   </section>
 
-  <!-- ===================== CHARTER ===================== -->
-  <section class="section charter" id="charter" data-index="02">
-    <div class="container">
-      <div class="section-head reveal">
-        <span class="eyebrow eyebrow--center">The Guwahati Mustard Charter</span>
-        <h2 class="charter__title">Eight Pillars</h2>
-        <p class="charter__lede">A unified mandate, read aloud at the close of the Conclave.</p>
-      </div>
-      <div class="charter-grid" id="charterGrid">
-        <!-- cards injected by main.js -->
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== PROGRAMME ===================== -->
-  <section class="section" id="programme" data-index="03">
+  <!-- ===================== PROGRAMME TEASER ===================== -->
+  <section class="section programme-teaser" id="programme-teaser" data-index="03">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">The Programme</span>
-        <h2>Two Days of Dialogue</h2>
-        <p>From the welcome lunch to the public reading of the Charter.</p>
+        <h2>Two Days of Innovation &amp; Impact</h2>
+        <p>From an Assamese welcome to the closing felicitations.</p>
       </div>
-      <div class="programme-grid" id="programmeGrid">
-        <!-- two day columns injected by main.js -->
+      <div class="prog-teaser">
+        <div class="prog-teaser__day reveal">
+          <span class="day-col__tag">Day 01 · Saturday 19 Sep</span>
+          <h3 class="day-col__title">Arrival &amp; Welcome</h3>
+          <p>Registration &amp; Welcome · Panel Session · Cultural Evening followed by a Gala Dinner.</p>
+        </div>
+        <div class="prog-teaser__day reveal" data-delay="1">
+          <span class="day-col__tag">Day 02 · Sunday 20 Sep</span>
+          <h3 class="day-col__title">The Main Conclave</h3>
+          <p>Lamp Lighting · Panel Session · Addresses by the President, Guest of Honour &amp; Chief Guest · Felicitation · Lunch.</p>
+        </div>
+      </div>
+      <div class="text-center reveal" data-delay="1">
+        <a class="btn btn-ghost" href="/programme">View the full programme</a>
       </div>
     </div>
   </section>
@@ -261,111 +215,91 @@
   <section class="section tariff" id="tariff" data-index="04">
     <div class="container">
       <div class="section-head reveal">
-        <span class="eyebrow eyebrow--center">Participation &amp; Tariff</span>
+        <span class="eyebrow eyebrow--center">Delegate Registration</span>
         <h2>Reserve Your Seat</h2>
         <p>Delegate participation, with an optional NEPA membership add-on.</p>
       </div>
 
-      <div class="delegate-wrap">
+      <div class="tariff-split">
         <div class="delegate-card reveal">
           <span class="delegate-card__tag">Delegate Pass</span>
           <div class="delegate-rows">
             <div class="delegate-row">
-              <div>
-                <span class="delegate-row__name">Early Bird</span>
-                <span class="delegate-row__note">up to 15 Aug 2026</span>
-              </div>
-              <span class="delegate-row__price">₹8,000</span>
+              <div><span class="delegate-row__name">Early Bird</span><span class="delegate-row__note">up to 15 Aug 2026</span></div>
+              <span class="delegate-row__price">₹8,000<em>+GST</em></span>
             </div>
             <div class="delegate-row">
-              <div>
-                <span class="delegate-row__name">Spot Registration</span>
-                <span class="delegate-row__note">after 15 Aug 2026</span>
-              </div>
-              <span class="delegate-row__price">₹10,000</span>
+              <div><span class="delegate-row__name">Spot Registration</span><span class="delegate-row__note">after 15 Aug 2026</span></div>
+              <span class="delegate-row__price">₹10,000<em>+GST</em></span>
             </div>
             <div class="delegate-row delegate-row--addon">
-              <div>
-                <span class="delegate-row__name">NEPA Membership</span>
-                <span class="delegate-row__note">optional · one-time</span>
-              </div>
+              <div><span class="delegate-row__name">NEPA Membership</span><span class="delegate-row__note">optional · one-time</span></div>
               <span class="delegate-row__price">₹3,100</span>
             </div>
           </div>
           <button class="btn btn-primary btn-block" data-open-register>Register as Delegate</button>
           <p class="delegate-card__live" id="tariffLiveNote">Live pricing is applied at registration.</p>
         </div>
+
+        <a class="sponsor-teaser reveal" data-delay="1" href="/sponsorship">
+          <span class="eyebrow">Become a Partner</span>
+          <h3>Sponsorship &amp; Exhibition</h3>
+          <p>From <strong>₹70,000</strong> exhibition stalls to the <strong>₹15,00,000</strong> Diamond title — align your brand with India's edible-oil industry.</p>
+          <ul class="sponsor-teaser__list">
+            <li>Diamond · Platinum · Gold · Silver · Bronze</li>
+            <li>Kit Bag · Lunch · Dinner · Cocktail · Hi-Tea</li>
+            <li>Exhibition stalls &amp; magazine advertising</li>
+          </ul>
+          <span class="sponsor-teaser__cta">View all sponsorship tiers →</span>
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- ===================== SPONSORSHIP ===================== -->
-  <section class="section sponsorship" id="sponsorship" data-index="05">
+  <!-- ===================== VENUE / LOGISTICS ===================== -->
+  <section class="section venue" id="venue" data-index="05">
     <div class="container">
       <div class="section-head reveal">
-        <span class="eyebrow eyebrow--center">Sponsorship</span>
-        <h2>Partner the Movement</h2>
-        <p>Align your brand with India's pre-eminent gathering for mustard oil. Sponsorship is arranged directly with the Secretariat.</p>
-      </div>
-
-      <div class="sponsor-grid" id="sponsorGrid">
-        <!-- sponsor tier cards injected by main.js -->
-      </div>
-
-      <div class="branding-line reveal" data-delay="1">
-        <span class="branding-line__label">Also Available</span>
-        <span class="branding-line__items">
-          Exhibition Stalls · Lunch · Dinner · Cocktail · Hi-Tea · Gifts · Table Branding &amp; Kit-Bag sponsorships — tariffs to be announced.
-        </span>
-      </div>
-
-      <p class="sponsor-cta reveal" data-delay="1">
-        To partner the Conclave, write to
-        <a href="mailto:nepaconnect2026@gmail.com?subject=Sponsorship%20—%20Mustard%20Conclave%202026">nepaconnect2026@gmail.com</a>
-        or call <a href="tel:9435040234">94350-40234</a>.
-      </p>
-    </div>
-  </section>
-
-  <!-- ===================== VENUE ===================== -->
-  <section class="section venue" id="venue">
-    <div class="container">
-      <div class="section-head reveal">
-        <span class="eyebrow eyebrow--center">Venue &amp; Secretariat</span>
+        <span class="eyebrow eyebrow--center">The Logistics of Attendance</span>
         <h2>Mayfair Spring Valley Resort</h2>
-        <p>Guwahati, Assam · North-East India</p>
+        <p>A premium five-star resort · Sonapur, Guwahati · Assam</p>
       </div>
 
-      <figure class="photo photo--wide reveal" data-photo="Mayfair Spring Valley Resort, Guwahati">
-        <img src="/img/venue-mayfair.jpg" alt="Mayfair Spring Valley Resort, Guwahati"
-             loading="lazy" onerror="this.closest('.photo').classList.add('photo--empty')" />
+      <figure class="photo photo--wide reveal" data-photo="Mayfair Spring Valley Resort, Sonapur, Guwahati">
+        <img src="/img/venue-mayfair.jpg" alt="Mayfair Spring Valley Resort, Guwahati" loading="lazy" onerror="this.closest('.photo').classList.add('photo--empty')" />
       </figure>
 
       <div class="venue-grid">
         <div class="venue-card reveal">
-          <span class="eyebrow">The Venue</span>
-          <h3>A Five-Star Welcome</h3>
-          <p>A premium five-star resort amidst Guwahati's natural beauty, with easy connectivity to LGBI Airport.</p>
-          <p>Accommodation is available at preferential rates. Please contact NEPA directly, quoting <strong>“Mustard Conclave 2026”</strong>.</p>
-          <p class="venue-card__placeholder">Empanelled hotels list — <em>to be added.</em></p>
-          <p class="venue-card__placeholder">Banking details for cheques/drafts are communicated to confirmed delegates and sponsors.</p>
+          <span class="eyebrow">Stay &amp; Travel</span>
+          <h3>Everything Taken Care Of</h3>
+          <ul class="perk-list">
+            <li>Well connected to <strong>LGBI Airport</strong></li>
+            <li><strong>Complimentary airport transfers</strong> (arrival &amp; departure) for all delegates</li>
+            <li>Preferential accommodation rates for NEPA delegates — quote <strong>“Mustard Conclave 2026”</strong></li>
+            <li>3–4 star hotel options also available</li>
+          </ul>
         </div>
 
         <div class="venue-card reveal" data-delay="1">
-          <span class="eyebrow">Secretariat &amp; Contact</span>
-          <h3>Conclave Secretariat</h3>
-          <p>NEPA, Ajit Singh Bothra &amp; Sons,<br />Lakhi Gali, Guwahati – 781001</p>
+          <span class="eyebrow">Helpline &amp; Secretariat</span>
+          <h3>We're Here to Help</h3>
           <ul class="contact-list">
-            <li><span>Phone</span><a href="tel:9435040234">94350-40234</a></li>
+            <li><span>Helpline</span><a href="tel:+918876590074">+91 88765 90074</a></li>
+            <li><span>Contact</span><span class="contact-list__plain">Shri Abhishek Mour</span></li>
             <li><span>Email</span><a href="mailto:nepaconnect2026@gmail.com">nepaconnect2026@gmail.com</a></li>
+            <li><span>Media</span><span class="contact-list__plain">Oil &amp; Grain Asia — Media Partner</span></li>
           </ul>
+          <p class="venue-card__placeholder">Banking details for cheques &amp; drafts are shown at the bank-transfer step during registration.</p>
         </div>
       </div>
 
-      <div class="final-cta reveal" data-delay="1">
+      <div class="final-cta final-cta--photo reveal" data-delay="1">
+        <img class="final-cta__bg" src="/img/heritage-banner.jpg"
+             alt="One Industry, One Purpose, One Collective Voice — a traditional mustard-oil ghani at sunrise in Assam"
+             loading="lazy" />
         <div class="final-cta__inner">
-          <span class="eyebrow eyebrow--center">One Industry. One Purpose. One Collective Voice.</span>
-          <h2>Join the Inaugural Conclave</h2>
+          <h2>Be Part of the Inaugural Conclave</h2>
           <p>Seats are limited to 400+ delegates. Register today to secure your place.</p>
           <button class="btn btn-primary" data-open-register>Register Now</button>
         </div>
@@ -373,57 +307,13 @@
     </div>
   </section>
 
-  <!-- ===================== STEWARDS (Council + Committee) ===================== -->
-  <section class="section stewards" id="council">
-    <div class="container">
-      <div class="section-head reveal">
-        <span class="eyebrow eyebrow--center">The Stewards</span>
-        <h2>The Mustard Oil Promotion Council</h2>
-        <p>Constituted under COOIT in May 2026, the Council is the apex body charged with championing pure mustard oil — convening this Inaugural Conclave is its first national act.</p>
-      </div>
-
-      <div class="council-principal reveal">
-        <div class="leader leader--lead">
-          <span class="leader__name">Shri Babu Lal Data</span>
-          <span class="leader__role">President · COOIT</span>
-        </div>
-        <div class="leader leader--lead">
-          <span class="leader__name">Shri Suresh Nagpal</span>
-          <span class="leader__role">Chairman · COOIT</span>
-        </div>
-        <div class="leader leader--lead">
-          <span class="leader__name">Shri Kailash Kabra</span>
-          <span class="leader__role">President · NEPA</span>
-        </div>
-      </div>
-
-      <div class="council-bearers reveal" data-delay="1">
-        <div class="leader"><span class="leader__name">Shri Krishna Kumar Aggarwal</span><span class="leader__role">Secretary &amp; Convenor</span></div>
-        <div class="leader"><span class="leader__name">Shri Gajender Jha</span><span class="leader__role">General Secretary · COOIT</span></div>
-        <div class="leader"><span class="leader__name">Shri Mahesh Goyal</span><span class="leader__role">Treasurer · COOIT</span></div>
-        <div class="leader"><span class="leader__name">Shri Prakash Kabra</span><span class="leader__role">Treasurer · NEPA</span></div>
-        <div class="leader"><span class="leader__name">Shri Neeraj Bothra</span><span class="leader__role">General Secretary · MOPA</span></div>
-      </div>
-
-      <div class="committee reveal" data-delay="1">
-        <div class="committee__head">
-          <span class="eyebrow eyebrow--center">Conclave Organising Committee</span>
-          <p class="committee__note">Constituted at the COOIT Executive Committee meeting, Hyatt Regency, Manesar — 1 May 2026.</p>
-        </div>
-        <ul class="committee__list" id="committeeList">
-          <!-- names injected by main.js -->
-        </ul>
-      </div>
-    </div>
-  </section>
-
   <!-- ===================== CONTACT ===================== -->
-  <section class="section contact" id="contact">
+  <section class="section contact" id="contact" data-index="06">
     <div class="container">
       <div class="section-head reveal">
         <span class="eyebrow eyebrow--center">Contact Us</span>
         <h2>Write to the Secretariat</h2>
-        <p>Questions about delegate registration, sponsorship or the programme? Send us a note and the Secretariat will respond.</p>
+        <p>Questions about delegate registration, sponsorship or the programme? Send a note and the Secretariat will respond.</p>
       </div>
 
       <div class="contact-grid">
@@ -431,7 +321,7 @@
           <h3>Conclave Secretariat</h3>
           <p>National Edible Oil Promotion Association (NEPA)<br />Ajit Singh Bothra &amp; Sons, Lakhi Gali,<br />Guwahati – 781001</p>
           <ul class="contact-list">
-            <li><span>Phone</span><a href="tel:9435040234">94350-40234</a></li>
+            <li><span>Helpline</span><a href="tel:+918876590074">+91 88765 90074</a></li>
             <li><span>Email</span><a href="mailto:nepaconnect2026@gmail.com">nepaconnect2026@gmail.com</a></li>
           </ul>
         </div>
@@ -471,246 +361,8 @@
     </div>
   </section>
 
-  <!-- ===================== FOOTER ===================== -->
-  <footer class="site-footer">
-    <div class="container">
-      <p class="footer-motto">Pure by Tradition · Powered by Science · Proudly Indian</p>
-      <p class="footer-submotto">One Industry · One Purpose · One Collective Voice</p>
-
-      <div class="footer-grid">
-        <div>
-          <h4>The Mustard Oil Promotion Conclave 2026</h4>
-          <p>Hosted by the National Edible Oil Promotion Association (NEPA), Guwahati — under the Mustard Oil Promotion Council, COOIT, New Delhi.</p>
-          <div class="footer-logos">
-            <img class="footer-logo" src="/img/nepa-logo.png" alt="NEPA" width="96" height="96" />
-            <div class="logo-chip">COOIT logo</div>
-            <div class="logo-chip">MOPA logo</div>
-          </div>
-        </div>
-        <div>
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="#charter">The Charter</a></li>
-            <li><a href="#programme">Programme</a></li>
-            <li><a href="#tariff">Tariff</a></li>
-            <li><a href="#sponsorship">Sponsorship</a></li>
-            <li><a href="#council">The Council</a></li>
-            <li><a href="#contact">Contact Us</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4>Secretariat</h4>
-          <ul>
-            <li>NEPA, Ajit Singh Bothra &amp; Sons</li>
-            <li>Lakhi Gali, Guwahati – 781001</li>
-            <li><a href="tel:9435040234">94350-40234</a></li>
-            <li><a href="mailto:nepaconnect2026@gmail.com">nepaconnect2026@gmail.com</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <p class="footer-bottom">© 2026 National Edible Oil Promotion Association (NEPA), Guwahati. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <!-- ===================== FLOATING REGISTER PILL ===================== -->
-  <button class="floating-register" data-open-register aria-label="Register Now">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" stroke-linecap="round" />
-    </svg>
-    <span>Register Now</span>
-  </button>
-
-  <!-- ===================== REGISTRATION MODAL ===================== -->
-  <div class="modal" id="registerModal" aria-hidden="true">
-    <div class="modal__overlay" data-close-register></div>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button class="modal__close" id="modalClose" aria-label="Close registration" data-close-register>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
-        </svg>
-      </button>
-
-      <div class="modal__head">
-        <span class="eyebrow">Delegate Registration</span>
-        <h2 id="modalTitle">Reserve Your Seat</h2>
-      </div>
-
-      <!-- Stepper -->
-      <ol class="stepper" id="stepper">
-        <li class="step is-active" data-step="1"><span class="step__no">01</span><span class="step__label">Details</span></li>
-        <li class="step" data-step="2"><span class="step__no">02</span><span class="step__label">Membership</span></li>
-        <li class="step" data-step="3"><span class="step__no">03</span><span class="step__label">Payment</span></li>
-      </ol>
-
-      <form id="registerForm" novalidate>
-        <!-- STEP 1 — DETAILS -->
-        <div class="form-step is-active" data-step-panel="1">
-          <div class="field">
-            <label for="fullName">Full Name</label>
-            <input type="text" id="fullName" name="fullName" autocomplete="name" required />
-            <span class="field__error" data-error-for="fullName"></span>
-          </div>
-          <div class="field">
-            <label for="mobile">Mobile Number</label>
-            <input type="tel" id="mobile" name="mobile" inputmode="numeric" maxlength="10" placeholder="10-digit number" autocomplete="tel" required />
-            <span class="field__error" data-error-for="mobile"></span>
-          </div>
-          <div class="field">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" autocomplete="email" required />
-            <span class="field__error" data-error-for="email"></span>
-          </div>
-          <div class="field">
-            <label for="organization">Organization</label>
-            <input type="text" id="organization" name="organization" autocomplete="organization" required />
-            <span class="field__error" data-error-for="organization"></span>
-          </div>
-          <div class="form-nav">
-            <span></span>
-            <button type="button" class="btn btn-primary" data-next>Continue</button>
-          </div>
-        </div>
-
-        <!-- STEP 2 — MEMBERSHIP -->
-        <div class="form-step" data-step-panel="2">
-          <p class="step-question">Want to become a NEPA member?</p>
-          <p class="step-help">NEPA Membership fee: ₹3,100 (one-time).</p>
-          <div class="toggle-group" id="memberToggle" role="group" aria-label="NEPA membership">
-            <button type="button" class="toggle-btn" data-member="true">Yes, add membership</button>
-            <button type="button" class="toggle-btn" data-member="false">No, thank you</button>
-          </div>
-          <span class="field__error" data-error-for="member"></span>
-
-          <div class="price-summary" id="priceSummary">
-            <div class="price-row">
-              <span id="delegateLabel">Delegate Fee</span>
-              <span id="delegateAmount">₹8,000</span>
-            </div>
-            <div class="price-row price-row--member" id="memberRow" hidden>
-              <span>NEPA Membership</span>
-              <span id="memberAmount">₹3,100</span>
-            </div>
-            <div class="price-row price-row--total">
-              <span>Total Payable</span>
-              <span id="totalAmount">₹8,000</span>
-            </div>
-          </div>
-
-          <div class="form-nav">
-            <button type="button" class="btn btn-ghost" data-prev>Back</button>
-            <button type="button" class="btn btn-primary" data-next>Continue</button>
-          </div>
-        </div>
-
-        <!-- STEP 3 — PAYMENT -->
-        <div class="form-step" data-step-panel="3">
-          <div class="pay-amount">
-            <span>Amount Payable</span>
-            <strong id="payAmount">₹8,000</strong>
-          </div>
-
-          <p class="step-question">Choose a payment method</p>
-          <div class="method-group" id="methodGroup" role="group" aria-label="Payment method">
-            <button type="button" class="method-card" data-method="UPI">
-              <span class="method-card__title">UPI</span>
-              <span class="method-card__sub">Scan &amp; pay</span>
-            </button>
-            <button type="button" class="method-card" data-method="Bank">
-              <span class="method-card__title">Bank Transfer</span>
-              <span class="method-card__sub">NEFT / IMPS</span>
-            </button>
-            <button type="button" class="method-card" data-method="Cash">
-              <span class="method-card__title">Cash / At Venue</span>
-              <span class="method-card__sub">Pay at desk</span>
-            </button>
-          </div>
-          <span class="field__error" data-error-for="method"></span>
-
-          <!-- UPI panel -->
-          <div class="pay-panel" data-pay-panel="UPI" hidden>
-            <div class="upi-box">
-              <div class="qr-placeholder">QR Code<br />Placeholder</div>
-              <div class="upi-meta">
-                <span class="pay-label">UPI ID</span>
-                <span class="pay-value" id="upiId">nepa-conclave@upi (placeholder)</span>
-                <p class="pay-hint">Scan the QR or pay to the UPI ID above, then upload your payment screenshot.</p>
-              </div>
-            </div>
-            <div class="field">
-              <label for="upiScreenshot">Payment Screenshot <span class="req">required</span></label>
-              <input type="file" id="upiScreenshot" accept="image/*" data-upload="UPI" />
-              <span class="field__error" data-error-for="upiScreenshot"></span>
-            </div>
-          </div>
-
-          <!-- Bank panel -->
-          <div class="pay-panel" data-pay-panel="Bank" hidden>
-            <div class="bank-box">
-              <div class="bank-row"><span>Bank</span><strong>Bandhan Bank</strong></div>
-              <div class="bank-row"><span>Account Name</span><strong>National Edible Oil Promotion Association</strong></div>
-              <div class="bank-row"><span>Account No.</span><strong>20100082897192</strong></div>
-              <div class="bank-row"><span>Account Type</span><strong>Current Account</strong></div>
-              <div class="bank-row"><span>IFSC</span><strong>BDBL0002488</strong></div>
-              <div class="bank-row"><span>Branch</span><strong>Fancy Bazar, Guwahati</strong></div>
-            </div>
-            <div class="field">
-              <label for="bankRef">Reference / UTR No. <span class="opt">optional</span></label>
-              <input type="text" id="bankRef" name="referenceNo" />
-            </div>
-            <div class="field">
-              <label for="bankScreenshot">Payment Screenshot <span class="req">required</span></label>
-              <input type="file" id="bankScreenshot" accept="image/*" data-upload="Bank" />
-              <span class="field__error" data-error-for="bankScreenshot"></span>
-            </div>
-          </div>
-
-          <!-- Cash panel -->
-          <div class="pay-panel" data-pay-panel="Cash" hidden>
-            <div class="cash-note">Pay at the registration desk; your seat is provisionally reserved.</div>
-            <div class="field">
-              <label for="cashNote">Note <span class="opt">optional</span></label>
-              <textarea id="cashNote" name="note" rows="3" placeholder="Anything we should know?"></textarea>
-            </div>
-          </div>
-
-          <span class="field__error field__error--submit" data-error-for="submit"></span>
-
-          <div class="form-nav">
-            <button type="button" class="btn btn-ghost" data-prev>Back</button>
-            <button type="submit" class="btn btn-primary" id="submitBtn">Complete Registration</button>
-          </div>
-        </div>
-      </form>
-
-      <!-- CONFIRMATION -->
-      <div class="confirmation" id="confirmation" hidden>
-        <div class="confirmation__seal" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h2>Registration Received</h2>
-        <p class="confirmation__name" id="confName"></p>
-        <div class="confirmation__meta">
-          <div><span>Registration ID</span><strong id="confRegId"></strong></div>
-          <div><span>Fee Type</span><strong id="confFeeType"></strong></div>
-          <div><span>Amount</span><strong id="confAmount"></strong></div>
-        </div>
-        <p class="confirmation__note">We'll confirm your payment shortly. A member of the Secretariat may reach out if anything is needed.</p>
-        <button type="button" class="btn btn-primary" data-close-register>Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================== CREDIT BAR ===================== -->
-  <div class="credit-bar">
-    <span class="credit-bar__text">Developed by</span>
-    <a class="credit-bar__link" href="https://www.vibrnd.in" target="_blank" rel="noopener noreferrer" aria-label="vibrnd — www.vibrnd.in">
-      <img class="credit-bar__logo" src="/img/vibrnd-logo.png" alt="vibrnd"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
-      <span class="credit-bar__word" style="display:none">vibrnd</span>
-    </a>
-  </div>
-
+  <!-- footer, floating CTA, modal & credit bar injected by partials.js -->
+  <script src="/js/partials.js"></script>
   <script src="/js/main.js"></script>
   <script src="/js/enhance.js"></script>
 </body>
