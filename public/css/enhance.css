@@ -1053,18 +1053,21 @@ h1, h2, h3, h4 {
    28. COUNCIL — member headshots (circular, gold ring)
    ========================================================== */
 .leader { text-align: center; }
+/* Rounded-rectangle photo boxes that match the brochure's framing,
+   sized to the crop's aspect so the full headshot shows (no hard crop). */
 .leader__photo {
-  width: 92px; height: 92px; border-radius: 50%;
-  object-fit: cover; object-position: 50% 42%;
-  margin: 0 auto 14px; display: block;
+  width: 134px; aspect-ratio: 240 / 222; height: auto;
+  border-radius: 16px;
+  object-fit: cover; object-position: center;
+  margin: 0 auto 16px; display: block;
   border: 2px solid var(--gold);
-  box-shadow: 0 8px 20px -10px rgba(22,48,31,.5), inset 0 0 0 3px #fff;
+  box-shadow: 0 10px 26px -12px rgba(22,48,31,.55), inset 0 0 0 3px #fff;
   background: var(--ivory-2);
 }
-.leader--lead .leader__photo { width: 112px; height: 112px; border-width: 2.5px; }
+.leader--lead .leader__photo { width: 152px; border-width: 2.5px; }
 .leader:hover .leader__photo { border-color: var(--gold-bright); }
 @media (max-width: 560px) {
-  .leader__photo, .leader--lead .leader__photo { width: 96px; height: 96px; }
+  .leader__photo, .leader--lead .leader__photo { width: 144px; }
 }
 
 /* ==========================================================
