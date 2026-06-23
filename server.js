@@ -70,10 +70,12 @@ app.use(express.json());
 app.use('/uploads', express.static(uploads.UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR, {
   setHeaders(res, filePath) {
-    // Long-cache fingerprint-free static assets; keep HTML fresh so edits show.
-    if (/\.(?:css|js|mp4|jpe?g|png|gif|svg|webp|woff2?|ico)$/i.test(filePath)) {
-      res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days
-    } else if (/\.html?$/i.test(filePath)) {
+    // Heavy media rarely changes → cache a week (big repeat-visit win).
+    if (/\.(?:mp4|jpe?g|png|gif|svg|webp|woff2?|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days
+    } else if (/\.(?:css|js|html?)$/i.test(filePath)) {
+      // Code/markup must always reflect the latest deploy → revalidate via
+      // ETag (cheap 304s) so updates show immediately, no 30-day staleness.
       res.setHeader('Cache-Control', 'no-cache');
     }
   },

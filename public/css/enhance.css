@@ -1086,6 +1086,11 @@ h1, h2, h3, h4 {
 @media (max-width: 560px) {
   .floating-register { padding: 13px 22px; }
 }
+/* Desktop: drop the floating Register button (header CTA is enough);
+   keep it only on mobile, where the header CTA scrolls away. */
+@media (min-width: 701px) {
+  .floating-register { display: none !important; }
+}
 
 /* ==========================================================
    32. MOTION & POLISH
