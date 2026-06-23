@@ -1086,3 +1086,74 @@ h1, h2, h3, h4 {
 @media (max-width: 560px) {
   .floating-register { padding: 13px 22px; }
 }
+
+/* ==========================================================
+   32. MOTION & POLISH
+   scroll progress · heading underline draw · image zoom ·
+   twinkling dividers · directional reveals · unified lift
+   ========================================================== */
+
+/* 32.1 — Scroll-progress bar (width driven by main.js initScrollProgress) */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 1200;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright, #E6B422), var(--gold));
+  box-shadow: 0 0 12px rgba(197, 162, 83, .65);
+  pointer-events: none; will-change: width;
+  transition: width .12s linear;
+}
+
+/* 32.2 — Section heading: gold underline that draws in on reveal */
+.section-head h2 { position: relative; display: inline-block; }
+.section-head h2::after {
+  content: ''; position: absolute; left: 50%; bottom: -14px;
+  width: 66px; height: 2px; transform: translateX(-50%) scaleX(0);
+  transform-origin: 50% 50%;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  transition: transform 1s var(--ease-out) .3s;
+}
+.section-head.is-visible h2::after { transform: translateX(-50%) scaleX(1); }
+
+/* 32.3 — Image figures: cinematic slow zoom + warmth on hover */
+.photo { overflow: hidden; }
+.photo img {
+  transition: transform 1.2s var(--ease-out), filter .7s var(--ease-out);
+  will-change: transform;
+}
+.photo:hover img { transform: scale(1.06); filter: saturate(1.07) brightness(1.02); }
+
+/* 32.4 — Council headshots: gentle lift + zoom on hover */
+.leader__photo { transition: transform .5s var(--ease-out), border-color .5s var(--ease-out), box-shadow .5s var(--ease-out); }
+.leader:hover .leader__photo { transform: translateY(-4px) scale(1.03); box-shadow: 0 14px 30px rgba(31, 61, 46, .22); }
+
+/* 32.5 — Directional reveal variants (assigned in markup/JS for variety) */
+.reveal--left  { transform: translateX(-36px) scale(.99); }
+.reveal--right { transform: translateX(36px) scale(.99); }
+.reveal--scale { transform: scale(.92); }
+.reveal--left.is-visible,
+.reveal--right.is-visible,
+.reveal--scale.is-visible { transform: none; }
+
+/* 32.6 — Unified soft lift across interactive cards */
+.why-card, .leader, .day-col, .sponsor-card, .sponsor-mini, .venue-card, .org-card, .charter-card {
+  transition: transform .5s var(--ease-out), box-shadow .5s var(--ease-out),
+              border-color .5s var(--ease-out), background-color .5s var(--ease-out);
+}
+.why-card:hover, .day-col:hover, .venue-card:hover,
+.org-card:hover, .sponsor-mini:hover { transform: translateY(-5px); }
+
+/* 32.7 — Twinkling diamonds on the gold rules */
+.gold-rule .diamond { animation: twinkle 3.8s ease-in-out infinite; }
+@keyframes twinkle {
+  0%, 100% { opacity: .55; transform: rotate(45deg) scale(.9); }
+  50%      { opacity: 1;   transform: rotate(45deg) scale(1.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress { display: none; }
+  .photo:hover img,
+  .leader:hover .leader__photo,
+  .why-card:hover, .day-col:hover, .venue-card:hover,
+  .org-card:hover, .sponsor-mini:hover { transform: none; }
+  .gold-rule .diamond { animation: none; }
+  .section-head h2::after { transition: none; }
+}

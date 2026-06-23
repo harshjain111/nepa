@@ -161,7 +161,7 @@
     const grid = document.getElementById('whyGrid');
     if (!grid) return;
     grid.innerHTML = WHY.map((c, i) => `
-      <article class="why-card reveal" data-delay="${(i % 4) + 1}">
+      <article class="why-card reveal reveal--scale" data-delay="${(i % 4) + 1}">
         <span class="why-card__icon">${WHY_ICONS[i] || ''}</span>
         <h3>${esc(c.t)}</h3>
         <p>${esc(c.d)}</p>
@@ -197,7 +197,7 @@
     const grid = document.getElementById('sponsorGrid');
     if (grid) {
       grid.innerHTML = SPONSOR_TIERS.map((s, i) => `
-        <article class="sponsor-card sponsor-card--${s.rank} reveal" data-tier="${esc(s.tier)}" data-delay="${(i % 3) + 1}">
+        <article class="sponsor-card sponsor-card--${s.rank} reveal reveal--scale" data-tier="${esc(s.tier)}" data-delay="${(i % 3) + 1}">
           <span class="sponsor-card__tier">${esc(s.tier)}</span>
           <span class="sponsor-card__amount">${esc(s.amount)} <em>+ GST</em></span>
           <ul class="sponsor-card__incl">
@@ -222,7 +222,7 @@
     const grid = document.getElementById('councilGrid');
     if (!grid) return;
     grid.innerHTML = COUNCIL.map((m, i) => `
-      <article class="leader${m.lead ? ' leader--lead' : ''} reveal" data-delay="${(i % 3) + 1}">
+      <article class="leader${m.lead ? ' leader--lead' : ''} reveal ${i % 3 === 0 ? 'reveal--left' : i % 3 === 2 ? 'reveal--right' : ''}" data-delay="${(i % 3) + 1}">
         ${m.img ? `<img class="leader__photo" src="${m.img}" alt="${esc(m.name)}" loading="lazy" />` : ''}
         <span class="leader__name">${esc(m.name)}</span>
         <span class="leader__role">${esc(m.role)}</span>

@@ -41,21 +41,77 @@
     card.style.setProperty('--my', `${e.clientY - r.top}px`);
   }, { passive: true });
 
-  /* ---- Hero video: desktop only (mobile keeps the lightweight poster) ---- */
+  /* ---- Hero video: robust autoplay (desktop only) ----
+     The mustard-field poster always shows; the video fades in once a real
+     frame is ready. We listen on EVERY "frame available" event (so a cached
+     load that fires before this runs is still caught), retry if autoplay is
+     blocked or the network stalls, and poll as a final safety net so the
+     hero never sits on a dim/blank frame. */
   const heroVideo = document.getElementById('heroVideo');
   if (heroVideo) {
     const wantVideo = !reduce &&
       window.matchMedia && window.matchMedia('(min-width: 760px)').matches;
     if (wantVideo) {
-      heroVideo.addEventListener('loadeddata', () => {
-        if (heroVideo.videoWidth > 0) heroVideo.classList.add('is-playing');
-      });
-      heroVideo.preload = 'auto';     // allow the source to fetch
-      const p = heroVideo.play();      // triggers load + playback
-      if (p && p.catch) p.catch(() => {});
+      const reveal = () => {
+        if (heroVideo.readyState >= 2) heroVideo.classList.add('is-playing');
+      };
+      ['loadeddata', 'canplay', 'canplaythrough', 'playing'].forEach((ev) =>
+        heroVideo.addEventListener(ev, reveal));
+
+      const attempt = () => {
+        const p = heroVideo.play();
+        if (p && p.catch) p.catch(() => {
+          // autoplay blocked → kick it off on the first user gesture
+          const kick = () => { heroVideo.play().catch(() => {}); };
+          ['pointerdown', 'touchstart', 'scroll', 'keydown'].forEach((ev) =>
+            window.addEventListener(ev, kick, { once: true, passive: true }));
+        });
+      };
+
+      heroVideo.preload = 'auto';
+      try { heroVideo.load(); } catch (_) {}   // force the source to fetch
+      reveal();                                 // cached / already-ready case
+      attempt();
+
+      // safety net: retry up to ~6s, then stop once it's actually playing
+      let ticks = 0;
+      const guard = setInterval(() => {
+        reveal();
+        if (heroVideo.paused) attempt();
+        if (++ticks >= 10 || (!heroVideo.paused && heroVideo.readyState >= 3)) {
+          clearInterval(guard);
+        }
+      }, 600);
+
+      // if the source genuinely fails, leave the poster in place (no error UI)
+      heroVideo.addEventListener('error', () => clearInterval(guard));
     }
     // On mobile / reduced-motion the poster (hero-field.jpg) remains the backdrop.
   }
+
+  /* ---- 5. Scroll-spy: highlight the in-view section in the nav ----
+     (the scroll-progress bar itself is handled by main.js initScrollProgress) */
+  (function scrollSpy() {
+    const links = Array.from(document.querySelectorAll('.nav a[href*="#"]'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const map = new Map();
+    links.forEach((a) => {
+      const id = (a.getAttribute('href').split('#')[1] || '').trim();
+      const sec = id && document.getElementById(id);
+      if (sec) map.set(sec, a);
+    });
+    if (!map.size) return;
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        // only manage anchor links so the cross-page is-active stays intact
+        map.forEach((a, sec) => {
+          if (a.getAttribute('href').includes('#')) a.classList.toggle('is-active', sec === e.target);
+        });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    map.forEach((_, sec) => spy.observe(sec));
+  })();
 
   if (reduce) return; // skip the heavier motion below
 
