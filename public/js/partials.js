@@ -74,6 +74,7 @@
             <li>NEPA, Ajit Singh Bothra &amp; Sons</li>
             <li>Lakhi Gali, Guwahati – 781001</li>
             <li><a href="tel:+918876590074">+91 88765 90074</a> · Abhishek Mour</li>
+            <li><a href="tel:+919091655502">+91 90916 55502</a> · Abhishek Mour (The Midas Touch)</li>
             <li><a href="mailto:nepaconnect2026@gmail.com">nepaconnect2026@gmail.com</a></li>
           </ul>
         </div>
