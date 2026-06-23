@@ -5,7 +5,7 @@
    Palette & type per CLAUDE.md §3.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap');
+/* Fonts are loaded via <link> in each page's <head> (faster than @import). */
 
 :root {
   /* Palette */

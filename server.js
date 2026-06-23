@@ -68,7 +68,16 @@ const upload = multer({
 app.use(express.json());
 // Local-disk uploads (no-op on Vercel, where Blob serves absolute URLs).
 app.use('/uploads', express.static(uploads.UPLOAD_DIR));
-app.use(express.static(PUBLIC_DIR));
+app.use(express.static(PUBLIC_DIR, {
+  setHeaders(res, filePath) {
+    // Long-cache fingerprint-free static assets; keep HTML fresh so edits show.
+    if (/\.(?:css|js|mp4|jpe?g|png|gif|svg|webp|woff2?|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days
+    } else if (/\.html?$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MOBILE_RE = /^\d{10}$/;
