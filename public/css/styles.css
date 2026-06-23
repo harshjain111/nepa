@@ -379,26 +379,27 @@ p { margin: 0 0 1em; }
 
 /* ---------- Credit bar (Developed by vibrnd) ---------- */
 .credit-bar {
-  background: #ffffff;
-  border-top: 1px solid rgba(197,162,83,.28);
-  padding: 13px 20px;
+  /* Dark overlay strip that continues the green footer above it */
+  background: rgba(11, 26, 17, .94);
+  border-top: 1px solid rgba(197,162,83,.30);
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 11px;
   font-size: .82rem;
-  color: var(--muted);
+  color: rgba(251, 246, 234, .72);
 }
-.credit-bar__text { letter-spacing: .03em; }
-.credit-bar__link { display: inline-flex; align-items: center; line-height: 0; }
-.credit-bar__logo { height: 24px; width: auto; object-fit: contain; display: block; }
+.credit-bar__text { letter-spacing: .05em; text-transform: uppercase; font-size: .72rem; }
+.credit-bar__link { display: inline-flex; align-items: center; line-height: 0; transition: opacity .3s var(--ease-out, ease); }
+.credit-bar__link:hover { opacity: .8; }
+.credit-bar__logo { height: 38px; width: auto; object-fit: contain; display: block; }
 .credit-bar__word {
   font-weight: 700;
-  letter-spacing: .04em;
-  color: var(--green);
+  letter-spacing: .08em;
+  color: var(--ivory);
   line-height: 1;
 }
-.credit-bar__link:hover .credit-bar__word { color: var(--sienna); }
 
 /* ---------- Reveal-on-scroll ---------- */
 .reveal {

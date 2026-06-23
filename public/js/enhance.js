@@ -16,18 +16,26 @@
   const fine = window.matchMedia &&
     window.matchMedia('(pointer: fine)').matches;
 
-  /* ---- 0. Floating register: show only after the top hero ---- */
+  /* ---- 0. Floating register: show only between the hero and the footer ---- */
   const floatBtn = document.querySelector('.floating-register');
   const topHero = document.querySelector('.hero, .page-hero');
+  const pageFoot = document.querySelector('.site-footer, .credit-bar');
   if (floatBtn) {
-    if (topHero && 'IntersectionObserver' in window) {
-      const io = new IntersectionObserver(
-        ([e]) => floatBtn.classList.toggle('is-shown', !e.isIntersecting),
-        { threshold: 0 }
-      );
-      io.observe(topHero);
+    if ('IntersectionObserver' in window && (topHero || pageFoot)) {
+      let heroIn = !!topHero;   // start hidden when sitting on the hero
+      let footIn = false;
+      const apply = () => floatBtn.classList.toggle('is-shown', !heroIn && !footIn);
+      if (topHero) {
+        new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; apply(); },
+          { threshold: 0 }).observe(topHero);
+      }
+      if (pageFoot) {
+        new IntersectionObserver(([e]) => { footIn = e.isIntersecting; apply(); },
+          { threshold: 0 }).observe(pageFoot);
+      }
+      apply();
     } else {
-      floatBtn.classList.add('is-shown'); // no hero on page → always available
+      floatBtn.classList.add('is-shown'); // no anchors → always available
     }
   }
 
@@ -163,8 +171,10 @@
       btn.addEventListener('pointerleave', () => { btn.style.transform = ''; });
     };
     // run after main.js has had a tick to add .btn-shine etc.
+    // NB: the floating Register pill is intentionally excluded — it must stay
+    // put (its centering transform would fight the magnetic translate).
     const wire = () => document
-      .querySelectorAll('.hero__cta .btn-primary, .floating-register')
+      .querySelectorAll('.hero__cta .btn-primary')
       .forEach(magnetize);
     if (document.readyState === 'complete') wire();
     else window.addEventListener('load', wire);

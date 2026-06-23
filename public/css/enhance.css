@@ -1079,7 +1079,14 @@ h1, h2, h3, h4 {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: translateX(-50%) translateY(0);
 }
-.floating-register.is-shown:hover { transform: translateX(-50%) translateY(-3px) scale(1.03); }
+/* Stay put on hover — no shift/scale; just a subtle glow + brightening.
+   (override the generic .floating-register:hover that drops the centring) */
+.floating-register:hover,
+.floating-register.is-shown:hover {
+  transform: translateX(-50%) translateY(0) !important;
+  filter: brightness(1.05);
+  box-shadow: 0 12px 30px rgba(31, 61, 46, .3);
+}
 .floating-register::before { display: none; }   /* remove the pulse ring */
 /* keep the label on mobile too */
 .floating-register span { display: inline-block !important; }
