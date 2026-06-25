@@ -104,7 +104,20 @@ app.get('/api/config', (req, res) => {
 
 // Public registration (multipart: optional "screenshot")
 app.post('/api/register', (req, res) => {
-  upload.single('screenshot')(req, res, wrap(async (err) => {
+  // multer calls this callback with (err) only — so we must use the route's
+  // own req/res (not wrap's args) and catch async errors ourselves, otherwise
+  // a storage failure crashes the function and the platform returns non-JSON.
+  upload.single('screenshot')(req, res, (err) => {
+    handleRegister(req, res, err).catch((e) => {
+      console.error('register failed:', e);
+      if (!res.headersSent) {
+        res.status(500).json({ ok: false, error: 'Could not save your registration. Please try again or contact the Secretariat.' });
+      }
+    });
+  });
+});
+
+async function handleRegister(req, res, err) {
     if (err) return res.status(400).json({ ok: false, error: err.message });
 
     const b = req.body || {};
@@ -146,7 +159,16 @@ app.post('/api/register', (req, res) => {
       feeType: record.feeType,
       fullName: record.fullName,
     });
-  }));
+}
+
+// Health / storage diagnostics — confirms which backend is actually live.
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    store: store.backend,       // 'postgres' (persistent) or 'json-file' (ephemeral on Vercel)
+    uploads: uploads.backend,   // 'supabase-storage' | 'vercel-blob' | 'disk'
+    persistent: store.backend === 'postgres',
+  });
 });
 
 // Public contact / enquiry form
