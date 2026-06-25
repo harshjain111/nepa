@@ -13,18 +13,19 @@ so `npm start` still works with zero setup.
 ## 1. Set up Supabase (one-time)
 
 Create a **new Supabase project** for the Conclave (keep it separate from any
-other app). Then collect three values:
+other app). Then:
 
-1. **Database URL** — Project Settings → Database → *Connection string* → **URI**.
-   Use the **Transaction pooler** string (host `...pooler.supabase.com:6543`) for
-   serverless. This becomes `DATABASE_URL`.
-2. **Project URL** — Project Settings → API → *Project URL* → `SUPABASE_URL`.
-3. **service_role key** — Project Settings → API → *service_role* secret →
-   `SUPABASE_SERVICE_ROLE_KEY` (server-only; never expose to the browser).
+1. **Create the tables** — open Supabase → **SQL Editor**, paste the contents of
+   [`supabase/schema.sql`](supabase/schema.sql), and click **Run**. (Data is
+   accessed over the Supabase HTTPS API — no Postgres connection string needed,
+   which avoids all serverless connection-pooling issues.)
+2. Collect two values from **Project Settings → API**:
+   - **Project URL** → `SUPABASE_URL` (`https://<ref>.supabase.co`)
+   - **service_role** secret → `SUPABASE_SERVICE_ROLE_KEY`
+     (⚠️ the **service_role** key, *not* the anon key — server-only, never in the browser)
 
-The app **creates its tables automatically** on first request, and **creates the
-Storage bucket** (`screenshots`, public) automatically too — no manual SQL or
-bucket setup needed.
+The **Storage bucket** (`screenshots`, public) is created automatically on the
+first upload — no manual bucket setup needed.
 
 ## 2. Test locally against Supabase (optional but recommended)
 
@@ -42,14 +43,16 @@ Vercel project → **Settings → Environment Variables** (Production + Preview)
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | the Supabase Transaction-pooler URI |
 | `SUPABASE_URL` | `https://<ref>.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | the service_role secret |
+| `SUPABASE_SERVICE_ROLE_KEY` | the **service_role** secret (not anon) |
 | `SUPABASE_BUCKET` | `screenshots` (optional; this is the default) |
 | `ADMIN_ID` | your admin username (default `admin`) |
 | `ADMIN_PASSWORD` | **change this** from the `nepa2026` default |
 | `AUTH_SECRET` | a long random string (`openssl rand -hex 32`) |
 | `EARLY_BIRD_CUTOFF` | `2026-08-15` (optional) |
+
+> `DATABASE_URL`/`POSTGRES_URL` are no longer used — data goes over the Supabase
+> API. You can remove them from Vercel if present.
 
 ## 4. Deploy
 

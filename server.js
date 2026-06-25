@@ -161,13 +161,24 @@ async function handleRegister(req, res, err) {
     });
 }
 
-// Health / storage diagnostics — confirms which backend is actually live.
-app.get('/api/health', (req, res) => {
+// Health / storage diagnostics — actually probes the datastore so it reflects
+// real connectivity (not just whether env vars are present).
+app.get('/api/health', async (req, res) => {
+  let db = 'ok';
+  let dbError = null;
+  try {
+    await store.listMessages(); // cheap read; throws if the table/connection is broken
+  } catch (err) {
+    db = 'error';
+    dbError = err.message;
+  }
   res.json({
-    ok: true,
-    store: store.backend,       // 'postgres' (persistent) or 'json-file' (ephemeral on Vercel)
-    uploads: uploads.backend,   // 'supabase-storage' | 'vercel-blob' | 'disk'
-    persistent: store.backend === 'postgres',
+    ok: db === 'ok',
+    store: store.backend,        // 'supabase' or 'json-file'
+    uploads: uploads.backend,    // 'supabase-storage' | 'vercel-blob' | 'disk'
+    persistent: store.backend !== 'json-file',
+    db,                          // 'ok' or 'error'
+    dbError,                     // surfaces the real reason if db === 'error'
   });
 });
 

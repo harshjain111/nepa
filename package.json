@@ -15,7 +15,6 @@
     "@supabase/supabase-js": "^2.45.0",
     "@vercel/blob": "^2.4.1",
     "express": "^4.19.2",
-    "multer": "^2.2.0",
-    "pg": "^8.13.0"
+    "multer": "^2.2.0"
   }
 }
