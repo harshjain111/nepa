@@ -363,24 +363,36 @@
     const rows = filtered();
     if (!rows.length) { alert('No rows to export.'); return; }
     const origin = window.location.origin;
-    const data = rows.map((r) => ({
-      'Reg ID': r.regId,
-      'Name': r.fullName,
-      'Organization': r.organization,
-      'Mobile': r.mobile,
-      'Email': r.email,
-      'NEPA Member': r.nepaMember ? 'Yes' : 'No',
-      'Fee Type': r.feeType,
-      'Delegate Fee': r.delegateFee,
-      'Membership Fee': r.membershipFee,
-      'Total Amount': r.totalAmount,
-      'Payment Method': r.paymentMethod,
-      'Reference No': r.referenceNo || '',
-      'Screenshot URL': r.screenshotUrl ? origin + r.screenshotUrl : '',
-      'Note': r.note || '',
-      'Status': r.status,
-      'Registered': fmtDate(r.createdAt),
-    }));
+    const data = rows.map((r) => {
+      // Fall back gracefully for rows saved before GST breakdown existed.
+      const subtotal = r.subtotal != null ? r.subtotal : (Number(r.delegateFee) || 0) + (Number(r.membershipFee) || 0);
+      const gstAmount = r.gstAmount != null ? r.gstAmount : Math.max(0, (Number(r.totalAmount) || 0) - subtotal);
+      const gstPct = r.gstRate ? Math.round(r.gstRate * 100) : 18;
+      // Supabase Storage returns absolute URLs; only prepend origin for local /uploads paths.
+      const shot = r.screenshotUrl
+        ? (/^https?:\/\//.test(r.screenshotUrl) ? r.screenshotUrl : origin + r.screenshotUrl)
+        : '';
+      return {
+        'Reg ID': r.regId,
+        'Name': r.fullName,
+        'Organization': r.organization,
+        'Mobile': r.mobile,
+        'Email': r.email,
+        'NEPA Member': r.nepaMember ? 'Yes' : 'No',
+        'Fee Type': r.feeType,
+        'Delegate Fee': r.delegateFee,
+        'Membership Fee': r.membershipFee,
+        'Subtotal': subtotal,
+        [`GST (${gstPct}%)`]: gstAmount,
+        'Total Amount': r.totalAmount,
+        'Payment Method': r.paymentMethod,
+        'Reference No': r.referenceNo || '',
+        'Screenshot URL': shot,
+        'Note': r.note || '',
+        'Status': r.status,
+        'Registered': fmtDate(r.createdAt),
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
