@@ -58,3 +58,8 @@ alter table registrations add column if not exists gst_amount  integer not null 
 
 alter table messages alter column id         set default gen_random_uuid();
 alter table messages alter column created_at set default now();
+
+-- One registration per mobile number. Deleting a registration frees the
+-- number so the delegate can register again. (Fails only if duplicate
+-- mobiles already exist — clean those up first if so.)
+create unique index if not exists registrations_mobile_unique on registrations (mobile);

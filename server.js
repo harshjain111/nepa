@@ -139,6 +139,13 @@ async function handleRegister(req, res, err) {
       return res.status(400).json({ ok: false, error: 'Payment screenshot is required for UPI and Bank Transfer' });
     }
 
+    // One registration per mobile number. If a delegate needs to change
+    // anything, the admin must delete their existing entry first — only then
+    // can the number register again. Check before uploading the screenshot.
+    const DUP_MSG = 'This mobile number is already registered. If you need to correct or change your details, please contact the Secretariat (94350-40234) — they will remove the existing entry so you can register again.';
+    const existing = await store.findRegistrationByMobile(mobile);
+    if (existing) return res.status(409).json({ ok: false, error: DUP_MSG });
+
     const { feeType, delegateFee } = currentFee();
     const membershipFee = nepaMember ? MEMBERSHIP_FEE : 0;
     const subtotal = delegateFee + membershipFee;
@@ -146,11 +153,21 @@ async function handleRegister(req, res, err) {
     const totalAmount = subtotal + gstAmount;
     const screenshotUrl = req.file ? await uploads.saveUpload(req.file) : null;
 
-    const record = await store.addRegistration({
-      fullName, mobile, email, organization, nepaMember, feeType,
-      delegateFee, membershipFee, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
-      paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note: note || null,
-    });
+    let record;
+    try {
+      record = await store.addRegistration({
+        fullName, mobile, email, organization, nepaMember, feeType,
+        delegateFee, membershipFee, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
+        paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note: note || null,
+      });
+    } catch (e) {
+      // Race: two submits with the same number at once — DB unique index wins.
+      if (e && e.code === 'DUPLICATE_MOBILE') {
+        if (screenshotUrl) await uploads.deleteUpload(screenshotUrl); // don't orphan the file
+        return res.status(409).json({ ok: false, error: DUP_MSG });
+      }
+      throw e;
+    }
 
     res.json({
       ok: true,
