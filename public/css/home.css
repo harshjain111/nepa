@@ -343,6 +343,31 @@
 .delegate-row__name { display: block; font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; color: var(--green); }
 .delegate-row__note { display: block; font-size: .78rem; color: var(--muted); }
 .delegate-row__price { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--sienna); }
+.delegate-card__incl {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 18px 0 0;
+  border-top: 1px solid rgba(197,162,83,.35);
+  text-align: left;
+  display: grid;
+  gap: 10px;
+}
+.delegate-card__incl li {
+  position: relative;
+  padding-left: 26px;
+  font-size: .92rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.delegate-card__incl li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 2px;
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FBF6EA' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/11px no-repeat;
+}
+.delegate-card__incl-note { display: block; font-size: .78rem; color: var(--muted); font-style: italic; }
 .delegate-card__live { font-size: .78rem; color: var(--muted); text-align: center; margin: 12px 0 0; }
 
 .sponsor-intro {
@@ -623,6 +648,11 @@
   border-bottom: 1px dashed rgba(197,162,83,.35);
   font-size: .95rem;
   color: var(--ink);
+}
+.price-row--sub,
+.price-row--gst {
+  font-size: .88rem;
+  color: var(--muted);
 }
 .price-row--total {
   border-bottom: 0;

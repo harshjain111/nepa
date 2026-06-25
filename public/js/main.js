@@ -341,30 +341,43 @@
       form.querySelectorAll('.field--invalid').forEach((f) => f.classList.remove('field--invalid'));
     };
 
-    /* ---- pricing ---- */
+    /* ---- pricing (GST added on top of delegate + membership) ---- */
     const delegateFee = config.delegateFee;
     const membershipFee = config.membershipFee;
     const feeType = config.feeType;
+    const gstRate = typeof config.gstRate === 'number' ? config.gstRate : 0.18;
+    const gstPct = Math.round(gstRate * 100);
+
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
 
     const updatePrices = () => {
       const member = state.member === true;
-      const total = delegateFee + (member ? membershipFee : 0);
-      document.getElementById('delegateLabel').textContent = `Delegate Fee (${feeType})`;
-      document.getElementById('delegateAmount').textContent = inr(delegateFee);
-      document.getElementById('memberAmount').textContent = inr(membershipFee);
+      const subtotal = delegateFee + (member ? membershipFee : 0);
+      const gst = Math.round(subtotal * gstRate);
+      const total = subtotal + gst;
+      setText('delegateLabel', `Delegate Fee (${feeType})`);
+      setText('delegateAmount', inr(delegateFee));
+      setText('memberAmount', inr(membershipFee));
       document.getElementById('memberRow').hidden = !member;
-      document.getElementById('totalAmount').textContent = inr(total);
-      document.getElementById('payAmount').textContent = inr(total);
+      setText('subtotalAmount', inr(subtotal));
+      setText('gstLabel', `GST (${gstPct}%)`);
+      setText('gstAmount', inr(gst));
+      setText('totalAmount', inr(total));
+      setText('payAmount', inr(total));
     };
 
-    // initial tariff live note + summary defaults
+    // initial tariff live note + summary defaults (no membership selected yet)
+    const baseGst = Math.round(delegateFee * gstRate);
     const liveNote = document.getElementById('tariffLiveNote');
-    if (liveNote) liveNote.textContent = `Current rate: ${feeType} — ${inr(delegateFee)} (membership +${inr(membershipFee)}).`;
-    document.getElementById('delegateLabel').textContent = `Delegate Fee (${feeType})`;
-    document.getElementById('delegateAmount').textContent = inr(delegateFee);
-    document.getElementById('totalAmount').textContent = inr(delegateFee);
-    document.getElementById('payAmount').textContent = inr(delegateFee);
-    document.getElementById('memberAmount').textContent = inr(membershipFee);
+    if (liveNote) liveNote.textContent = `Current rate: ${feeType} — ${inr(delegateFee)} + ${gstPct}% GST (membership +${inr(membershipFee)}).`;
+    setText('delegateLabel', `Delegate Fee (${feeType})`);
+    setText('delegateAmount', inr(delegateFee));
+    setText('memberAmount', inr(membershipFee));
+    setText('subtotalAmount', inr(delegateFee));
+    setText('gstLabel', `GST (${gstPct}%)`);
+    setText('gstAmount', inr(baseGst));
+    setText('totalAmount', inr(delegateFee + baseGst));
+    setText('payAmount', inr(delegateFee + baseGst));
 
     /* ---- step navigation ---- */
     const showStep = (n) => {
@@ -712,7 +725,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    let config = { feeType: 'Early Bird', delegateFee: 8000, membershipFee: 3100, earlyBirdCutoff: '2026-08-15' };
+    let config = { feeType: 'Early Bird', delegateFee: 8000, membershipFee: 3100, gstRate: 0.18, earlyBirdCutoff: '2026-08-15' };
     try {
       const res = await fetch('/api/config');
       if (res.ok) config = await res.json();

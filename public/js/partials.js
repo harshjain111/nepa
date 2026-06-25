@@ -123,9 +123,11 @@
           <div class="price-summary" id="priceSummary">
             <div class="price-row"><span id="delegateLabel">Delegate Fee</span><span id="delegateAmount">₹8,000</span></div>
             <div class="price-row price-row--member" id="memberRow" hidden><span>NEPA Membership</span><span id="memberAmount">₹3,100</span></div>
-            <div class="price-row price-row--total"><span>Total Payable</span><span id="totalAmount">₹8,000</span></div>
+            <div class="price-row price-row--sub"><span>Subtotal</span><span id="subtotalAmount">₹8,000</span></div>
+            <div class="price-row price-row--gst"><span id="gstLabel">GST (18%)</span><span id="gstAmount">₹1,440</span></div>
+            <div class="price-row price-row--total"><span>Total Payable</span><span id="totalAmount">₹9,440</span></div>
           </div>
-          <p class="price-gst-note">All delegate fees are exclusive of GST, charged as applicable.</p>
+          <p class="price-gst-note">GST @ 18% is included in the total payable above.</p>
           <div class="form-nav"><button type="button" class="btn btn-ghost" data-prev>Back</button><button type="button" class="btn btn-primary" data-next>Continue</button></div>
         </div>
         <div class="form-step" data-step-panel="3">

@@ -32,6 +32,7 @@ const EARLY_BIRD_CUTOFF = process.env.EARLY_BIRD_CUTOFF || '2026-08-15';
 const DELEGATE_FEE_EARLY = 8000;
 const DELEGATE_FEE_SPOT = 10000;
 const MEMBERSHIP_FEE = 3100;
+const GST_RATE = 0.18; // 18% GST added on top of delegate + membership fees
 
 const ADMIN_ID = process.env.ADMIN_ID || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
@@ -98,7 +99,7 @@ const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => 
 // Pricing constants + cutoff
 app.get('/api/config', (req, res) => {
   const { feeType, delegateFee } = currentFee();
-  res.json({ earlyBirdCutoff: EARLY_BIRD_CUTOFF, feeType, delegateFee, membershipFee: MEMBERSHIP_FEE });
+  res.json({ earlyBirdCutoff: EARLY_BIRD_CUTOFF, feeType, delegateFee, membershipFee: MEMBERSHIP_FEE, gstRate: GST_RATE });
 });
 
 // Public registration (multipart: optional "screenshot")
@@ -127,11 +128,14 @@ app.post('/api/register', (req, res) => {
 
     const { feeType, delegateFee } = currentFee();
     const membershipFee = nepaMember ? MEMBERSHIP_FEE : 0;
+    const subtotal = delegateFee + membershipFee;
+    const gstAmount = Math.round(subtotal * GST_RATE);
+    const totalAmount = subtotal + gstAmount;
     const screenshotUrl = req.file ? await uploads.saveUpload(req.file) : null;
 
     const record = await store.addRegistration({
       fullName, mobile, email, organization, nepaMember, feeType,
-      delegateFee, membershipFee, totalAmount: delegateFee + membershipFee,
+      delegateFee, membershipFee, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
       paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note: note || null,
     });
 
