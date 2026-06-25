@@ -141,8 +141,8 @@
           <span class="field__error" data-error-for="method"></span>
           <div class="pay-panel" data-pay-panel="UPI" hidden>
             <div class="upi-box">
-              <div class="qr-placeholder">QR Code<br />Placeholder</div>
-              <div class="upi-meta"><span class="pay-label">UPI ID</span><span class="pay-value" id="upiId">nepa-conclave@upi (placeholder)</span><p class="pay-hint">Scan the QR or pay to the UPI ID above, then upload your payment screenshot.</p></div>
+              <img class="qr-img" src="/img/upi-qr.png" alt="UPI QR code — National Edible Oil Promotion Association" width="180" height="180" loading="lazy" />
+              <div class="upi-meta"><span class="pay-label">UPI ID</span><span class="pay-value" id="upiId">3423262a@bandhan</span><p class="pay-hint">Scan the QR or pay to the UPI ID above, then upload your payment screenshot.</p></div>
             </div>
             <div class="field"><label for="upiScreenshot">Payment Screenshot <span class="req">required</span></label><input type="file" id="upiScreenshot" accept="image/*" data-upload="UPI" /><span class="field__error" data-error-for="upiScreenshot"></span></div>
           </div>
@@ -153,6 +153,7 @@
               <div class="bank-row"><span>Account No.</span><strong>20100082897192</strong></div>
               <div class="bank-row"><span>IFSC</span><strong>BDBL0002488</strong></div>
               <div class="bank-row"><span>Branch</span><strong>Fancy Bazar, Guwahati</strong></div>
+              <div class="bank-row"><span>GSTIN</span><strong>18AAGCB1323G1Z2</strong></div>
             </div>
             <div class="field"><label for="bankRef">Reference / UTR No. <span class="opt">optional</span></label><input type="text" id="bankRef" name="referenceNo" /></div>
             <div class="field"><label for="bankScreenshot">Payment Screenshot <span class="req">required</span></label><input type="file" id="bankScreenshot" accept="image/*" data-upload="Bank" /><span class="field__error" data-error-for="bankScreenshot"></span></div>
