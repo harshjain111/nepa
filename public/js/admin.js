@@ -200,11 +200,18 @@
       const shot = r.screenshotUrl
         ? `<button class="link-view" data-view="${esc(r.screenshotUrl)}">View</button>`
         : '<span class="cell-muted">—</span>';
-      const statusClass = r.status === 'Confirmed' ? 'status-toggle--confirmed' : 'status-toggle--pending';
-      // Viewer: status shown as a static pill, no toggle/delete controls.
+      const confirmed = r.status === 'Confirmed';
+      const badge = `<span class="status-badge status-badge--${confirmed ? 'confirmed' : 'pending'}">${confirmed ? 'Confirmed' : 'Pending'}</span>`;
+      // Viewer sees just the badge; admin gets an explicit action so it's
+      // obvious what clicking does ("Click to confirm" / "Undo").
       const statusCell = isViewer()
-        ? `<span class="status-toggle ${statusClass}" style="cursor:default">${esc(r.status)}</span>`
-        : `<button class="status-toggle ${statusClass}" data-toggle="${esc(r.id)}">${esc(r.status)}</button>`;
+        ? badge
+        : `<div class="status-set">
+             ${badge}
+             ${confirmed
+               ? `<button class="status-action status-action--undo" data-toggle="${esc(r.id)}" title="Revert to Pending">Undo</button>`
+               : `<button class="status-action status-action--confirm" data-toggle="${esc(r.id)}">Click to confirm</button>`}
+           </div>`;
       const actionsCell = isViewer()
         ? '<span class="cell-muted">—</span>'
         : `<button class="btn-delete" data-delete="${esc(r.id)}" title="Delete">

@@ -233,6 +233,27 @@
 .status-toggle--pending { background: #fff; color: var(--muted); border-color: rgba(197,162,83,.5); }
 .status-toggle:hover { filter: brightness(.97); }
 
+/* Clearer status: a state badge + an explicit action ("Click to confirm" / "Undo") */
+.status-set { display: inline-flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+  padding: 3px 11px; border-radius: 999px; white-space: nowrap;
+}
+.status-badge--confirmed { background: rgba(31,61,46,.12); color: var(--green); }
+.status-badge--pending  { background: rgba(111,107,93,.14); color: var(--muted); }
+.status-badge--confirmed::before { content: '✓'; font-weight: 700; }
+
+.status-action {
+  font-family: var(--font-body); font-weight: 600; font-size: .72rem;
+  border-radius: 999px; cursor: pointer; white-space: nowrap;
+  border: 1px solid transparent; padding: 5px 13px; transition: filter .15s ease, background .15s ease;
+}
+.status-action--confirm { background: var(--mustard); color: #3a2c05; box-shadow: 0 1px 4px rgba(230,180,34,.4); }
+.status-action--confirm:hover { filter: brightness(.96); }
+.status-action--undo { background: none; color: var(--muted); text-decoration: underline; padding: 2px 4px; }
+.status-action--undo:hover { color: var(--sienna); }
+
 .link-view { color: var(--green); font-weight: 600; cursor: pointer; background: none; border: 0; font-family: var(--font-body); font-size: .84rem; text-decoration: underline; }
 .link-view:hover { color: var(--sienna); }
 
