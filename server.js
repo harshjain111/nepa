@@ -36,6 +36,9 @@ const GST_RATE = 0.18; // 18% GST added on top of delegate + membership fees
 
 const ADMIN_ID = process.env.ADMIN_ID || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
+// Read-only account: can view all records & screenshots, cannot edit or delete.
+const VIEWER_ID = process.env.VIEWER_ID || 'viewer';
+const VIEWER_PASSWORD = process.env.VIEWER_PASSWORD || 'nepa2026';
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -221,7 +224,10 @@ app.post('/api/contact', wrap(async (req, res) => {
 app.post('/api/admin/login', (req, res) => {
   const { id, password } = req.body || {};
   if (id === ADMIN_ID && password === ADMIN_PASSWORD) {
-    return res.json({ ok: true, token: auth.sign() });
+    return res.json({ ok: true, role: 'admin', token: auth.sign('admin') });
+  }
+  if (id === VIEWER_ID && password === VIEWER_PASSWORD) {
+    return res.json({ ok: true, role: 'viewer', token: auth.sign('viewer') });
   }
   res.status(401).json({ ok: false, error: 'Invalid credentials' });
 });
@@ -234,13 +240,13 @@ app.get('/api/registrations', auth.middleware, wrap(async (req, res) => {
   res.json({ ok: true, registrations: await store.listRegistrations() });
 }));
 
-app.patch('/api/registrations/:id/status', auth.middleware, wrap(async (req, res) => {
+app.patch('/api/registrations/:id/status', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
   const status = await store.setRegistrationStatus(req.params.id, (req.body && req.body.status) || null);
   if (status === null) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true, status });
 }));
 
-app.delete('/api/registrations/:id', auth.middleware, wrap(async (req, res) => {
+app.delete('/api/registrations/:id', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
   const removed = await store.deleteRegistration(req.params.id);
   if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
   if (removed.screenshotUrl) await uploads.deleteUpload(removed.screenshotUrl);
@@ -252,13 +258,13 @@ app.get('/api/messages', auth.middleware, wrap(async (req, res) => {
   res.json({ ok: true, messages: await store.listMessages() });
 }));
 
-app.patch('/api/messages/:id/read', auth.middleware, wrap(async (req, res) => {
+app.patch('/api/messages/:id/read', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
   const read = await store.setMessageRead(req.params.id, req.body && typeof req.body.read === 'boolean' ? req.body.read : undefined);
   if (read === null) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true, read });
 }));
 
-app.delete('/api/messages/:id', auth.middleware, wrap(async (req, res) => {
+app.delete('/api/messages/:id', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
   const ok = await store.deleteMessage(req.params.id);
   if (!ok) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true });

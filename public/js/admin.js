@@ -7,10 +7,13 @@
 
 (function () {
   const TOKEN_KEY = 'nepa_admin_token';
+  const ROLE_KEY = 'nepa_admin_role';
 
   /* ---------------- helpers ---------------- */
   const $ = (id) => document.getElementById(id);
   const token = () => sessionStorage.getItem(TOKEN_KEY);
+  const role = () => sessionStorage.getItem(ROLE_KEY) || 'admin';
+  const isViewer = () => role() === 'viewer';
 
   const esc = (s) =>
     String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
@@ -51,8 +54,16 @@
   function showDashboard() {
     loginScreen.hidden = true;
     dashboard.hidden = false;
+    applyRoleUI();
     loadRegistrations();
     loadMessages();
+  }
+
+  // Reflect read-only mode in the header (controls are also conditionally
+  // rendered per-row, and the backend rejects any write from a viewer).
+  function applyRoleUI() {
+    const sub = document.querySelector('.admin-header .brand__sub');
+    if (sub) sub.textContent = isViewer() ? 'Registrations · Read-only' : 'Registrations';
   }
   function showLogin() {
     dashboard.hidden = true;
@@ -75,6 +86,7 @@
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'Invalid credentials');
       sessionStorage.setItem(TOKEN_KEY, data.token);
+      sessionStorage.setItem(ROLE_KEY, data.role || 'admin');
       $('adminPassword').value = '';
       showDashboard();
     } catch (err) {
@@ -89,6 +101,7 @@
     try { await fetch('/api/admin/logout', { method: 'POST', headers: { Authorization: `Bearer ${token()}` } }); }
     catch (e) { /* ignore */ }
     sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(ROLE_KEY);
     showLogin();
   }
   $('logoutBtn').addEventListener('click', handleLogout);
@@ -188,6 +201,15 @@
         ? `<button class="link-view" data-view="${esc(r.screenshotUrl)}">View</button>`
         : '<span class="cell-muted">—</span>';
       const statusClass = r.status === 'Confirmed' ? 'status-toggle--confirmed' : 'status-toggle--pending';
+      // Viewer: status shown as a static pill, no toggle/delete controls.
+      const statusCell = isViewer()
+        ? `<span class="status-toggle ${statusClass}" style="cursor:default">${esc(r.status)}</span>`
+        : `<button class="status-toggle ${statusClass}" data-toggle="${esc(r.id)}">${esc(r.status)}</button>`;
+      const actionsCell = isViewer()
+        ? '<span class="cell-muted">—</span>'
+        : `<button class="btn-delete" data-delete="${esc(r.id)}" title="Delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+          </button>`;
       return `
         <tr>
           <td class="cell-name">${esc(r.fullName)}<br><span class="cell-muted" style="font-weight:400;font-size:.78rem">${esc(r.regId)}</span></td>
@@ -201,10 +223,8 @@
           <td>${r.referenceNo ? esc(r.referenceNo) : '<span class="cell-muted">—</span>'}</td>
           <td>${shot}</td>
           <td class="cell-muted">${esc(fmtDate(r.createdAt))}</td>
-          <td><button class="status-toggle ${statusClass}" data-toggle="${esc(r.id)}">${esc(r.status)}</button></td>
-          <td><button class="btn-delete" data-delete="${esc(r.id)}" title="Delete">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
-          </button></td>
+          <td>${statusCell}</td>
+          <td>${actionsCell}</td>
         </tr>`;
     }).join('');
   }
@@ -291,7 +311,16 @@
     const tbody = $('msgTbody');
     const rows = filteredMessages();
     $('msgEmpty').hidden = rows.length > 0;
-    tbody.innerHTML = rows.map((m) => `
+    tbody.innerHTML = rows.map((m) => {
+      const readCell = isViewer()
+        ? `<span class="status-toggle ${m.read ? 'status-toggle--pending' : 'status-toggle--confirmed'}" style="cursor:default">${m.read ? 'Read' : 'Unread'}</span>`
+        : `<button class="status-toggle ${m.read ? 'status-toggle--pending' : 'status-toggle--confirmed'}" data-msgread="${esc(m.id)}">${m.read ? 'Read' : 'Mark read'}</button>`;
+      const delCell = isViewer()
+        ? '<span class="cell-muted">—</span>'
+        : `<button class="btn-delete" data-msgdelete="${esc(m.id)}" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+        </button>`;
+      return `
       <tr class="${m.read ? '' : 'msg-row--unread'}">
         <td class="cell-name">${esc(m.name)}</td>
         <td class="cell-muted">${esc(m.email)}</td>
@@ -299,11 +328,10 @@
         <td>${m.subject ? esc(m.subject) : '<span class="cell-muted">—</span>'}</td>
         <td class="msg-cell">${esc(m.message)}</td>
         <td class="cell-muted">${esc(fmtDate(m.createdAt))}</td>
-        <td><button class="status-toggle ${m.read ? 'status-toggle--pending' : 'status-toggle--confirmed'}" data-msgread="${esc(m.id)}">${m.read ? 'Read' : 'Mark read'}</button></td>
-        <td><button class="btn-delete" data-msgdelete="${esc(m.id)}" title="Delete">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
-        </button></td>
-      </tr>`).join('');
+        <td>${readCell}</td>
+        <td>${delCell}</td>
+      </tr>`;
+    }).join('');
   }
 
   $('msgTbody').addEventListener('click', async (e) => {
