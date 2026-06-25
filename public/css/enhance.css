@@ -385,7 +385,16 @@ h1, h2, h3, h4 {
   opacity: 0; transition: opacity 1.2s var(--ease-out);
 }
 /* CINEMATIC photo/video hero — vivid media + dark veil + light type */
-.hero--photo .hero__video { opacity: .92; }
+/* The field image is the always-present backdrop (fallback when the video
+   can't autoplay — e.g. iOS Low Power Mode / slow networks). The <video> stays
+   invisible until it is truly playing, so no "tap to play" overlay ever shows. */
+.hero--photo {
+  background-image: url('/img/hero-field.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.hero--photo .hero__video { opacity: 0; }
 .hero--photo .hero__video.is-playing { opacity: 1; }
 /* dark green veil: strong at top & bottom (behind nav/title/countdown),
    lighter in the middle so the field stays vivid — gives real contrast */

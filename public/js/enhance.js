@@ -49,52 +49,65 @@
     card.style.setProperty('--my', `${e.clientY - r.top}px`);
   }, { passive: true });
 
-  /* ---- Hero video: robust autoplay (desktop only) ----
-     The mustard-field poster always shows; the video fades in once a real
-     frame is ready. We listen on EVERY "frame available" event (so a cached
-     load that fires before this runs is still caught), retry if autoplay is
-     blocked or the network stalls, and poll as a final safety net so the
-     hero never sits on a dim/blank frame. */
+  /* ---- Hero video: autoplay everywhere, else fall back to the field image ----
+     The hero section's background image (hero-field.jpg, set in CSS) is the
+     ALWAYS-present backdrop. The <video> is invisible (opacity 0) until it is
+     genuinely playing, then it fades in over the image. This is what removes
+     the iOS "tap to play" button: a paused/blocked video is never shown.
+     If autoplay is blocked (iOS Low Power Mode) or the network is too slow,
+     the video is hard-hidden so no play-button overlay can appear — the static
+     image simply remains. A user tap still starts it where the browser allows. */
   const heroVideo = document.getElementById('heroVideo');
   if (heroVideo) {
-    const wantVideo = !reduce &&
-      window.matchMedia && window.matchMedia('(min-width: 760px)').matches;
-    if (wantVideo) {
+    if (reduce) {
+      heroVideo.style.display = 'none'; // motion off → just the image
+    } else {
       const reveal = () => {
-        if (heroVideo.readyState >= 2) heroVideo.classList.add('is-playing');
+        if (heroVideo.readyState >= 2 && !heroVideo.paused) {
+          heroVideo.style.display = '';
+          heroVideo.classList.add('is-playing');
+        }
       };
-      ['loadeddata', 'canplay', 'canplaythrough', 'playing'].forEach((ev) =>
-        heroVideo.addEventListener(ev, reveal));
+      ['playing', 'timeupdate'].forEach((ev) => heroVideo.addEventListener(ev, reveal));
+
+      // Until it actually plays, keep the element from showing any UA play button.
+      const hideForFallback = () => {
+        heroVideo.classList.remove('is-playing');
+        heroVideo.style.display = 'none';
+      };
 
       const attempt = () => {
         const p = heroVideo.play();
         if (p && p.catch) p.catch(() => {
-          // autoplay blocked → kick it off on the first user gesture
-          const kick = () => { heroVideo.play().catch(() => {}); };
-          ['pointerdown', 'touchstart', 'scroll', 'keydown'].forEach((ev) =>
+          // Autoplay refused (Low Power Mode / data saver) → show the image,
+          // and let a real tap anywhere try once more.
+          hideForFallback();
+          const kick = () => {
+            heroVideo.style.display = '';
+            heroVideo.play().then(reveal).catch(hideForFallback);
+          };
+          ['pointerdown', 'touchstart', 'click', 'keydown'].forEach((ev) =>
             window.addEventListener(ev, kick, { once: true, passive: true }));
         });
       };
 
       heroVideo.preload = 'auto';
-      try { heroVideo.load(); } catch (_) {}   // force the source to fetch
-      reveal();                                 // cached / already-ready case
+      try { heroVideo.load(); } catch (_) {}
+      reveal();
       attempt();
 
-      // safety net: retry up to ~6s, then stop once it's actually playing
+      // Safety net: retry briefly; if it still hasn't started, hard-hide so the
+      // image is clean (no play button) on slow/blocked connections.
       let ticks = 0;
       const guard = setInterval(() => {
         reveal();
         if (heroVideo.paused) attempt();
-        if (++ticks >= 10 || (!heroVideo.paused && heroVideo.readyState >= 3)) {
-          clearInterval(guard);
-        }
-      }, 600);
+        if (!heroVideo.paused && heroVideo.readyState >= 3) { clearInterval(guard); }
+        else if (++ticks >= 8) { clearInterval(guard); if (heroVideo.paused) hideForFallback(); }
+      }, 500);
 
-      // if the source genuinely fails, leave the poster in place (no error UI)
-      heroVideo.addEventListener('error', () => clearInterval(guard));
+      heroVideo.addEventListener('error', () => { clearInterval(guard); hideForFallback(); });
     }
-    // On mobile / reduced-motion the poster (hero-field.jpg) remains the backdrop.
   }
 
   /* ---- 5. Scroll-spy: highlight the in-view section in the nav ----
