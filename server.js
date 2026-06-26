@@ -39,6 +39,44 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
 // Read-only account: can view all records & screenshots, cannot edit or delete.
 const VIEWER_ID = process.env.VIEWER_ID || 'viewer';
 const VIEWER_PASSWORD = process.env.VIEWER_PASSWORD || 'nepa2026';
+// Preferred in production: store a scrypt hash (see `npm run hash-password`)
+// so the real password is never kept in plaintext. Falls back to *_PASSWORD.
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const VIEWER_PASSWORD_HASH = process.env.VIEWER_PASSWORD_HASH || '';
+
+// Nudge operators off insecure defaults in production.
+if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+  if (!ADMIN_PASSWORD_HASH && ADMIN_PASSWORD === 'nepa2026') {
+    console.warn('[security] ADMIN_PASSWORD is the default — set a strong ADMIN_PASSWORD or ADMIN_PASSWORD_HASH.');
+  }
+  if (!process.env.AUTH_SECRET) {
+    console.warn('[security] AUTH_SECRET is not set — session tokens use a guessable fallback secret.');
+  }
+}
+
+/* ---- Brute-force protection: per-IP+id sliding lockout (in-memory) ---- */
+const LOGIN_MAX_FAILS = 6;            // failures allowed within the window
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_LOCK_MS = 15 * 60 * 1000; // lock duration once tripped
+const loginAttempts = new Map();
+function loginKey(req, id) {
+  const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'ip').split(',')[0].trim();
+  return `${ip}:${String(id || '').toLowerCase()}`;
+}
+function loginLock(key) {
+  const rec = loginAttempts.get(key);
+  if (rec && rec.lockUntil > Date.now()) return rec.lockUntil - Date.now();
+  return 0;
+}
+function loginNoteFail(key) {
+  const now = Date.now();
+  let rec = loginAttempts.get(key);
+  if (!rec || now - rec.first > LOGIN_WINDOW_MS) rec = { fails: 0, first: now, lockUntil: 0 };
+  rec.fails += 1;
+  if (rec.fails >= LOGIN_MAX_FAILS) rec.lockUntil = now + LOGIN_LOCK_MS;
+  loginAttempts.set(key, rec);
+  if (loginAttempts.size > 5000) loginAttempts.clear(); // crude memory cap
+}
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -220,17 +258,42 @@ app.post('/api/contact', wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
-// Admin login -> stateless token
-app.post('/api/admin/login', (req, res) => {
+// Admin login -> stateless token. Hardened: lockout + constant-time + hashing.
+app.post('/api/admin/login', wrap(async (req, res) => {
   const { id, password } = req.body || {};
-  if (id === ADMIN_ID && password === ADMIN_PASSWORD) {
+  const key = loginKey(req, id);
+
+  const lockedMs = loginLock(key);
+  if (lockedMs > 0) {
+    return res.status(429).json({
+      ok: false,
+      error: `Too many failed attempts. Try again in ${Math.ceil(lockedMs / 60000)} minute(s).`,
+    });
+  }
+
+  // Small fixed delay blunts rapid online guessing.
+  await new Promise((r) => setTimeout(r, 250));
+
+  const idStr = String(id == null ? '' : id);
+  const pwStr = String(password == null ? '' : password);
+
+  const adminOk = auth.safeEqual(idStr, ADMIN_ID) &&
+    auth.verifyPassword(pwStr, ADMIN_PASSWORD_HASH || ADMIN_PASSWORD);
+  const viewerOk = !adminOk && auth.safeEqual(idStr, VIEWER_ID) &&
+    auth.verifyPassword(pwStr, VIEWER_PASSWORD_HASH || VIEWER_PASSWORD);
+
+  if (adminOk) {
+    loginAttempts.delete(key);
     return res.json({ ok: true, role: 'admin', token: auth.sign('admin') });
   }
-  if (id === VIEWER_ID && password === VIEWER_PASSWORD) {
+  if (viewerOk) {
+    loginAttempts.delete(key);
     return res.json({ ok: true, role: 'viewer', token: auth.sign('viewer') });
   }
+
+  loginNoteFail(key);
   res.status(401).json({ ok: false, error: 'Invalid credentials' });
-});
+}));
 
 // Logout — tokens are stateless; the client clears its own session.
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
