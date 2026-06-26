@@ -286,8 +286,22 @@
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .breakdown-grid { grid-template-columns: 1fr; }
 }
+@media (max-width: 680px) {
+  /* Header: keep brand + actions on one tidy row, no overlap */
+  .admin-header__inner { height: auto; min-height: 58px; padding-top: 10px; padding-bottom: 10px; gap: 10px; flex-wrap: nowrap; }
+  .admin-header .brand__sub { display: none; }
+  .admin-header .brand__name { font-size: 1.05rem; }
+  .admin-header .brand__mark { width: 34px; height: 34px; font-size: .9rem; }
+  .admin-header__actions { gap: 8px; flex: none; }
+  .admin-header .btn-ghost { padding: 8px 13px; font-size: .82rem; }
+}
 @media (max-width: 560px) {
   .stat-grid { grid-template-columns: 1fr; }
   .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar__filters { flex-direction: column; align-items: stretch; }
+  .toolbar__search, .toolbar__select { width: 100%; }
   .toolbar #exportBtn { width: 100%; justify-content: center; }
+  /* Hint that the wide table scrolls sideways on phones */
+  .table-wrap { -webkit-overflow-scrolling: touch; position: relative; }
+  .reg-table { font-size: .82rem; }
 }
