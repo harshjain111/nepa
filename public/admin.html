@@ -59,6 +59,7 @@
           </span>
         </div>
         <div class="admin-header__actions">
+          <button class="btn btn-ghost" id="backupBtn" title="Download a full JSON backup of all registrations &amp; enquiries">Backup</button>
           <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
           <button class="btn btn-ghost" id="logoutBtn">Logout</button>
         </div>
@@ -70,6 +71,7 @@
       <nav class="admin-tabs" id="adminTabs">
         <button class="admin-tab is-active" data-view="registrations">Registrations</button>
         <button class="admin-tab" data-view="messages">Enquiries <span class="tab-badge" id="msgBadge" hidden>0</span></button>
+        <button class="admin-tab" data-view="archived">Archived <span class="tab-badge" id="archivedBadge" hidden>0</span></button>
       </nav>
 
       <!-- ===== REGISTRATIONS VIEW ===== -->
@@ -186,6 +188,28 @@
           <div class="table-empty" id="msgEmpty" hidden>No enquiries yet.</div>
         </section>
       </div><!-- /viewMessages -->
+
+      <!-- ===== ARCHIVED VIEW ===== -->
+      <div id="viewArchived" hidden>
+        <p class="archived-note">Archived registrations are hidden from the main list but never deleted. Restore one to bring it back, or remove it permanently.</p>
+        <section class="table-wrap">
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Organization</th>
+                <th>Mobile</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Archived</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="archivedTbody"></tbody>
+          </table>
+          <div class="table-empty" id="archivedEmpty" hidden>Nothing archived. Deleted registrations will appear here, recoverable.</div>
+        </section>
+      </div><!-- /viewArchived -->
     </main>
   </div>
 

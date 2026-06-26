@@ -298,9 +298,14 @@ app.post('/api/admin/login', wrap(async (req, res) => {
 // Logout — tokens are stateless; the client clears its own session.
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
 
-// Registrations
+// Registrations (active list)
 app.get('/api/registrations', auth.middleware, wrap(async (req, res) => {
   res.json({ ok: true, registrations: await store.listRegistrations() });
+}));
+
+// Archived (soft-deleted) registrations — recoverable
+app.get('/api/registrations/archived', auth.middleware, wrap(async (req, res) => {
+  res.json({ ok: true, registrations: await store.listArchivedRegistrations() });
 }));
 
 app.patch('/api/registrations/:id/status', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
@@ -309,11 +314,44 @@ app.patch('/api/registrations/:id/status', auth.middleware, auth.requireWrite, w
   res.json({ ok: true, status });
 }));
 
+// "Delete" now ARCHIVES — the record is hidden but kept and recoverable.
+// Nothing is ever permanently removed here, and the screenshot is preserved.
 app.delete('/api/registrations/:id', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
-  const removed = await store.deleteRegistration(req.params.id);
+  let removed;
+  try {
+    removed = await store.archiveRegistration(req.params.id);
+  } catch (err) {
+    if (err && err.code === 'NEEDS_MIGRATION') return res.status(409).json({ ok: false, error: err.message });
+    throw err;
+  }
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, archived: true });
+}));
+
+// Restore an archived registration back to the active list
+app.post('/api/registrations/:id/restore', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+  const restored = await store.restoreRegistration(req.params.id);
+  if (!restored) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, restored: true });
+}));
+
+// Permanent removal — only meaningful for already-archived records.
+app.delete('/api/registrations/:id/purge', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+  const removed = await store.purgeRegistration(req.params.id);
   if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
   if (removed.screenshotUrl) await uploads.deleteUpload(removed.screenshotUrl);
-  res.json({ ok: true });
+  res.json({ ok: true, purged: true });
+}));
+
+// One-click full backup (active + archived + enquiries) as downloadable JSON
+app.get('/api/admin/backup', auth.middleware, wrap(async (req, res) => {
+  const [registrations, messages] = await Promise.all([
+    store.allRegistrationsForBackup(),
+    store.listMessages(),
+  ]);
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  res.setHeader('Content-Disposition', `attachment; filename="nepa-backup-${stamp}.json"`);
+  res.json({ takenAt: new Date().toISOString(), backend: store.backend, counts: { registrations: registrations.length, messages: messages.length }, registrations, messages });
 }));
 
 // Enquiry messages

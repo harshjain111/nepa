@@ -55,11 +55,16 @@ alter table registrations alter column status set default 'Pending';
 alter table registrations add column if not exists subtotal   integer not null default 0;
 alter table registrations add column if not exists gst_rate    numeric not null default 0;
 alter table registrations add column if not exists gst_amount  integer not null default 0;
+-- Soft-delete: the admin "delete" sets archived_at instead of removing the row,
+-- so registrations are never lost and can be restored.
+alter table registrations add column if not exists archived_at timestamptz;
 
 alter table messages alter column id         set default gen_random_uuid();
 alter table messages alter column created_at set default now();
 
--- One registration per mobile number. Deleting a registration frees the
--- number so the delegate can register again. (Fails only if duplicate
--- mobiles already exist — clean those up first if so.)
-create unique index if not exists registrations_mobile_unique on registrations (mobile);
+-- One registration per mobile number — but only among ACTIVE rows, so an
+-- archived registration frees the number for re-registration. (Fails only if
+-- duplicate active mobiles already exist — clean those up first if so.)
+drop index if exists registrations_mobile_unique;
+create unique index if not exists registrations_mobile_active_unique
+  on registrations (mobile) where archived_at is null;

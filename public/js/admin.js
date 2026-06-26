@@ -57,6 +57,7 @@
     applyRoleUI();
     loadRegistrations();
     loadMessages();
+    loadArchived();
   }
 
   // Reflect read-only mode in the header (controls are also conditionally
@@ -105,7 +106,7 @@
     showLogin();
   }
   $('logoutBtn').addEventListener('click', handleLogout);
-  $('refreshBtn').addEventListener('click', () => { loadRegistrations(); loadMessages(); });
+  $('refreshBtn').addEventListener('click', () => { loadRegistrations(); loadMessages(); loadArchived(); });
 
   /* ---------------- tabs ---------------- */
   $('adminTabs').addEventListener('click', (e) => {
@@ -115,6 +116,8 @@
     document.querySelectorAll('.admin-tab').forEach((t) => t.classList.toggle('is-active', t === btn));
     $('viewRegistrations').hidden = view !== 'registrations';
     $('viewMessages').hidden = view !== 'messages';
+    $('viewArchived').hidden = view !== 'archived';
+    if (view === 'archived') loadArchived();
   });
 
   /* ============================================================
@@ -262,16 +265,108 @@
     if (deleteBtn) {
       const id = deleteBtn.dataset.delete;
       const rec = records.find((r) => r.id === id);
-      if (!confirm(`Delete registration for "${rec ? rec.fullName : 'this delegate'}"? This cannot be undone.`)) return;
+      if (!confirm(`Archive registration for "${rec ? rec.fullName : 'this delegate'}"?\n\nIt will be hidden from this list but kept safe — you can restore it from the Archived tab.`)) return;
       try {
         const res = await api(`/api/registrations/${id}`, { method: 'DELETE' });
         const data = await res.json();
-        if (data.ok) {
-          records = records.filter((r) => r.id !== id);
-          renderStats(); renderTable();
-        }
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not archive.');
+        records = records.filter((r) => r.id !== id);
+        renderStats(); renderTable();
+        loadArchived();
       } catch (err) { alert(err.message); }
     }
+  });
+
+  /* ============================================================
+     ARCHIVED (soft-deleted) — restore / permanent delete
+     ============================================================ */
+  let archived = [];
+  async function loadArchived() {
+    try {
+      const res = await api('/api/registrations/archived');
+      const data = await res.json();
+      archived = data.registrations || [];
+      const badge = $('archivedBadge');
+      if (badge) { badge.textContent = archived.length; badge.hidden = archived.length === 0; }
+      renderArchived();
+    } catch (err) { console.error(err); }
+  }
+
+  function renderArchived() {
+    const tbody = $('archivedTbody');
+    if (!tbody) return;
+    const empty = $('archivedEmpty');
+    if (empty) empty.hidden = archived.length > 0;
+    const viewer = isViewer();
+    tbody.innerHTML = archived.map((r) => `
+        <tr>
+          <td class="cell-name">${esc(r.fullName)}<br><span class="cell-muted" style="font-weight:400;font-size:.78rem">${esc(r.regId)}</span></td>
+          <td>${esc(r.organization)}</td>
+          <td>${esc(r.mobile)}</td>
+          <td class="cell-amount">${inr(r.totalAmount)}</td>
+          <td><span class="pill pill--method">${esc(r.paymentMethod)}</span></td>
+          <td class="cell-muted">${esc(fmtDate(r.archivedAt))}</td>
+          <td>${viewer ? '<span class="cell-muted">—</span>' : `
+            <div class="archived-actions">
+              <button class="status-action status-action--confirm" data-restore="${esc(r.id)}">Restore</button>
+              <button class="status-action status-action--undo" data-purge="${esc(r.id)}" title="Delete permanently">Delete forever</button>
+            </div>`}</td>
+        </tr>`).join('');
+  }
+
+  const archTbody = $('archivedTbody');
+  if (archTbody) archTbody.addEventListener('click', async (e) => {
+    const restoreBtn = e.target.closest('[data-restore]');
+    const purgeBtn = e.target.closest('[data-purge]');
+    if (restoreBtn) {
+      const id = restoreBtn.dataset.restore;
+      restoreBtn.disabled = true;
+      try {
+        const res = await api(`/api/registrations/${id}/restore`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not restore.');
+        archived = archived.filter((r) => r.id !== id);
+        renderArchived();
+        $('archivedBadge').textContent = archived.length;
+        $('archivedBadge').hidden = archived.length === 0;
+        loadRegistrations();
+      } catch (err) { alert(err.message); restoreBtn.disabled = false; }
+      return;
+    }
+    if (purgeBtn) {
+      const id = purgeBtn.dataset.purge;
+      const rec = archived.find((r) => r.id === id);
+      if (!confirm(`Permanently delete "${rec ? rec.fullName : 'this record'}"?\n\nThis CANNOT be undone. Consider downloading a Backup first.`)) return;
+      try {
+        const res = await api(`/api/registrations/${id}/purge`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not delete.');
+        archived = archived.filter((r) => r.id !== id);
+        renderArchived();
+        $('archivedBadge').textContent = archived.length;
+        $('archivedBadge').hidden = archived.length === 0;
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  /* ---------------- one-click backup ---------------- */
+  const backupBtn = $('backupBtn');
+  if (backupBtn) backupBtn.addEventListener('click', async () => {
+    backupBtn.disabled = true;
+    const orig = backupBtn.textContent;
+    backupBtn.textContent = 'Backing up…';
+    try {
+      const res = await api('/api/admin/backup');
+      if (!res.ok) throw new Error('Backup failed.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.href = url; a.download = `nepa-backup-${stamp}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert(err.message); }
+    finally { backupBtn.disabled = false; backupBtn.textContent = orig; }
   });
 
   /* ---------- filters wiring ---------- */
