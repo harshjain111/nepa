@@ -1135,3 +1135,24 @@
 @media (max-width: 400px) {
   .sponsor-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   REGISTER PAGE (/register) — the form as a standalone page card
+   ============================================================ */
+.page-hero--compact { min-height: auto; padding: calc(var(--header-h) + 54px) 0 46px; }
+.register-section { padding-top: 40px; }
+.container--narrow { max-width: 660px; }
+.register-shell {
+  position: relative;
+  background: var(--ivory);
+  border: 1px solid var(--gold-soft);
+  border-radius: 18px;
+  box-shadow: 0 36px 80px -34px rgba(20,32,24,.5);
+  padding: 38px 36px 32px;
+}
+.register-shell .register-head { text-align: center; margin-bottom: 22px; }
+.register-shell .register-head h2 { font-size: 2rem; margin: 0; }
+@media (max-width: 560px) {
+  .register-shell { padding: 26px 18px 22px; border-radius: 14px; }
+  .register-shell .register-head h2 { font-size: 1.6rem; }
+}

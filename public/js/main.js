@@ -311,10 +311,12 @@
      REGISTRATION MODAL
      ============================================================ */
   function initRegistration(config) {
+    // Registration now lives on its own page (/register). `modal` will be null
+    // there; all modal-only behaviour is guarded behind `if (modal)`.
     const modal = document.getElementById('registerModal');
     const form = document.getElementById('registerForm');
     const confirmation = document.getElementById('confirmation');
-    if (!modal || !form) return;
+    if (!form) return;
 
     const state = { step: 1, member: null, method: null };
     let lastFocused = null;
@@ -503,8 +505,11 @@
 
     function showConfirmation(data) {
       form.hidden = true;
-      document.getElementById('stepper').hidden = true;
-      document.querySelector('.modal__head').hidden = true;
+      const stepperEl = document.getElementById('stepper');
+      if (stepperEl) stepperEl.hidden = true;
+      const headEl = document.querySelector('.modal__head');
+      if (headEl) headEl.hidden = true;
+      confirmation.scrollIntoView({ behavior: 'smooth', block: 'start' });
       document.getElementById('confName').textContent = data.fullName;
       document.getElementById('confRegId').textContent = data.regId;
       document.getElementById('confFeeType').textContent = data.feeType;
@@ -512,48 +517,51 @@
       confirmation.hidden = false;
     }
 
-    /* ---- open / close ---- */
-    const open = () => {
-      lastFocused = document.activeElement;
-      modal.classList.add('open');
-      modal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      const first = document.getElementById('fullName');
-      if (first) setTimeout(() => first.focus(), 50);
-    };
+    /* ---- open / close (modal mode only — kept for any legacy modal use) ---- */
+    if (modal) {
+      const open = () => {
+        lastFocused = document.activeElement;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        const first = document.getElementById('fullName');
+        if (first) setTimeout(() => first.focus(), 50);
+      };
 
-    const reset = () => {
-      form.reset();
-      state.step = 1; state.member = null; state.method = null;
-      clearErrors();
-      document.querySelectorAll('#memberToggle .toggle-btn, #methodGroup .method-card')
-        .forEach((b) => b.classList.remove('is-active'));
-      payPanels.forEach((p) => (p.hidden = true));
-      form.hidden = false;
-      document.getElementById('stepper').hidden = false;
-      document.querySelector('.modal__head').hidden = false;
-      confirmation.hidden = true;
-      showStep(1);
-      updatePrices();
-      state.member = null;
-      document.getElementById('memberRow').hidden = true;
-    };
+      const reset = () => {
+        form.reset();
+        state.step = 1; state.member = null; state.method = null;
+        clearErrors();
+        document.querySelectorAll('#memberToggle .toggle-btn, #methodGroup .method-card')
+          .forEach((b) => b.classList.remove('is-active'));
+        payPanels.forEach((p) => (p.hidden = true));
+        form.hidden = false;
+        document.getElementById('stepper').hidden = false;
+        const head = document.querySelector('.modal__head');
+        if (head) head.hidden = false;
+        confirmation.hidden = true;
+        showStep(1);
+        updatePrices();
+        state.member = null;
+        document.getElementById('memberRow').hidden = true;
+      };
 
-    const close = () => {
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      reset();
-      if (lastFocused && lastFocused.focus) lastFocused.focus();
-    };
+      const close = () => {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        reset();
+        if (lastFocused && lastFocused.focus) lastFocused.focus();
+      };
 
-    document.querySelectorAll('[data-open-register]').forEach((b) =>
-      b.addEventListener('click', open));
-    document.querySelectorAll('[data-close-register]').forEach((b) =>
-      b.addEventListener('click', close));
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('open')) close();
-    });
+      document.querySelectorAll('[data-open-register]').forEach((b) =>
+        b.addEventListener('click', open));
+      document.querySelectorAll('[data-close-register]').forEach((b) =>
+        b.addEventListener('click', close));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) close();
+      });
+    }
 
     showStep(1);
   }
@@ -719,7 +727,7 @@
     initCounters();
     initParticles();
     // primary register CTAs get the sheen sweep
-    document.querySelectorAll('[data-open-register].btn-primary').forEach((b) => b.classList.add('btn-shine'));
+    document.querySelectorAll('a[href="/register"].btn-primary').forEach((b) => b.classList.add('btn-shine'));
     // reveal observes everything, including freshly-rendered cards
     initReveal();
   }

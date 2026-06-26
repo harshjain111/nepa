@@ -34,7 +34,7 @@
       </a>
       <nav class="nav" id="primaryNav">
         ${navLinks}
-        <button class="btn btn-primary nav__cta" data-open-register>Register<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <a class="btn btn-primary nav__cta" href="/register">Register<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="primaryNav">
         <span></span><span></span><span></span>
@@ -83,19 +83,15 @@
   </footer>`;
 
   const FLOATING = `
-  <button class="floating-register" data-open-register aria-label="Register Now">
+  <a class="floating-register" href="/register" aria-label="Register Now">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round" /></svg>
     <span>Register Now</span>
-  </button>`;
+  </a>`;
 
-  const MODAL = `
-  <div class="modal" id="registerModal" aria-hidden="true">
-    <div class="modal__overlay" data-close-register></div>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button class="modal__close" id="modalClose" aria-label="Close registration" data-close-register>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
-      </button>
-      <div class="modal__head">
+  // The registration form lives on its own page (/register). This inner markup
+  // is injected into the page's #registerMount; main.js wires the same logic.
+  const REGISTER_INNER = `
+      <div class="register-head modal__head">
         <span class="eyebrow">Delegate Registration</span>
         <h2 id="modalTitle">Reserve Your Seat</h2>
       </div>
@@ -176,10 +172,8 @@
           <div><span>Amount</span><strong id="confAmount"></strong></div>
         </div>
         <p class="confirmation__note">We'll confirm your payment shortly. A member of the Secretariat may reach out if anything is needed.</p>
-        <button type="button" class="btn btn-primary" data-close-register>Done</button>
-      </div>
-    </div>
-  </div>`;
+        <a href="/" class="btn btn-primary">Back to Home</a>
+      </div>`;
 
   const CREDIT = `
   <div class="credit-bar">
@@ -192,5 +186,9 @@
 
   // Inject. Header at the very top; the rest after the page content.
   document.body.insertAdjacentHTML('afterbegin', HEADER);
-  document.body.insertAdjacentHTML('beforeend', FOOTER + FLOATING + MODAL + CREDIT);
+  // The registration form is page-based: it renders into #registerMount on the
+  // /register page. Other pages just get the floating CTA that links there.
+  const mount = document.getElementById('registerMount');
+  if (mount) mount.innerHTML = REGISTER_INNER;
+  document.body.insertAdjacentHTML('beforeend', FOOTER + FLOATING + CREDIT);
 })();
