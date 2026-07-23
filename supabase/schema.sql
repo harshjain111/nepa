@@ -68,3 +68,58 @@ alter table messages alter column created_at set default now();
 drop index if exists registrations_mobile_unique;
 create unique index if not exists registrations_mobile_active_unique
   on registrations (mobile) where archived_at is null;
+
+-- ============================================================
+--  HOTEL ACCOMMODATION (managed by the 'hotel' team role)
+-- ============================================================
+
+-- Hotel booking numbers: HB26-2001, HB26-2002, ...
+create sequence if not exists hotel_booking_seq start 2001;
+
+-- Hotels the team manages: capacity (rooms) + per-hotel package prices.
+create table if not exists hotels (
+  id           uuid primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  name         text not null,
+  address      text,
+  total_rooms  integer not null default 0,
+  single_price integer not null default 8000,
+  double_price integer not null default 10000,
+  active       boolean not null default true,
+  sort         integer not null default 0
+);
+
+-- Each booking uses ONE room (single = 1 guest, double = 2 sharing 1 room).
+create table if not exists hotel_bookings (
+  id             uuid primary key default gen_random_uuid(),
+  booking_id     text unique not null default ('HB26-' || nextval('hotel_booking_seq')),
+  created_at     timestamptz not null default now(),
+  hotel_id       uuid references hotels(id) on delete set null,
+  hotel_name     text,                         -- snapshot, survives hotel deletion
+  occupancy      text not null,                -- 'Single' | 'Double'
+  guest_name     text,                         -- optional 2nd guest (double)
+  full_name      text not null,
+  firm           text,
+  address        text,
+  mobile         text not null,
+  email          text,
+  room_price     integer not null default 0,
+  subtotal       integer not null default 0,
+  gst_rate       numeric not null default 0,
+  gst_amount     integer not null default 0,
+  total_amount   integer not null default 0,
+  payment_method text not null,
+  reference_no   text,
+  screenshot_url text,
+  note           text,
+  status         text not null default 'Pending',
+  archived_at    timestamptz                   -- soft-delete; frees the room
+);
+
+-- repair no-ops (safe on pre-existing tables)
+alter table hotels alter column id set default gen_random_uuid();
+alter table hotels alter column created_at set default now();
+alter table hotel_bookings alter column id set default gen_random_uuid();
+alter table hotel_bookings alter column booking_id set default ('HB26-' || nextval('hotel_booking_seq'));
+alter table hotel_bookings alter column created_at set default now();
+alter table hotel_bookings add column if not exists archived_at timestamptz;

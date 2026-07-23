@@ -51,20 +51,54 @@
   const loginForm = $('loginForm');
   const loginError = $('loginError');
 
+  // Which views each role may see (and the loader for each).
+  const VIEWS = {
+    registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer'], load: () => loadRegistrations() },
+    messages:      { el: 'viewMessages',      roles: ['admin', 'viewer'], load: () => loadMessages() },
+    archived:      { el: 'viewArchived',      roles: ['admin', 'viewer'], load: () => loadArchived() },
+    hotels:        { el: 'viewHotels',        roles: ['admin', 'hotel'],  load: () => loadHotels() },
+    hotelBookings: { el: 'viewHotelBookings', roles: ['admin', 'hotel'],  load: () => loadHotelBookings() },
+  };
+
+  function activateView(view) {
+    document.querySelectorAll('.admin-tab').forEach((t) => t.classList.toggle('is-active', t.dataset.view === view));
+    Object.values(VIEWS).forEach((v) => { const el = $(v.el); if (el) el.hidden = true; });
+    const el = $(VIEWS[view] && VIEWS[view].el);
+    if (el) el.hidden = false;
+  }
+
   function showDashboard() {
     loginScreen.hidden = true;
     dashboard.hidden = false;
     applyRoleUI();
-    loadRegistrations();
-    loadMessages();
-    loadArchived();
+    reloadAll();
   }
 
-  // Reflect read-only mode in the header (controls are also conditionally
-  // rendered per-row, and the backend rejects any write from a viewer).
+  // Load every view the current role can access (keeps tab badges accurate).
+  function reloadAll() {
+    const r = role();
+    if (VIEWS.registrations.roles.includes(r)) { loadRegistrations(); loadMessages(); loadArchived(); }
+    if (VIEWS.hotels.roles.includes(r)) { loadHotels(); loadHotelBookings(); }
+  }
+
+  // Gate tabs + chrome by role; open the first tab the role is allowed.
   function applyRoleUI() {
+    const r = role();
     const sub = document.querySelector('.admin-header .brand__sub');
-    if (sub) sub.textContent = isViewer() ? 'Registrations · Read-only' : 'Registrations';
+    if (sub) sub.textContent = r === 'viewer' ? 'Read-only' : r === 'hotel' ? 'Hotel Team' : 'Registrations';
+    const brandName = document.querySelector('.admin-header .brand__name');
+    if (brandName) brandName.textContent = r === 'hotel' ? 'Hotel Admin' : 'Conclave Admin';
+
+    let firstAllowed = null;
+    document.querySelectorAll('.admin-tab').forEach((t) => {
+      const cfg = VIEWS[t.dataset.view];
+      const allowed = cfg && cfg.roles.includes(r);
+      t.hidden = !allowed;
+      if (allowed && !firstAllowed) firstAllowed = t.dataset.view;
+    });
+    // Backup is a registrations feature — hide it for the hotel team.
+    if ($('backupBtn')) $('backupBtn').hidden = !(r === 'admin' || r === 'viewer');
+    if (firstAllowed) activateView(firstAllowed);
   }
   function showLogin() {
     dashboard.hidden = true;
@@ -106,18 +140,16 @@
     showLogin();
   }
   $('logoutBtn').addEventListener('click', handleLogout);
-  $('refreshBtn').addEventListener('click', () => { loadRegistrations(); loadMessages(); loadArchived(); });
+  $('refreshBtn').addEventListener('click', reloadAll);
 
   /* ---------------- tabs ---------------- */
   $('adminTabs').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-view]');
-    if (!btn) return;
+    if (!btn || btn.hidden) return;
     const view = btn.dataset.view;
-    document.querySelectorAll('.admin-tab').forEach((t) => t.classList.toggle('is-active', t === btn));
-    $('viewRegistrations').hidden = view !== 'registrations';
-    $('viewMessages').hidden = view !== 'messages';
-    $('viewArchived').hidden = view !== 'archived';
-    if (view === 'archived') loadArchived();
+    activateView(view);
+    const cfg = VIEWS[view];
+    if (cfg && cfg.load) cfg.load(); // refresh on switch
   });
 
   /* ============================================================
@@ -527,6 +559,215 @@
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
     XLSX.writeFile(wb, `NEPA-Conclave-Registrations-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  });
+
+  /* ============================================================
+     HOTELS — management (add / edit rooms & prices / delete)
+     ============================================================ */
+  let hotels = [];
+  async function loadHotels() {
+    if (!$('hotelsList')) return;
+    try {
+      const res = await api('/api/admin/hotels');
+      const data = await res.json();
+      hotels = data.hotels || [];
+      renderHotels();
+    } catch (err) { console.error(err); }
+  }
+
+  function renderHotels() {
+    const list = $('hotelsList'); if (!list) return;
+    if ($('hotelsEmpty')) $('hotelsEmpty').hidden = hotels.length > 0;
+    list.innerHTML = hotels.map((h) => `
+      <div class="hotel-admin-card" data-hotel="${esc(h.id)}">
+        <div class="hotel-admin-card__meter">
+          <span class="hotel-admin-card__used">${h.roomsUsed} / ${h.totalRooms}</span>
+          <span class="hotel-admin-card__mlabel">rooms used</span>
+          <span class="hotel-admin-card__left ${h.roomsRemaining <= 0 ? 'is-full' : ''}">${h.roomsRemaining <= 0 ? 'FULL' : h.roomsRemaining + ' left'}</span>
+        </div>
+        <div class="hotel-admin-card__fields">
+          <label>Hotel name<input data-f="name" value="${esc(h.name)}" /></label>
+          <label>Address<input data-f="address" value="${esc(h.address || '')}" /></label>
+          <label>Total rooms<input data-f="totalRooms" type="number" min="0" value="${h.totalRooms}" /></label>
+          <label>Single ₹<input data-f="singlePrice" type="number" min="0" value="${h.singlePrice}" /></label>
+          <label>Double ₹<input data-f="doublePrice" type="number" min="0" value="${h.doublePrice}" /></label>
+          <label class="hotel-admin-card__toggle"><input data-f="active" type="checkbox" ${h.active ? 'checked' : ''} /> Accepting bookings</label>
+        </div>
+        <div class="hotel-admin-card__actions">
+          <button class="status-action status-action--confirm" data-save="${esc(h.id)}">Save</button>
+          <button class="btn-delete" data-hoteldelete="${esc(h.id)}" title="Delete hotel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  const hoAddBtn = $('hoAddBtn');
+  if (hoAddBtn) hoAddBtn.addEventListener('click', async () => {
+    const err = $('hoAddErr'); err.hidden = true;
+    const name = $('hoName').value.trim();
+    if (!name) { err.textContent = 'Hotel name is required.'; err.hidden = false; return; }
+    hoAddBtn.disabled = true;
+    try {
+      const res = await api('/api/admin/hotels', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, address: $('hoAddress').value.trim(),
+          totalRooms: $('hoRooms').value, singlePrice: $('hoSingle').value, doublePrice: $('hoDouble').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add hotel.');
+      $('hoName').value = ''; $('hoAddress').value = ''; $('hoRooms').value = '';
+      loadHotels();
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { hoAddBtn.disabled = false; }
+  });
+
+  const hotelsList = $('hotelsList');
+  if (hotelsList) hotelsList.addEventListener('click', async (e) => {
+    const save = e.target.closest('[data-save]');
+    const del = e.target.closest('[data-hoteldelete]');
+    if (save) {
+      const card = save.closest('[data-hotel]');
+      const id = save.dataset.save;
+      const fields = {};
+      card.querySelectorAll('[data-f]').forEach((inp) => { fields[inp.dataset.f] = inp.type === 'checkbox' ? inp.checked : inp.value; });
+      save.disabled = true; const t = save.textContent; save.textContent = 'Saving…';
+      try {
+        const res = await api(`/api/admin/hotels/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fields) });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save.');
+        loadHotels();
+      } catch (err) { alert(err.message); save.disabled = false; save.textContent = t; }
+      return;
+    }
+    if (del) {
+      const id = del.dataset.hoteldelete;
+      const h = hotels.find((x) => x.id === id);
+      let msg = `Delete "${h ? h.name : 'this hotel'}"?`;
+      if (h && h.roomsUsed > 0) msg += `\n\nIt has ${h.roomsUsed} booking(s). They'll be kept (with the hotel name) but no longer linked. Consider marking it "not accepting bookings" instead.`;
+      if (!confirm(msg)) return;
+      try {
+        const res = await api(`/api/admin/hotels/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not delete.');
+        loadHotels();
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  /* ============================================================
+     HOTEL BOOKINGS
+     ============================================================ */
+  let hotelBookings = [];
+  async function loadHotelBookings() {
+    if (!$('hbTbody')) return;
+    try {
+      const res = await api('/api/hotel-bookings');
+      const data = await res.json();
+      hotelBookings = data.bookings || [];
+      const badge = $('hbBadge');
+      if (badge) { badge.textContent = hotelBookings.length; badge.hidden = hotelBookings.length === 0; }
+      renderHotelBookings();
+    } catch (err) { console.error(err); }
+  }
+
+  function filteredHB() {
+    const q = $('hbSearch').value.trim().toLowerCase();
+    const st = $('hbStatusFilter').value;
+    return hotelBookings.filter((b) => {
+      if (st && b.status !== st) return false;
+      if (q) { const hay = `${b.fullName} ${b.firm || ''} ${b.mobile} ${b.hotelName || ''}`.toLowerCase(); if (!hay.includes(q)) return false; }
+      return true;
+    });
+  }
+
+  function renderHotelBookings() {
+    const tbody = $('hbTbody'); if (!tbody) return;
+    const rows = filteredHB();
+    if ($('hbEmpty')) $('hbEmpty').hidden = rows.length > 0;
+    tbody.innerHTML = rows.map((b) => {
+      const confirmed = b.status === 'Confirmed';
+      const shot = b.screenshotUrl ? `<button class="link-view" data-view="${esc(b.screenshotUrl)}">View</button>` : '<span class="cell-muted">—</span>';
+      const badge = `<span class="status-badge status-badge--${confirmed ? 'confirmed' : 'pending'}">${confirmed ? 'Confirmed' : 'Pending'}</span>`;
+      const statusCell = `<div class="status-set">${badge}${confirmed
+        ? `<button class="status-action status-action--undo" data-hbtoggle="${esc(b.id)}" title="Revert to Pending">Undo</button>`
+        : `<button class="status-action status-action--confirm" data-hbtoggle="${esc(b.id)}">Click to confirm</button>`}</div>`;
+      return `
+        <tr>
+          <td class="cell-name">${esc(b.bookingId)}</td>
+          <td>${esc(b.fullName)}</td>
+          <td>${b.firm ? esc(b.firm) : '<span class="cell-muted">—</span>'}</td>
+          <td>${esc(b.mobile)}</td>
+          <td>${esc(b.hotelName || '—')}</td>
+          <td>${esc(b.occupancy)}</td>
+          <td>${b.guestName ? esc(b.guestName) : '<span class="cell-muted">—</span>'}</td>
+          <td class="cell-amount">${inr(b.totalAmount)}</td>
+          <td><span class="pill pill--method">${esc(b.paymentMethod)}</span></td>
+          <td>${b.referenceNo ? esc(b.referenceNo) : '<span class="cell-muted">—</span>'}</td>
+          <td>${shot}</td>
+          <td class="cell-muted">${esc(fmtDate(b.createdAt))}</td>
+          <td>${statusCell}</td>
+          <td><button class="btn-delete" data-hbdelete="${esc(b.id)}" title="Remove booking (frees the room)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+          </button></td>
+        </tr>`;
+    }).join('');
+  }
+
+  const hbTbody = $('hbTbody');
+  if (hbTbody) hbTbody.addEventListener('click', async (e) => {
+    const viewBtn = e.target.closest('[data-view]');
+    const toggleBtn = e.target.closest('[data-hbtoggle]');
+    const delBtn = e.target.closest('[data-hbdelete]');
+    if (viewBtn) { openLightbox(viewBtn.dataset.view); return; }
+    if (toggleBtn) {
+      const id = toggleBtn.dataset.hbtoggle;
+      toggleBtn.disabled = true;
+      try {
+        const res = await api(`/api/hotel-bookings/${id}/status`, { method: 'PATCH' });
+        const data = await res.json();
+        if (data.ok) { const rec = hotelBookings.find((b) => b.id === id); if (rec) rec.status = data.status; renderHotelBookings(); }
+      } catch (err) { alert(err.message); }
+      return;
+    }
+    if (delBtn) {
+      const id = delBtn.dataset.hbdelete;
+      const b = hotelBookings.find((x) => x.id === id);
+      if (!confirm(`Remove the booking "${b ? b.bookingId : ''}" for ${b ? b.fullName : 'this guest'}?\n\nThis frees the room. The booking is archived (recoverable by an admin), not permanently deleted.`)) return;
+      try {
+        const res = await api(`/api/hotel-bookings/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not remove.');
+        hotelBookings = hotelBookings.filter((x) => x.id !== id);
+        renderHotelBookings();
+        const badge = $('hbBadge'); if (badge) { badge.textContent = hotelBookings.length; badge.hidden = hotelBookings.length === 0; }
+        loadHotels(); // room count changed
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  ['hbSearch', 'hbStatusFilter'].forEach((id) => { const el = $(id); if (el) el.addEventListener('input', renderHotelBookings); });
+
+  const hbExportBtn = $('hbExportBtn');
+  if (hbExportBtn) hbExportBtn.addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') { alert('Excel library failed to load.'); return; }
+    const rows = filteredHB();
+    if (!rows.length) { alert('No bookings to export.'); return; }
+    const origin = window.location.origin;
+    const data = rows.map((b) => ({
+      'Booking ID': b.bookingId, 'Name': b.fullName, 'Firm': b.firm || '', 'Address': b.address || '',
+      'Mobile': b.mobile, 'Email': b.email || '', 'Hotel': b.hotelName || '', 'Occupancy': b.occupancy,
+      'Second Guest': b.guestName || '', 'Room Price': b.roomPrice, 'GST': b.gstAmount, 'Total Amount': b.totalAmount,
+      'Payment Method': b.paymentMethod, 'Reference No': b.referenceNo || '',
+      'Screenshot URL': b.screenshotUrl ? (/^https?:\/\//.test(b.screenshotUrl) ? b.screenshotUrl : origin + b.screenshotUrl) : '',
+      'Status': b.status, 'Booked': fmtDate(b.createdAt),
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Hotel Bookings');
+    XLSX.writeFile(wb, `NEPA-Hotel-Bookings-${new Date().toISOString().slice(0, 10)}.xlsx`);
   });
 
   /* ============================================================

@@ -515,6 +515,21 @@
       document.getElementById('confFeeType').textContent = data.feeType;
       document.getElementById('confAmount').textContent = inr(data.totalAmount);
       confirmation.hidden = false;
+
+      // Prompt for hotel accommodation; carry the delegate's details across so
+      // the hotel form is pre-filled if they choose "yes".
+      const hotelYes = document.getElementById('hotelYes');
+      if (hotelYes) {
+        hotelYes.addEventListener('click', () => {
+          try {
+            sessionStorage.setItem('nepa_hotel_prefill', JSON.stringify({
+              fullName: (document.getElementById('fullName') || {}).value || data.fullName || '',
+              mobile: (document.getElementById('mobile') || {}).value || '',
+              organization: (document.getElementById('organization') || {}).value || '',
+            }));
+          } catch (e) { /* ignore */ }
+        });
+      }
     }
 
     /* ---- open / close (modal mode only — kept for any legacy modal use) ---- */

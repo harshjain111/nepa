@@ -72,6 +72,8 @@
         <button class="admin-tab is-active" data-view="registrations">Registrations</button>
         <button class="admin-tab" data-view="messages">Enquiries <span class="tab-badge" id="msgBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="archived">Archived <span class="tab-badge" id="archivedBadge" hidden>0</span></button>
+        <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
+        <button class="admin-tab" data-view="hotelBookings" hidden>Hotel Bookings <span class="tab-badge" id="hbBadge" hidden>0</span></button>
       </nav>
 
       <!-- ===== REGISTRATIONS VIEW ===== -->
@@ -210,6 +212,53 @@
           <div class="table-empty" id="archivedEmpty" hidden>Nothing archived. Deleted registrations will appear here, recoverable.</div>
         </section>
       </div><!-- /viewArchived -->
+
+      <!-- ===== HOTELS (management) VIEW ===== -->
+      <div id="viewHotels" hidden>
+        <p class="archived-note">Add the hotels available for the Conclave and set how many rooms each has. A hotel stops accepting bookings automatically once its rooms are full. Prices are per room; 18% GST is added at booking.</p>
+        <div class="hotel-admin-add">
+          <h3>Add a hotel</h3>
+          <div class="hotel-admin-form">
+            <input id="hoName" placeholder="Hotel name" />
+            <input id="hoAddress" placeholder="Address (optional)" />
+            <input id="hoRooms" type="number" min="0" placeholder="Total rooms" />
+            <input id="hoSingle" type="number" min="0" placeholder="Single ₹" value="8000" />
+            <input id="hoDouble" type="number" min="0" placeholder="Double ₹" value="10000" />
+            <button class="btn btn-primary" id="hoAddBtn">Add Hotel</button>
+          </div>
+          <p class="login-error" id="hoAddErr" hidden></p>
+        </div>
+        <div id="hotelsList" class="hotels-list"></div>
+        <div class="table-empty" id="hotelsEmpty" hidden>No hotels yet — add one above.</div>
+      </div><!-- /viewHotels -->
+
+      <!-- ===== HOTEL BOOKINGS VIEW ===== -->
+      <div id="viewHotelBookings" hidden>
+        <section class="toolbar">
+          <div class="toolbar__filters">
+            <input type="search" id="hbSearch" class="toolbar__search" placeholder="Search name, firm, mobile, hotel…" />
+            <select id="hbStatusFilter" class="toolbar__select" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="hbExportBtn">Export to Excel</button>
+        </section>
+        <section class="table-wrap">
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th>Booking</th><th>Name</th><th>Firm</th><th>Mobile</th><th>Hotel</th>
+                <th>Occupancy</th><th>Guest</th><th>Amount</th><th>Method</th><th>Ref No.</th>
+                <th>Screenshot</th><th>Booked</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hbTbody"></tbody>
+          </table>
+          <div class="table-empty" id="hbEmpty" hidden>No hotel bookings yet.</div>
+        </section>
+      </div><!-- /viewHotelBookings -->
     </main>
   </div>
 

@@ -313,3 +313,46 @@
   border: 1px solid rgba(197,162,83,.3); border-radius: 10px;
 }
 .archived-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ===================== HOTELS (admin management) ===================== */
+.hotel-admin-add {
+  background: #fff; border: 1px solid rgba(197,162,83,.4); border-radius: var(--radius);
+  padding: 18px 20px; margin-bottom: 18px; box-shadow: var(--shadow-soft);
+}
+.hotel-admin-add h3 { margin: 0 0 12px; color: var(--green); font-size: 1.05rem; }
+.hotel-admin-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hotel-admin-form input {
+  font-family: var(--font-body); font-size: .9rem; padding: 9px 12px;
+  border: 1px solid rgba(197,162,83,.5); border-radius: 10px; background: #fff; color: var(--ink);
+}
+.hotel-admin-form input:focus { outline: none; border-color: var(--mustard); box-shadow: 0 0 0 3px rgba(230,180,34,.18); }
+.hotel-admin-form input[type="number"] { width: 110px; }
+.hotel-admin-form input#hoName { flex: 1; min-width: 180px; }
+.hotel-admin-form input#hoAddress { flex: 1; min-width: 180px; }
+
+.hotels-list { display: grid; gap: 14px; }
+.hotel-admin-card {
+  display: grid; grid-template-columns: 130px 1fr auto; gap: 18px; align-items: center;
+  background: #fff; border: 1px solid rgba(197,162,83,.4); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow-soft);
+}
+.hotel-admin-card__meter { text-align: center; padding-right: 16px; border-right: 1px dashed rgba(197,162,83,.4); }
+.hotel-admin-card__used { display: block; font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: var(--green); line-height: 1; }
+.hotel-admin-card__mlabel { display: block; font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 8px; }
+.hotel-admin-card__left { display: inline-block; font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(31,61,46,.1); color: var(--green); }
+.hotel-admin-card__left.is-full { background: rgba(192,57,43,.12); color: #c0392b; }
+.hotel-admin-card__fields { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.hotel-admin-card__fields label { display: flex; flex-direction: column; gap: 4px; font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+.hotel-admin-card__fields input:not([type="checkbox"]) {
+  font-family: var(--font-body); font-size: .9rem; padding: 8px 10px; text-transform: none; letter-spacing: normal;
+  border: 1px solid rgba(197,162,83,.5); border-radius: 8px; background: #fff; color: var(--ink);
+}
+.hotel-admin-card__fields input[type="number"] { width: 100px; }
+.hotel-admin-card__toggle { flex-direction: row !important; align-items: center; text-transform: none !important; letter-spacing: normal !important; color: var(--ink) !important; font-weight: 500 !important; font-size: .82rem !important; }
+.hotel-admin-card__actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+@media (max-width: 720px) {
+  .hotel-admin-card { grid-template-columns: 1fr; }
+  .hotel-admin-card__meter { border-right: 0; border-bottom: 1px dashed rgba(197,162,83,.4); padding: 0 0 12px; display: flex; gap: 10px; align-items: baseline; justify-content: flex-start; }
+  .hotel-admin-card__actions { flex-direction: row; align-items: center; }
+}

@@ -8,6 +8,7 @@
     { "source": "/sponsorship", "destination": "/sponsorship.html" },
     { "source": "/people", "destination": "/people.html" },
     { "source": "/register", "destination": "/register.html" },
+    { "source": "/hotel", "destination": "/hotel.html" },
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }

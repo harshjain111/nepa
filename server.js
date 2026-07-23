@@ -39,6 +39,10 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
 // Read-only account: can view all records & screenshots, cannot edit or delete.
 const VIEWER_ID = process.env.VIEWER_ID || 'viewer';
 const VIEWER_PASSWORD = process.env.VIEWER_PASSWORD || 'nepa2026';
+// Hotel team: manages hotels + capacity and views hotel bookings ONLY.
+const HOTEL_ID = process.env.HOTEL_ID || 'hotel';
+const HOTEL_PASSWORD = process.env.HOTEL_PASSWORD || 'nepa2026';
+const HOTEL_PASSWORD_HASH = process.env.HOTEL_PASSWORD_HASH || '';
 // Preferred in production: store a scrypt hash (see `npm run hash-password`)
 // so the real password is never kept in plaintext. Falls back to *_PASSWORD.
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -281,6 +285,8 @@ app.post('/api/admin/login', wrap(async (req, res) => {
     auth.verifyPassword(pwStr, ADMIN_PASSWORD_HASH || ADMIN_PASSWORD);
   const viewerOk = !adminOk && auth.safeEqual(idStr, VIEWER_ID) &&
     auth.verifyPassword(pwStr, VIEWER_PASSWORD_HASH || VIEWER_PASSWORD);
+  const hotelOk = !adminOk && !viewerOk && auth.safeEqual(idStr, HOTEL_ID) &&
+    auth.verifyPassword(pwStr, HOTEL_PASSWORD_HASH || HOTEL_PASSWORD);
 
   if (adminOk) {
     loginAttempts.delete(key);
@@ -290,6 +296,10 @@ app.post('/api/admin/login', wrap(async (req, res) => {
     loginAttempts.delete(key);
     return res.json({ ok: true, role: 'viewer', token: auth.sign('viewer') });
   }
+  if (hotelOk) {
+    loginAttempts.delete(key);
+    return res.json({ ok: true, role: 'hotel', token: auth.sign('hotel') });
+  }
 
   loginNoteFail(key);
   res.status(401).json({ ok: false, error: 'Invalid credentials' });
@@ -298,17 +308,17 @@ app.post('/api/admin/login', wrap(async (req, res) => {
 // Logout — tokens are stateless; the client clears its own session.
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
 
-// Registrations (active list)
-app.get('/api/registrations', auth.middleware, wrap(async (req, res) => {
+// Registrations (active list) — admin + viewer only (not the hotel role)
+app.get('/api/registrations', auth.middleware, auth.requireRole('admin', 'viewer'), wrap(async (req, res) => {
   res.json({ ok: true, registrations: await store.listRegistrations() });
 }));
 
 // Archived (soft-deleted) registrations — recoverable
-app.get('/api/registrations/archived', auth.middleware, wrap(async (req, res) => {
+app.get('/api/registrations/archived', auth.middleware, auth.requireRole('admin', 'viewer'), wrap(async (req, res) => {
   res.json({ ok: true, registrations: await store.listArchivedRegistrations() });
 }));
 
-app.patch('/api/registrations/:id/status', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+app.patch('/api/registrations/:id/status', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
   const status = await store.setRegistrationStatus(req.params.id, (req.body && req.body.status) || null);
   if (status === null) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true, status });
@@ -316,7 +326,7 @@ app.patch('/api/registrations/:id/status', auth.middleware, auth.requireWrite, w
 
 // "Delete" now ARCHIVES — the record is hidden but kept and recoverable.
 // Nothing is ever permanently removed here, and the screenshot is preserved.
-app.delete('/api/registrations/:id', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+app.delete('/api/registrations/:id', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
   let removed;
   try {
     removed = await store.archiveRegistration(req.params.id);
@@ -329,14 +339,14 @@ app.delete('/api/registrations/:id', auth.middleware, auth.requireWrite, wrap(as
 }));
 
 // Restore an archived registration back to the active list
-app.post('/api/registrations/:id/restore', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+app.post('/api/registrations/:id/restore', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
   const restored = await store.restoreRegistration(req.params.id);
   if (!restored) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true, restored: true });
 }));
 
 // Permanent removal — only meaningful for already-archived records.
-app.delete('/api/registrations/:id/purge', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+app.delete('/api/registrations/:id/purge', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
   const removed = await store.purgeRegistration(req.params.id);
   if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
   if (removed.screenshotUrl) await uploads.deleteUpload(removed.screenshotUrl);
@@ -344,7 +354,7 @@ app.delete('/api/registrations/:id/purge', auth.middleware, auth.requireWrite, w
 }));
 
 // One-click full backup (active + archived + enquiries) as downloadable JSON
-app.get('/api/admin/backup', auth.middleware, wrap(async (req, res) => {
+app.get('/api/admin/backup', auth.middleware, auth.requireRole('admin', 'viewer'), wrap(async (req, res) => {
   const [registrations, messages] = await Promise.all([
     store.allRegistrationsForBackup(),
     store.listMessages(),
@@ -355,24 +365,181 @@ app.get('/api/admin/backup', auth.middleware, wrap(async (req, res) => {
 }));
 
 // Enquiry messages
-app.get('/api/messages', auth.middleware, wrap(async (req, res) => {
+app.get('/api/messages', auth.middleware, auth.requireRole('admin', 'viewer'), wrap(async (req, res) => {
   res.json({ ok: true, messages: await store.listMessages() });
 }));
 
-app.patch('/api/messages/:id/read', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+app.patch('/api/messages/:id/read', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
   const read = await store.setMessageRead(req.params.id, req.body && typeof req.body.read === 'boolean' ? req.body.read : undefined);
   if (read === null) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true, read });
 }));
 
-app.delete('/api/messages/:id', auth.middleware, auth.requireWrite, wrap(async (req, res) => {
+app.delete('/api/messages/:id', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
   const ok = await store.deleteMessage(req.params.id);
   if (!ok) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true });
 }));
 
+/* ============================================================
+   HOTEL ACCOMMODATION
+   ============================================================ */
+
+// PUBLIC — active hotels for the booking form (id, prices, rooms left).
+app.get('/api/hotels', wrap(async (req, res) => {
+  const hotels = (await store.listHotelsPublic()).map((h) => ({
+    id: h.id, name: h.name, address: h.address,
+    singlePrice: h.singlePrice, doublePrice: h.doublePrice,
+    totalRooms: h.totalRooms, roomsRemaining: h.roomsRemaining,
+    full: h.roomsRemaining <= 0,
+  }));
+  res.json({ ok: true, hotels, gstRate: GST_RATE });
+}));
+
+// PUBLIC — create a hotel booking (multipart: optional "screenshot")
+app.post('/api/hotel-bookings', (req, res) => {
+  upload.single('screenshot')(req, res, (err) => {
+    handleHotelBooking(req, res, err).catch((e) => {
+      console.error('hotel booking failed:', e);
+      if (!res.headersSent) res.status(500).json({ ok: false, error: 'Could not save your booking. Please try again or contact the Secretariat.' });
+    });
+  });
+});
+
+async function handleHotelBooking(req, res, err) {
+  if (err) return res.status(400).json({ ok: false, error: err.message });
+  const b = req.body || {};
+  const hotelId = (b.hotelId || '').trim();
+  const occupancy = (b.occupancy || '').trim();
+  const fullName = (b.fullName || '').trim();
+  const firm = (b.firm || '').trim();
+  const address = (b.address || '').trim();
+  const mobile = (b.mobile || '').trim();
+  const email = (b.email || '').trim();
+  const guestName = (b.guestName || '').trim();
+  const paymentMethod = (b.paymentMethod || '').trim();
+  const referenceNo = (b.referenceNo || '').trim();
+  const note = (b.note || '').trim();
+
+  if (!hotelId) return res.status(400).json({ ok: false, error: 'Please choose a hotel' });
+  if (occupancy !== 'Single' && occupancy !== 'Double') return res.status(400).json({ ok: false, error: 'Please choose an occupancy' });
+  if (!fullName) return res.status(400).json({ ok: false, error: 'Full name is required' });
+  if (!firm) return res.status(400).json({ ok: false, error: 'Firm name is required' });
+  if (!address) return res.status(400).json({ ok: false, error: 'Address is required' });
+  if (!MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Mobile must be exactly 10 digits' });
+  if (email && !EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'Enter a valid email or leave it blank' });
+  if (!VALID_METHODS.includes(paymentMethod)) return res.status(400).json({ ok: false, error: 'Invalid payment method' });
+  if ((paymentMethod === 'UPI' || paymentMethod === 'Bank') && !req.file) {
+    return res.status(400).json({ ok: false, error: 'Payment screenshot is required for UPI and Bank Transfer' });
+  }
+
+  const hotel = await store.getHotel(hotelId);
+  if (!hotel || !hotel.active) return res.status(400).json({ ok: false, error: 'That hotel is no longer available. Please pick another.' });
+
+  // Price is computed server-side from the hotel record (never trust the client).
+  const roomPrice = occupancy === 'Single' ? hotel.singlePrice : hotel.doublePrice;
+  const subtotal = roomPrice;
+  const gstAmount = Math.round(subtotal * GST_RATE);
+  const totalAmount = subtotal + gstAmount;
+  const screenshotUrl = req.file ? await uploads.saveUpload(req.file) : null;
+
+  let booking;
+  try {
+    booking = await store.addHotelBooking({
+      hotelId, occupancy, guestName: occupancy === 'Double' ? guestName : null,
+      fullName, firm, address, mobile, email,
+      roomPrice, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
+      paymentMethod, referenceNo, screenshotUrl, note,
+    });
+  } catch (e) {
+    if (e && (e.code === 'HOTEL_FULL' || e.code === 'HOTEL_UNAVAILABLE')) {
+      if (screenshotUrl) await uploads.deleteUpload(screenshotUrl);
+      return res.status(409).json({ ok: false, error: e.message });
+    }
+    throw e;
+  }
+
+  res.json({ ok: true, bookingId: booking.bookingId, hotelName: booking.hotelName, occupancy: booking.occupancy, totalAmount: booking.totalAmount });
+}
+
+/* ---- Hotel management + bookings (admin + hotel roles) ---- */
+const hotelTeam = [auth.middleware, auth.requireRole('admin', 'hotel')];
+
+app.get('/api/admin/hotels', ...hotelTeam, wrap(async (req, res) => {
+  res.json({ ok: true, hotels: await store.listHotels() });
+}));
+
+app.post('/api/admin/hotels', ...hotelTeam, wrap(async (req, res) => {
+  const b = req.body || {};
+  const name = (b.name || '').trim();
+  if (!name) return res.status(400).json({ ok: false, error: 'Hotel name is required' });
+  const hotel = await store.addHotel({
+    name, address: (b.address || '').trim() || null,
+    totalRooms: Math.max(0, parseInt(b.totalRooms, 10) || 0),
+    singlePrice: Math.max(0, parseInt(b.singlePrice, 10) || 0),
+    doublePrice: Math.max(0, parseInt(b.doublePrice, 10) || 0),
+    active: b.active !== false && b.active !== 'false',
+    sort: parseInt(b.sort, 10) || 0,
+  });
+  res.json({ ok: true, hotel });
+}));
+
+app.patch('/api/admin/hotels/:id', ...hotelTeam, wrap(async (req, res) => {
+  const b = req.body || {};
+  const fields = {};
+  if ('name' in b) { const n = String(b.name).trim(); if (!n) return res.status(400).json({ ok: false, error: 'Hotel name cannot be empty' }); fields.name = n; }
+  if ('address' in b) fields.address = String(b.address || '').trim() || null;
+  if ('totalRooms' in b) fields.totalRooms = Math.max(0, parseInt(b.totalRooms, 10) || 0);
+  if ('singlePrice' in b) fields.singlePrice = Math.max(0, parseInt(b.singlePrice, 10) || 0);
+  if ('doublePrice' in b) fields.doublePrice = Math.max(0, parseInt(b.doublePrice, 10) || 0);
+  if ('active' in b) fields.active = b.active === true || b.active === 'true';
+  if ('sort' in b) fields.sort = parseInt(b.sort, 10) || 0;
+  const hotel = await store.updateHotel(req.params.id, fields);
+  if (!hotel) return res.status(404).json({ ok: false, error: 'Hotel not found' });
+  res.json({ ok: true, hotel });
+}));
+
+app.delete('/api/admin/hotels/:id', ...hotelTeam, wrap(async (req, res) => {
+  const removed = await store.deleteHotel(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Hotel not found' });
+  res.json({ ok: true });
+}));
+
+app.get('/api/hotel-bookings', ...hotelTeam, wrap(async (req, res) => {
+  res.json({ ok: true, bookings: await store.listHotelBookings() });
+}));
+
+app.get('/api/hotel-bookings/archived', ...hotelTeam, wrap(async (req, res) => {
+  res.json({ ok: true, bookings: await store.listArchivedHotelBookings() });
+}));
+
+app.patch('/api/hotel-bookings/:id/status', ...hotelTeam, wrap(async (req, res) => {
+  const status = await store.setHotelBookingStatus(req.params.id, (req.body && req.body.status) || null);
+  if (status === null) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, status });
+}));
+
+app.delete('/api/hotel-bookings/:id', ...hotelTeam, wrap(async (req, res) => {
+  const archived = await store.archiveHotelBooking(req.params.id);
+  if (!archived) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, archived: true });
+}));
+
+app.post('/api/hotel-bookings/:id/restore', ...hotelTeam, wrap(async (req, res) => {
+  const restored = await store.restoreHotelBooking(req.params.id);
+  if (!restored) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, restored: true });
+}));
+
+app.delete('/api/hotel-bookings/:id/purge', ...hotelTeam, wrap(async (req, res) => {
+  const removed = await store.purgeHotelBooking(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  if (removed.screenshotUrl) await uploads.deleteUpload(removed.screenshotUrl);
+  res.json({ ok: true, purged: true });
+}));
+
 // Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
-const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html' };
+const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html' };
 for (const [route, file] of Object.entries(PAGES)) {
   app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
 }

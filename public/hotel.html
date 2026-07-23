@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Hotel · National Edible Oil Conclave 2026 · संपर्क Sampark</title>
+  <meta name="description" content="Reserve hotel accommodation for the National Edible Oil Conclave 2026, 19–20 September 2026, Guwahati. Single or double occupancy at partner hotels." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.nepaconnect.in/hotel" />
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/img/icon-192.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#1F3D2E" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="National Edible Oil Conclave 2026" />
+  <meta property="og:url" content="https://www.nepaconnect.in/hotel" />
+  <meta property="og:title" content="Book Hotel · National Edible Oil Conclave 2026" />
+  <meta property="og:description" content="Reserve hotel accommodation for the Conclave — single or double occupancy at partner hotels, Guwahati." />
+  <meta property="og:image" content="https://www.nepaconnect.in/img/og.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.nepaconnect.in/img/og.jpg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/home.css" />
+  <link rel="stylesheet" href="/css/enhance.css" />
+</head>
+<body>
+  <!-- header injected by partials.js -->
+
+  <section class="page-hero page-hero--photo page-hero--compact" style="--ph-img:url('/img/venue-mayfair.jpg')">
+    <div class="container">
+      <span class="eyebrow eyebrow--center reveal">Hotel Accommodation</span>
+      <h1 class="reveal" data-delay="1">Book Your Stay</h1>
+      <p class="reveal" data-delay="2">Reserve a room at a partner hotel for the Conclave, 19–20 September 2026, Guwahati.</p>
+    </div>
+  </section>
+
+  <section class="section register-section" data-index="01">
+    <div class="container container--narrow">
+      <div class="register-shell reveal">
+
+        <div class="register-head modal__head">
+          <span class="eyebrow">Hotel Booking</span>
+          <h2>Reserve a Room</h2>
+        </div>
+
+        <ol class="stepper" id="hStepper">
+          <li class="step is-active" data-step="1"><span class="step__no">01</span><span class="step__label">Hotel</span></li>
+          <li class="step" data-step="2"><span class="step__no">02</span><span class="step__label">Package</span></li>
+          <li class="step" data-step="3"><span class="step__no">03</span><span class="step__label">Details</span></li>
+          <li class="step" data-step="4"><span class="step__no">04</span><span class="step__label">Payment</span></li>
+        </ol>
+
+        <form id="hotelForm" novalidate>
+          <!-- STEP 1 — CHOOSE HOTEL -->
+          <div class="form-step is-active" data-step-panel="1">
+            <p class="step-question">Choose your hotel</p>
+            <p class="step-help">Rooms are limited — availability is shown live.</p>
+            <div class="hotel-list" id="hotelList" role="group" aria-label="Hotels">
+              <div class="hotel-loading" id="hotelLoading">Loading hotels…</div>
+            </div>
+            <span class="field__error" data-error-for="hotel"></span>
+            <div class="form-nav"><span></span><button type="button" class="btn btn-primary" data-next>Continue</button></div>
+          </div>
+
+          <!-- STEP 2 — PACKAGE -->
+          <div class="form-step" data-step-panel="2">
+            <p class="step-question">Choose occupancy</p>
+            <p class="step-help">Prices are per room for the stay. GST @ 18% is added.</p>
+            <div class="pkg-group" id="pkgGroup" role="group" aria-label="Occupancy">
+              <button type="button" class="pkg-card" data-pkg="Single">
+                <span class="pkg-card__head"><span class="pkg-card__name">Single Occupancy</span><span class="pkg-card__price" data-pkg-price="Single">—</span></span>
+                <span class="pkg-card__desc">One room for one person.</span>
+              </button>
+              <button type="button" class="pkg-card" data-pkg="Double">
+                <span class="pkg-card__head"><span class="pkg-card__name">Double Occupancy</span><span class="pkg-card__price" data-pkg-price="Double">—</span></span>
+                <span class="pkg-card__desc">One room for two people sharing — you and another person of your choice.</span>
+              </button>
+            </div>
+            <span class="field__error" data-error-for="pkg"></span>
+            <div class="price-summary" id="hPrice" hidden>
+              <div class="price-row"><span id="hRoomLabel">Room</span><span id="hRoomAmount">—</span></div>
+              <div class="price-row price-row--gst"><span>GST (18%)</span><span id="hGstAmount">—</span></div>
+              <div class="price-row price-row--total"><span>Total Payable</span><span id="hTotalAmount">—</span></div>
+            </div>
+            <div class="form-nav"><button type="button" class="btn btn-ghost" data-prev>Back</button><button type="button" class="btn btn-primary" data-next>Continue</button></div>
+          </div>
+
+          <!-- STEP 3 — DETAILS -->
+          <div class="form-step" data-step-panel="3">
+            <div class="field"><label for="hName">Full Name</label><input type="text" id="hName" autocomplete="name" required /><span class="field__error" data-error-for="hName"></span></div>
+            <div class="field" data-guest-field hidden><label for="hGuest">Second Guest Name <span class="opt">optional</span></label><input type="text" id="hGuest" placeholder="Person sharing the room" /></div>
+            <div class="field"><label for="hFirm">Firm / Organization Name</label><input type="text" id="hFirm" autocomplete="organization" required /><span class="field__error" data-error-for="hFirm"></span></div>
+            <div class="field"><label for="hAddress">Address</label><textarea id="hAddress" rows="2" required></textarea><span class="field__error" data-error-for="hAddress"></span></div>
+            <div class="field"><label for="hMobile">Phone Number</label><input type="tel" id="hMobile" inputmode="numeric" maxlength="10" placeholder="10-digit number" autocomplete="tel" required /><span class="field__error" data-error-for="hMobile"></span></div>
+            <div class="field"><label for="hEmail">Email <span class="opt">optional</span></label><input type="email" id="hEmail" autocomplete="email" /><span class="field__error" data-error-for="hEmail"></span></div>
+            <div class="form-nav"><button type="button" class="btn btn-ghost" data-prev>Back</button><button type="button" class="btn btn-primary" data-next>Continue</button></div>
+          </div>
+
+          <!-- STEP 4 — PAYMENT (identical flow to registration) -->
+          <div class="form-step" data-step-panel="4">
+            <div class="pay-amount"><span>Amount Payable</span><strong id="hPayAmount">—</strong></div>
+            <p class="step-question">Choose a payment method</p>
+            <div class="method-group" id="hMethodGroup" role="group" aria-label="Payment method">
+              <button type="button" class="method-card" data-method="UPI"><span class="method-card__title">UPI</span><span class="method-card__sub">Scan &amp; pay</span></button>
+              <button type="button" class="method-card" data-method="Bank"><span class="method-card__title">Bank Transfer</span><span class="method-card__sub">NEFT / IMPS</span></button>
+              <button type="button" class="method-card" data-method="Cash"><span class="method-card__title">Cash / At Venue</span><span class="method-card__sub">Pay at desk</span></button>
+            </div>
+            <span class="field__error" data-error-for="method"></span>
+            <div class="pay-panel" data-pay-panel="UPI" hidden>
+              <div class="upi-box">
+                <img class="qr-img" src="/img/upi-qr.png" alt="UPI QR code — National Edible Oil Promotion Association" width="180" height="180" loading="lazy" />
+                <div class="upi-meta"><span class="pay-label">UPI ID</span><span class="pay-value">3423262a@bandhan</span><p class="pay-hint">Scan the QR or pay to the UPI ID above, then upload your payment screenshot.</p></div>
+              </div>
+              <div class="field"><label for="hUpiShot">Payment Screenshot <span class="req">required</span></label><input type="file" id="hUpiShot" accept="image/*" data-upload="UPI" /><span class="field__error" data-error-for="hUpiShot"></span></div>
+            </div>
+            <div class="pay-panel" data-pay-panel="Bank" hidden>
+              <div class="bank-box">
+                <div class="bank-row"><span>Bank</span><strong>Bandhan Bank</strong></div>
+                <div class="bank-row"><span>Account Name</span><strong>National Edible Oil Promotion Association</strong></div>
+                <div class="bank-row"><span>Account No.</span><strong>20100082897192</strong></div>
+                <div class="bank-row"><span>IFSC</span><strong>BDBL0002488</strong></div>
+                <div class="bank-row"><span>Branch</span><strong>Fancy Bazar, Guwahati</strong></div>
+                <div class="bank-row"><span>GSTIN</span><strong>18AAGCB1323G1Z2</strong></div>
+              </div>
+              <div class="field"><label for="hBankRef">Reference / UTR No. <span class="opt">optional</span></label><input type="text" id="hBankRef" /></div>
+              <div class="field"><label for="hBankShot">Payment Screenshot <span class="req">required</span></label><input type="file" id="hBankShot" accept="image/*" data-upload="Bank" /><span class="field__error" data-error-for="hBankShot"></span></div>
+            </div>
+            <div class="pay-panel" data-pay-panel="Cash" hidden>
+              <div class="cash-note">Pay at the registration desk; your room is provisionally reserved.</div>
+              <div class="field"><label for="hCashNote">Note <span class="opt">optional</span></label><textarea id="hCashNote" rows="3" placeholder="Anything we should know?"></textarea></div>
+            </div>
+            <span class="field__error field__error--submit" data-error-for="submit"></span>
+            <div class="form-nav"><button type="button" class="btn btn-ghost" data-prev>Back</button><button type="submit" class="btn btn-primary" id="hSubmit">Complete Booking</button></div>
+          </div>
+        </form>
+
+        <div class="confirmation" id="hConfirmation" hidden>
+          <div class="confirmation__seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h2>Booking Received</h2>
+          <p class="confirmation__name" id="hConfName"></p>
+          <div class="confirmation__meta">
+            <div><span>Booking ID</span><strong id="hConfId"></strong></div>
+            <div><span>Hotel</span><strong id="hConfHotel"></strong></div>
+            <div><span>Amount</span><strong id="hConfAmount"></strong></div>
+          </div>
+          <p class="confirmation__note">We'll confirm your payment shortly. The hotel team may reach out if anything is needed.</p>
+          <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- footer, floating CTA & credit bar injected by partials.js -->
+  <script src="/js/partials.js"></script>
+  <script src="/js/hotel.js"></script>
+  <script src="/js/enhance.js"></script>
+</body>
+</html>

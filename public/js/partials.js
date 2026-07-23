@@ -13,6 +13,7 @@
     { href: '/#programme', label: 'Programme' },
     { href: '/#tariff', label: 'Tariff' },
     { href: '/sponsorship', label: 'Sponsorship', path: '/sponsorship' },
+    { href: '/hotel', label: 'Hotel', path: '/hotel' },
     { href: '/people', label: 'Council', path: '/people' },
     { href: '/#contact', label: 'Contact' },
   ];
@@ -34,6 +35,7 @@
       </a>
       <nav class="nav" id="primaryNav">
         ${navLinks}
+        <a class="btn btn-ghost nav__cta nav__cta--hotel" href="/hotel">Book Hotel</a>
         <a class="btn btn-primary nav__cta" href="/register">Register<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="primaryNav">
@@ -172,7 +174,13 @@
           <div><span>Amount</span><strong id="confAmount"></strong></div>
         </div>
         <p class="confirmation__note">We'll confirm your payment shortly. A member of the Secretariat may reach out if anything is needed.</p>
-        <a href="/" class="btn btn-primary">Back to Home</a>
+        <div class="hotel-prompt" id="hotelPrompt">
+          <p class="hotel-prompt__q">Do you also want hotel accommodation for the Conclave?</p>
+          <div class="hotel-prompt__actions">
+            <a class="btn btn-primary" id="hotelYes" href="/hotel">Yes, book a hotel</a>
+            <a class="btn btn-ghost" href="/">No, thank you</a>
+          </div>
+        </div>
       </div>`;
 
   const CREDIT = `
