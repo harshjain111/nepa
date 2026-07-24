@@ -728,6 +728,22 @@
   }
 
   /* ---------------- Boot ---------------- */
+  // Show the real "starting at" hotel price on the tariff strip (falls back to
+  // the static default if hotels aren't set up yet or the fetch fails).
+  async function initHotelTeaser() {
+    const el = document.getElementById('hotelFromPrice');
+    if (!el) return;
+    try {
+      const res = await fetch('/api/hotels');
+      if (!res.ok) return;
+      const data = await res.json();
+      const priced = (data.hotels || []).filter((h) => Number(h.singlePrice) > 0);
+      if (!priced.length) return;
+      const min = Math.min(...priced.map((h) => Number(h.singlePrice)));
+      el.textContent = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(min);
+    } catch (e) { /* keep the default text */ }
+  }
+
   function boot(config) {
     renderWhy();
     renderProgramme();
@@ -741,8 +757,9 @@
     initCountdown(config);
     initCounters();
     initParticles();
-    // primary register CTAs get the sheen sweep
-    document.querySelectorAll('a[href="/register"].btn-primary').forEach((b) => b.classList.add('btn-shine'));
+    initHotelTeaser();
+    // primary register + hotel CTAs get the sheen sweep
+    document.querySelectorAll('a[href="/register"].btn-primary, .hotel-strip__btn').forEach((b) => b.classList.add('btn-shine'));
     // reveal observes everything, including freshly-rendered cards
     initReveal();
   }

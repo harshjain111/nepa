@@ -13,7 +13,6 @@
     { href: '/#programme', label: 'Programme' },
     { href: '/#tariff', label: 'Tariff' },
     { href: '/sponsorship', label: 'Sponsorship', path: '/sponsorship' },
-    { href: '/hotel', label: 'Hotel', path: '/hotel' },
     { href: '/people', label: 'Council', path: '/people' },
     { href: '/#contact', label: 'Contact' },
   ];

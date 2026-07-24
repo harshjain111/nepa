@@ -1178,3 +1178,72 @@ h1, h2, h3, h4 {
   .gold-rule .diamond { animation: none; }
   .section-head h2::after { transition: none; }
 }
+
+/* ---- Hotel accommodation strip in the Tariff section ---- */
+.hotel-strip {
+  max-width: 940px; margin: 22px auto 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 22px 28px; border-radius: var(--radius);
+  background: #fff; border: 1px solid rgba(197,162,83,.4);
+  box-shadow: var(--shadow-soft);
+}
+.hotel-strip__info { min-width: 0; }
+.hotel-strip__info .eyebrow { color: var(--gold); margin-bottom: 6px; }
+.hotel-strip__info h3 { margin: 0 0 6px; color: var(--green); font-size: 1.35rem; }
+.hotel-strip__info p { margin: 0; color: #45493d; font-size: .95rem; }
+.hotel-strip__info p strong { color: var(--sienna); }
+.hotel-strip__info p em { font-style: normal; color: var(--muted); font-size: .82em; }
+.hotel-strip__btn { flex: none; }
+@media (max-width: 620px) {
+  .hotel-strip { flex-direction: column; align-items: stretch; text-align: center; }
+  .hotel-strip__btn { justify-content: center; }
+}
+
+/* ==========================================================
+   HEADER NAV — de-clutter: tighter spacing, real CTA buttons
+   (not link-styled), and collapse to the hamburger by 1024px
+   so the item-heavy bar never overlaps.
+   ========================================================== */
+.nav { gap: 22px; }
+
+/* The CTA <a> carry .btn — strip the uppercase/underline/opacity that
+   .nav a applies, so they render as proper buttons. */
+.nav a.btn {
+  text-transform: none;
+  letter-spacing: .01em;
+  opacity: 1;
+  font-size: .78rem;
+  padding: 9px 17px;
+}
+.nav a.btn::after { display: none !important; }
+.nav__cta { gap: 6px; }
+
+/* "Book Hotel" — outlined to sit as a clear secondary next to the
+   solid gold Register button, legible on the deep-green header. */
+.nav__cta--hotel {
+  color: var(--ivory);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(212,169,58,.6);
+}
+.nav__cta--hotel:hover { background: rgba(255,255,255,.12); border-color: var(--gold-bright); }
+
+@media (max-width: 1024px) {
+  .nav {
+    position: fixed; inset: var(--header-h) 0 auto 0;
+    flex-direction: column; align-items: stretch; gap: 0;
+    padding: 10px 0 18px;
+    background: rgba(12,30,20,.98);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(212,169,58,.4);
+    transform: translateY(-120%); transition: transform .32s var(--ease-out);
+    max-height: calc(100vh - var(--header-h)); overflow-y: auto;
+  }
+  .nav.open { transform: translateY(0); }
+  .nav a:not(.btn) { padding: 14px 26px; opacity: .92; }
+  .nav a:not(.btn)::after { display: none; }
+  .nav a.btn, .nav__cta {
+    margin: 8px 26px 0; justify-content: center;
+    padding: 14px 18px; font-size: .92rem;
+  }
+  .nav-toggle { display: flex; }
+}
