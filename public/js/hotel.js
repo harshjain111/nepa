@@ -237,6 +237,13 @@
     } catch (e) { /* ignore */ }
   }
 
+  // This page loads hotel.js (not main.js), so the .reveal fade-in observer
+  // from main.js never runs — reveal all content immediately so it's visible.
+  function revealAll() {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-visible'));
+  }
+
+  revealAll();
   loadHotels();
   applyPrefill();
   showStep(1);
