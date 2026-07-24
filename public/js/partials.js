@@ -55,7 +55,7 @@
           <div class="footer-logos">
             <img class="footer-logo" src="/img/nepa-logo.png" alt="NEPA" width="96" height="96" />
             <span class="footer-logo-slot">
-              <img class="footer-logo" src="/img/cooit-logo.png" alt="COOIT — The Central Organization for Oil Industry & Trade" width="96" height="96" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+              <img class="footer-logo" src="/img/cooit-logo.jpeg" alt="COOIT — The Central Organization for Oil Industry & Trade" width="96" height="96" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
               <span class="logo-chip" style="display:none">COOIT</span>
             </span>
             <div class="logo-chip">MOPA</div>
