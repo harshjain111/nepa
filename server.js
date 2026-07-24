@@ -131,10 +131,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MOBILE_RE = /^\d{10}$/;
 const VALID_METHODS = ['UPI', 'Bank', 'Cash'];
 
-// Wrap async handlers so rejected promises become clean 500s.
+// Wrap async handlers so rejected promises become clean JSON errors.
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => {
   console.error(err);
-  if (!res.headersSent) res.status(500).json({ ok: false, error: 'Server error' });
+  if (res.headersSent) return;
+  // Surface a helpful message when a table hasn't been created yet.
+  if (err && err.code === 'NEEDS_MIGRATION') return res.status(503).json({ ok: false, error: err.message });
+  res.status(500).json({ ok: false, error: 'Server error' });
 });
 
 /* ------------------------------------------------------------------ *
