@@ -54,7 +54,10 @@
           <p>Hosted by the National Edible Oil Promotion Association (NEPA), Guwahati — organised by the Mustard Oil Promotion Council under COOIT, New Delhi, and supported by MOPA.</p>
           <div class="footer-logos">
             <img class="footer-logo" src="/img/nepa-logo.png" alt="NEPA" width="96" height="96" />
-            <div class="logo-chip">COOIT</div>
+            <span class="footer-logo-slot">
+              <img class="footer-logo" src="/img/cooit-logo.png" alt="COOIT — The Central Organization for Oil Industry & Trade" width="96" height="96" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+              <span class="logo-chip" style="display:none">COOIT</span>
+            </span>
             <div class="logo-chip">MOPA</div>
           </div>
         </div>
