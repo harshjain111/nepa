@@ -130,6 +130,8 @@
 .meal-card__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .meal-card__served { font-size: 1.6rem; font-weight: 800; color: var(--green, #1F3D2E); font-family: var(--font-display, serif); }
 .meal-card__served span { font-size: .8rem; font-weight: 500; color: var(--muted,#6F6B5D); }
+.meal-card__stat { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.meal-card__unique { font-size: .72rem; color: var(--muted,#6F6B5D); font-weight: 600; }
 .meal-card__fields { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
 .meal-card__fields label { display: flex; flex-direction: column; gap: 3px; font-size: .78rem; color: var(--muted,#6F6B5D); }
 .meal-card__fields input { padding: 8px 10px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; }

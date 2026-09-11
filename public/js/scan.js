@@ -125,15 +125,18 @@
     const hint = $('mealHint');
     const banner = $('activeBanner');
     if (!m) { hint.hidden = true; if (banner) banner.hidden = true; return; }
-    const per = (m.maxPerPerson || 1) === 1 ? 'once per delegate' : `up to ${m.maxPerPerson}× per delegate`;
-    const verb = m.kind === 'event' ? 'attended' : 'served';
-    hint.textContent = `${m.redeemed || 0} ${verb} so far · ${per}`;
+    const isEvent = m.kind === 'event';
+    hint.textContent = isEvent
+      ? `${m.redeemed || 0} entries · ${m.unique || 0} unique · re-entry allowed`
+      : `${m.redeemed || 0} served so far · ${(m.maxPerPerson || 1) === 1 ? 'once per delegate' : `up to ${m.maxPerPerson}× per delegate`}`;
     hint.hidden = false;
     // Big always-on reminder of the active session.
     if (banner) {
-      banner.className = 'scan-active scan-active--' + (m.kind === 'event' ? 'event' : 'meal');
+      banner.className = 'scan-active scan-active--' + (isEvent ? 'event' : 'meal');
       $('activeName').textContent = m.name + (m.mealDay ? ' · ' + m.mealDay : '');
-      $('activeCount').textContent = `${m.redeemed || 0} ${verb}`;
+      $('activeCount').textContent = isEvent
+        ? `${m.redeemed || 0} entries · ${m.unique || 0} unique`
+        : `${m.redeemed || 0} served`;
       banner.hidden = false;
     }
   }
@@ -199,8 +202,13 @@
       const data = await jpost('/api/redeem', Object.assign({ mealId: meal.id }, payload));
       if (!data.ok) { showResult('error', 'Error', '', data.error || 'Could not check in', ''); return; }
       renderResult(data, meal);
-      // keep the local "served" counter roughly current
-      if (data.status === 'ok') { meal.redeemed = (meal.redeemed || 0) + 1; updateMealHint(); }
+      // keep the local counters current
+      if (data.status === 'ok') {
+        meal.redeemed = (meal.redeemed || 0) + 1;
+        if (meal.kind === 'event' && !data.reentry) meal.unique = (meal.unique || 0) + 1;
+        else if (meal.kind !== 'event') meal.unique = (meal.unique || 0) + 1;
+        updateMealHint();
+      }
     } catch (err) {
       showResult('error', 'Error', '', err.message, '');
     }
@@ -212,7 +220,9 @@
     const metaBits = [r.organization, r.designation, r.city].filter(Boolean).join(' · ');
     const isEvent = meal.kind === 'event';
     if (data.status === 'ok') {
-      showResult('ok', '✓ Checked in', name, metaBits, `${esc(meal.name)} — ${isEvent ? 'admit' : 'serve now'}`);
+      const status = isEvent ? (data.reentry ? '✓ Re-entry logged' : '✓ Entry logged') : '✓ Checked in';
+      const sub = isEvent ? `${esc(meal.name)} — admit${data.used ? ` (entry #${data.used})` : ''}` : `${esc(meal.name)} — serve now`;
+      showResult('ok', status, name, metaBits, sub);
       buzz([120]);
     } else if (data.status === 'already') {
       const when = data.lastAt ? new Date(data.lastAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '';

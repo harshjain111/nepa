@@ -1081,7 +1081,10 @@
       <div class="meal-card" data-meal="${esc(m.id)}">
         <div class="meal-card__top">
           <strong>${esc(m.name)} <span class="meal-badge meal-badge--${isEvent ? 'event' : 'meal'}">${isEvent ? 'Event' : 'Meal'}</span></strong>
-          <span class="meal-card__served">${m.redeemed || 0}<span> ${isEvent ? 'attended' : 'served'}</span></span>
+          <span class="meal-card__stat">
+            <span class="meal-card__served">${m.redeemed || 0}<span> ${isEvent ? 'entries' : 'served'}</span></span>
+            ${isEvent ? `<span class="meal-card__unique">${m.unique || 0} unique</span>` : ''}
+          </span>
         </div>
         <div class="meal-card__fields">
           <label>Type<select data-mf="kind"><option value="meal"${isEvent ? '' : ' selected'}>Meal</option><option value="event"${isEvent ? ' selected' : ''}>Event</option></select></label>
