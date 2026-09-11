@@ -144,13 +144,15 @@ alter table hotel_bookings add column if not exists archived_at timestamptz;
 --  MEALS / CATERING CHECK-IN (managed by admin; scanned by the 'gate' role)
 -- ============================================================
 
--- The catalog of meal sessions you configure (e.g. Day 1 Lunch, Day 1 Dinner).
--- max_per_person is how many times ONE delegate may avail this meal (usually 1).
+-- The catalog of scannable sessions: meals (Day 1 Lunch) AND events
+-- (Afternoon Seminar). max_per_person is how many times ONE delegate may
+-- avail/attend this session (usually 1). kind = 'meal' | 'event'.
 create table if not exists meals (
   id             uuid primary key default gen_random_uuid(),
   created_at     timestamptz not null default now(),
   name           text not null,
   meal_day       text,                          -- free label, e.g. 'Day 1' / date
+  kind           text not null default 'meal',  -- 'meal' | 'event'
   max_per_person integer not null default 1,
   active         boolean not null default true,
   sort           integer not null default 0
@@ -169,6 +171,7 @@ create table if not exists meal_redemptions (
 -- repair no-ops
 alter table meals alter column id set default gen_random_uuid();
 alter table meals alter column created_at set default now();
+alter table meals add column if not exists kind text not null default 'meal';
 alter table meal_redemptions alter column id set default gen_random_uuid();
 alter table meal_redemptions alter column redeemed_at set default now();
 

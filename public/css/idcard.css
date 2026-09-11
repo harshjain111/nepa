@@ -135,6 +135,10 @@
 .meal-card__fields input { padding: 8px 10px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; }
 .meal-card__toggle { flex-direction: row !important; align-items: center; gap: 8px !important; }
 .meal-card__actions { display: flex; justify-content: space-between; align-items: center; }
+.meal-badge { display: inline-block; font-size: .62rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; vertical-align: middle; }
+.meal-badge--meal  { background: #e7f0e9; color: #1e6b3c; }
+.meal-badge--event { background: #efe6d0; color: #8a6a1c; }
+.ci-count { color: var(--muted, #6F6B5D); font-size: .9rem; align-self: center; }
 
 /* Import */
 .import-box { background: #fff; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 14px; padding: 18px 20px; }

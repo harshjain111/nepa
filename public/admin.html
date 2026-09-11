@@ -75,7 +75,7 @@
         <button class="admin-tab" data-view="messages">Enquiries <span class="tab-badge" id="msgBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="archived">Archived <span class="tab-badge" id="archivedBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="idcards" hidden>ID Cards</button>
-        <button class="admin-tab" data-view="meals" hidden>Meals</button>
+        <button class="admin-tab" data-view="meals" hidden>Meals &amp; Events</button>
         <button class="admin-tab" data-view="checkins" hidden>Check-ins</button>
         <button class="admin-tab" data-view="import" hidden>Import</button>
         <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
@@ -275,19 +275,23 @@
 
       <!-- ===== MEALS VIEW ===== -->
       <div id="viewMeals" hidden>
-        <p class="archived-note">Set up each meal session (e.g. “Day 1 Lunch”). <strong>How many times</strong> is how many times ONE delegate may avail that meal — usually 1. The gate team picks a meal in the scanner and checks delegates in against it.</p>
+        <p class="archived-note">Set up each <strong>meal</strong> (e.g. “Day 1 Lunch”) or <strong>event</strong> (e.g. “Afternoon Seminar”) delegates check in to. <strong>How many times</strong> is how many times ONE delegate may avail/attend it — usually 1. The gate team picks it in the scanner and checks delegates in; the count shows how many were served / attended.</p>
         <div class="hotel-admin-add">
-          <h3>Add a meal</h3>
+          <h3>Add a meal or event</h3>
           <div class="meal-admin-form">
-            <input id="mealName" placeholder="Meal name (e.g. Day 1 Lunch)" />
+            <select id="mealKind" class="toolbar__select" title="Type">
+              <option value="meal">Meal</option>
+              <option value="event">Event</option>
+            </select>
+            <input id="mealName" placeholder="Name (e.g. Day 1 Lunch / Afternoon Seminar)" />
             <input id="mealDay" placeholder="Day / date label (optional)" />
             <input id="mealMax" type="number" min="1" value="1" title="How many times per delegate" />
-            <button class="btn btn-primary" id="mealAddBtn">Add Meal</button>
+            <button class="btn btn-primary" id="mealAddBtn">Add</button>
           </div>
           <p class="login-error" id="mealAddErr" hidden></p>
         </div>
         <div id="mealsList" class="meals-list"></div>
-        <div class="table-empty" id="mealsEmpty" hidden>No meals yet — add one above.</div>
+        <div class="table-empty" id="mealsEmpty" hidden>Nothing yet — add a meal or event above.</div>
       </div><!-- /viewMeals -->
 
       <!-- ===== CHECK-INS (meal log) VIEW ===== -->

@@ -102,9 +102,13 @@
       }
       $('startBtn').disabled = false;
       const saved = sessionStorage.getItem(MEAL_KEY);
-      sel.innerHTML = meals.map((m) =>
-        `<option value="${esc(m.id)}"${m.id === saved ? ' selected' : ''}>${esc(m.name)}${m.mealDay ? ' · ' + esc(m.mealDay) : ''}</option>`
-      ).join('');
+      const opt = (m) => `<option value="${esc(m.id)}"${m.id === saved ? ' selected' : ''}>${esc(m.name)}${m.mealDay ? ' · ' + esc(m.mealDay) : ''}</option>`;
+      const mealsG = meals.filter((m) => m.kind !== 'event');
+      const eventsG = meals.filter((m) => m.kind === 'event');
+      let html = '';
+      if (mealsG.length) html += `<optgroup label="Meals">${mealsG.map(opt).join('')}</optgroup>`;
+      if (eventsG.length) html += `<optgroup label="Events">${eventsG.map(opt).join('')}</optgroup>`;
+      sel.innerHTML = html || meals.map(opt).join('');
       updateMealHint();
     } catch (err) {
       hint.textContent = err.message;
@@ -121,7 +125,8 @@
     const hint = $('mealHint');
     if (!m) { hint.hidden = true; return; }
     const per = (m.maxPerPerson || 1) === 1 ? 'once per delegate' : `up to ${m.maxPerPerson}× per delegate`;
-    hint.textContent = `${m.redeemed || 0} served so far · ${per}`;
+    const verb = m.kind === 'event' ? 'attended' : 'served';
+    hint.textContent = `${m.redeemed || 0} ${verb} so far · ${per}`;
     hint.hidden = false;
   }
   $('mealSelect').addEventListener('change', () => {
@@ -197,12 +202,13 @@
     const r = data.registrant || {};
     const name = r.fullName || '';
     const metaBits = [r.organization, r.designation, r.city].filter(Boolean).join(' · ');
+    const isEvent = meal.kind === 'event';
     if (data.status === 'ok') {
-      showResult('ok', '✓ Checked in', name, metaBits, `${esc(meal.name)} — serve now`);
+      showResult('ok', '✓ Checked in', name, metaBits, `${esc(meal.name)} — ${isEvent ? 'admit' : 'serve now'}`);
       buzz([120]);
     } else if (data.status === 'already') {
       const when = data.lastAt ? new Date(data.lastAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '';
-      showResult('already', '✕ Already availed', name, metaBits, `${esc(meal.name)} taken${when ? ' at ' + esc(when) : ''}`);
+      showResult('already', isEvent ? '✕ Already attended' : '✕ Already availed', name, metaBits, `${esc(meal.name)}${isEvent ? ' — attended' : ' taken'}${when ? ' at ' + esc(when) : ''}`);
       buzz([80, 60, 80]);
     } else if (data.status === 'notfound') {
       showResult('warn', 'Not a valid delegate QR', '', '', 'This code is not a registered delegate.');

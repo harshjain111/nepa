@@ -608,7 +608,7 @@ app.post('/api/meals', ...adminOnly, wrap(async (req, res) => {
   const b = req.body || {};
   if (!b.name || !String(b.name).trim()) return res.status(400).json({ ok: false, error: 'Meal name is required' });
   const meal = await store.addMeal({
-    name: String(b.name).trim(), mealDay: b.mealDay, maxPerPerson: b.maxPerPerson, active: b.active, sort: b.sort,
+    name: String(b.name).trim(), mealDay: b.mealDay, kind: b.kind, maxPerPerson: b.maxPerPerson, active: b.active, sort: b.sort,
   });
   res.json({ ok: true, meal });
 }));

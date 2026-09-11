@@ -1075,13 +1075,16 @@
   function renderMeals() {
     const list = $('mealsList'); if (!list) return;
     if ($('mealsEmpty')) $('mealsEmpty').hidden = meals.length > 0;
-    list.innerHTML = meals.map((m) => `
+    list.innerHTML = meals.map((m) => {
+      const isEvent = m.kind === 'event';
+      return `
       <div class="meal-card" data-meal="${esc(m.id)}">
         <div class="meal-card__top">
-          <strong>${esc(m.name)}</strong>
-          <span class="meal-card__served">${m.redeemed || 0}<span> served</span></span>
+          <strong>${esc(m.name)} <span class="meal-badge meal-badge--${isEvent ? 'event' : 'meal'}">${isEvent ? 'Event' : 'Meal'}</span></strong>
+          <span class="meal-card__served">${m.redeemed || 0}<span> ${isEvent ? 'attended' : 'served'}</span></span>
         </div>
         <div class="meal-card__fields">
+          <label>Type<select data-mf="kind"><option value="meal"${isEvent ? '' : ' selected'}>Meal</option><option value="event"${isEvent ? ' selected' : ''}>Event</option></select></label>
           <label>Name<input data-mf="name" value="${esc(m.name)}" /></label>
           <label>Day / label<input data-mf="mealDay" value="${esc(m.mealDay || '')}" /></label>
           <label>Times per delegate<input data-mf="maxPerPerson" type="number" min="1" value="${m.maxPerPerson || 1}" /></label>
@@ -1093,7 +1096,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
           </button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   const mealAddBtn = $('mealAddBtn');
@@ -1105,10 +1109,10 @@
     try {
       const res = await api('/api/meals', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, mealDay: $('mealDay').value.trim(), maxPerPerson: $('mealMax').value }),
+        body: JSON.stringify({ name, mealDay: $('mealDay').value.trim(), kind: $('mealKind').value, maxPerPerson: $('mealMax').value }),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add meal.');
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add.');
       $('mealName').value = ''; $('mealDay').value = ''; $('mealMax').value = '1';
       loadMeals();
     } catch (e) { err.textContent = e.message; err.hidden = false; }
@@ -1192,7 +1196,7 @@
         <td class="cell-name">${esc(r.fullName || '—')}</td>
         <td class="cell-muted">${esc(r.regId || '')}</td>
         <td>${r.organization ? esc(r.organization) : '<span class="cell-muted">—</span>'}</td>
-        <td>${esc(r.mealName || '—')}${r.mealDay ? ` <span class="cell-muted">· ${esc(r.mealDay)}</span>` : ''}</td>
+        <td>${esc(r.mealName || '—')} <span class="meal-badge meal-badge--${r.mealKind === 'event' ? 'event' : 'meal'}">${r.mealKind === 'event' ? 'Event' : 'Meal'}</span>${r.mealDay ? ` <span class="cell-muted">· ${esc(r.mealDay)}</span>` : ''}</td>
         <td class="cell-muted">${esc(fmtDate(r.redeemedAt))}</td>
         <td class="cell-muted">${esc(r.redeemedBy || '—')}</td>
         <td><button class="btn-delete" data-cidelete="${esc(r.id)}" title="Delete this check-in">
