@@ -41,10 +41,10 @@
 .idcard__qr {
   position: absolute;
   left: 50%;
-  top: 217mm;              /* QR CENTRE */
-  width: 50mm;
-  height: 50mm;
-  padding: 3mm;            /* transparent quiet zone */
+  top: 214mm;              /* QR CENTRE */
+  width: 54mm;
+  height: 54mm;
+  padding: 2mm;            /* transparent quiet zone */
   box-sizing: border-box;
   transform: translate(-50%, -50%);
   background: transparent;
@@ -57,15 +57,17 @@
   left: 0; right: 0;
   text-align: center;
   transform: translateY(-50%);
-  padding: 0 18mm;
+  padding: 0 16mm;
   box-sizing: border-box;
-  line-height: 1.12;
+  line-height: 1.1;
   color: #1F3D2E;
 }
-.idcard__name        { top: 251mm; font-size: 26pt; font-weight: 700; }
-.idcard__company     { top: 268mm; font-size: 16pt; font-weight: 600; letter-spacing: .01em; }
-.idcard__designation { top: 283mm; font-size: 15pt; font-weight: 500; }
-.idcard__city        { top: 296mm; font-size: 15pt; font-weight: 500; }
+/* Vertical CENTRE of each line, in mm. Even ~14mm spacing to match the template.
+   Tweak these four (and the QR top above) to fine-tune placement. */
+.idcard__name        { top: 243mm; font-size: 24pt; font-weight: 700; }
+.idcard__company     { top: 259mm; font-size: 15pt; font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
+.idcard__designation { top: 275mm; font-size: 14pt; font-weight: 500; text-transform: uppercase; }
+.idcard__city        { top: 291mm; font-size: 14pt; font-weight: 500; text-transform: uppercase; }
 
 /* ---------------- print ---------------- */
 .print-area { display: none; }
