@@ -1,0 +1,124 @@
+/* ============================================================
+   scan.css — meal check-in scanner (mobile-first)
+   ============================================================ */
+
+.scan-body { background: var(--ivory, #FBF6EA); }
+
+.scan-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.scan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--green, #1F3D2E);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.scan-header__brand { display: flex; align-items: center; gap: 10px; }
+.scan-header__title { font-weight: 600; letter-spacing: .01em; }
+.scan-header .brand__mark {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: grid; place-items: center;
+  background: var(--gold, #C5A253); color: var(--green, #1F3D2E);
+  font-weight: 800; font-family: var(--font-display, serif);
+}
+.btn-sm { padding: 7px 12px; font-size: .82rem; }
+
+.scan-main { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+
+.scan-controls { display: flex; flex-direction: column; gap: 8px; }
+.scan-label { font-weight: 600; font-size: .95rem; color: var(--ink, #25291F); }
+.scan-select {
+  width: 100%;
+  padding: 13px 14px;
+  font-size: 1.05rem;
+  border: 1px solid var(--gold-soft, #D8C08A);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink, #25291F);
+}
+.scan-hint { font-size: .85rem; color: var(--muted, #6F6B5D); margin: 0; }
+
+.scan-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #10160f;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--gold-soft, #D8C08A);
+}
+.scan-reader { width: 100%; height: 100%; }
+.scan-reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+.scan-reader__idle {
+  position: absolute; inset: 0;
+  display: grid; place-items: center; text-align: center;
+  color: #cbd3c4; padding: 24px; font-size: .95rem;
+}
+
+.scan-actions { display: flex; flex-direction: column; gap: 10px; }
+.btn-block { width: 100%; justify-content: center; }
+
+.scan-manual { border-top: 1px solid var(--gold-soft, #D8C08A); padding-top: 12px; }
+.scan-manual summary { cursor: pointer; color: var(--muted, #6F6B5D); font-size: .9rem; }
+.scan-manual__row { display: flex; gap: 8px; margin-top: 10px; }
+.scan-manual__row .scan-select { flex: 1; }
+
+/* ---------------- result overlay ---------------- */
+.scan-result {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  padding: 24px;
+  background: rgba(20, 24, 18, .55);
+  backdrop-filter: blur(3px);
+}
+.scan-result__card {
+  width: 100%; max-width: 420px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 32px 24px 24px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+  border-top: 8px solid var(--muted, #6F6B5D);
+}
+.scan-result__icon {
+  width: 84px; height: 84px; margin: 0 auto 14px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 3rem; font-weight: 800; color: #fff;
+  background: var(--muted, #6F6B5D);
+}
+.scan-result__status { font-size: 1.5rem; font-weight: 700; margin: 0 0 6px; }
+.scan-result__name { font-size: 1.35rem; font-weight: 700; margin: 0 0 2px; color: var(--ink,#25291F); }
+.scan-result__meta { font-size: .98rem; color: var(--muted,#6F6B5D); margin: 0 0 6px; }
+.scan-result__sub  { font-size: .95rem; color: var(--ink,#25291F); margin: 0 0 20px; }
+.scan-result__next { background: var(--green, #1F3D2E); color: #fff; }
+
+/* states */
+.scan-result--ok      .scan-result__card { border-top-color: #1e8a4c; }
+.scan-result--ok      .scan-result__icon { background: #1e8a4c; }
+.scan-result--ok      .scan-result__status { color: #157a3f; }
+
+.scan-result--already .scan-result__card { border-top-color: #c0392b; }
+.scan-result--already .scan-result__icon { background: #c0392b; }
+.scan-result--already .scan-result__status { color: #b02a1c; }
+
+.scan-result--warn    .scan-result__card { border-top-color: #d68910; }
+.scan-result--warn    .scan-result__icon { background: #d68910; }
+.scan-result--warn    .scan-result__status { color: #a8690b; }
+
+.scan-result--error   .scan-result__card { border-top-color: #6F6B5D; }
+.scan-result--error   .scan-result__icon { background: #6F6B5D; }
+
+/* html5-qrcode injects some UI we don't need */
+.scan-reader img[alt="Info icon"], .scan-reader__dashboard { display: none !important; }

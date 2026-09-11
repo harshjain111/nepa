@@ -1,0 +1,161 @@
+/* ============================================================
+   idcard.css — printable delegate ID card (overlay only) +
+   the ID Cards / Meals / Import admin controls.
+
+   The card BACKGROUND is pre-printed on B4 (250 x 353 mm) stock.
+   We print ONLY the overlay: name, company, designation, city + QR,
+   positioned in millimetres to land on the blank areas of the stock.
+   Edit the *_mm positions below to match your actual template.
+   ============================================================ */
+
+:root {
+  --card-w: 250mm;
+  --card-h: 353mm;
+}
+
+.idcard {
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  background: #fff;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  overflow: hidden;
+  color: #1F3D2E;
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+}
+/* On-screen / test-print only: show the real design behind the overlay. */
+.idcard--template { background-image: url('/img/idcard-template.jpg'); }
+
+/* Everything inside gets nudged together by the calibration controls. */
+.idcard__inner {
+  position: absolute;
+  inset: 0;
+  transform: translate(var(--nx, 0mm), var(--ny, 0mm)) scale(var(--scale, 1));
+  transform-origin: center center;
+}
+
+/* --- QR: centered horizontally; light modules transparent so only the dark
+       ink prints over the pre-printed stock, which acts as the quiet zone. --- */
+.idcard__qr {
+  position: absolute;
+  left: 50%;
+  top: 217mm;              /* QR CENTRE */
+  width: 50mm;
+  height: 50mm;
+  padding: 3mm;            /* transparent quiet zone */
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+  background: transparent;
+}
+.idcard__qr canvas,
+.idcard__qr img { width: 100% !important; height: 100% !important; display: block; }
+
+.idcard__field {
+  position: absolute;
+  left: 0; right: 0;
+  text-align: center;
+  transform: translateY(-50%);
+  padding: 0 18mm;
+  box-sizing: border-box;
+  line-height: 1.12;
+  color: #1F3D2E;
+}
+.idcard__name        { top: 251mm; font-size: 26pt; font-weight: 700; }
+.idcard__company     { top: 268mm; font-size: 16pt; font-weight: 600; letter-spacing: .01em; }
+.idcard__designation { top: 283mm; font-size: 15pt; font-weight: 500; }
+.idcard__city        { top: 296mm; font-size: 15pt; font-weight: 500; }
+
+/* ---------------- print ---------------- */
+.print-area { display: none; }
+
+@media print {
+  @page { size: 250mm 353mm; margin: 0; }
+  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  body.admin-body > *:not(.print-area) { display: none !important; }
+  .print-area { display: block !important; }
+  .print-area .idcard { page-break-after: always; break-after: page; box-shadow: none !important; }
+  .print-area .idcard:last-child { page-break-after: auto; break-after: auto; }
+}
+
+/* ---------------- preview thumbnail (scaled) ---------------- */
+.card-preview__card { max-width: 420px; }
+.card-preview__stage {
+  position: relative;
+  margin: 6px auto 4px;
+  border: 1px solid var(--gold-soft, #D8C08A);
+  background: #f3ead4;
+  overflow: hidden;
+}
+.card-preview__stage .idcard { transform-origin: top left; box-shadow: none; }
+
+/* ============================================================
+   Admin controls: ID Cards toolbar, alignment, Meals, Import
+   ============================================================ */
+.toolbar--cards { flex-wrap: wrap; gap: 12px; }
+.card-toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.card-check-col { width: 34px; text-align: center; }
+.card-check-col input, #cardTbody input[type="checkbox"] { width: 16px; height: 16px; }
+
+.card-align {
+  background: #fff;
+  border: 1px solid var(--gold-soft, #D8C08A);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.card-align__row { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
+.card-align__row label { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--muted, #6F6B5D); }
+.card-align__row input[type="number"] { width: 96px; padding: 8px 10px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; }
+.card-align__check { flex-direction: row !important; align-items: center; gap: 8px !important; }
+.card-align__hint { font-size: .82rem; color: var(--muted, #6F6B5D); margin: 10px 0 0; }
+
+.cell-missing { color: #b02a1c; font-style: italic; }
+.card-print-one { }
+
+/* Meals */
+.meal-admin-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.meal-admin-form input { padding: 10px 12px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; }
+.meal-admin-form input#mealName { flex: 1 1 220px; }
+.meal-admin-form input#mealDay { flex: 1 1 160px; }
+.meal-admin-form input#mealMax { width: 90px; }
+
+.meals-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 16px; }
+.meal-card {
+  background: #fff; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 12px; padding: 14px 16px;
+}
+.meal-card__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.meal-card__served { font-size: 1.6rem; font-weight: 800; color: var(--green, #1F3D2E); font-family: var(--font-display, serif); }
+.meal-card__served span { font-size: .8rem; font-weight: 500; color: var(--muted,#6F6B5D); }
+.meal-card__fields { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.meal-card__fields label { display: flex; flex-direction: column; gap: 3px; font-size: .78rem; color: var(--muted,#6F6B5D); }
+.meal-card__fields input { padding: 8px 10px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; }
+.meal-card__toggle { flex-direction: row !important; align-items: center; gap: 8px !important; }
+.meal-card__actions { display: flex; justify-content: space-between; align-items: center; }
+
+/* Import */
+.import-box { background: #fff; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 14px; padding: 18px 20px; }
+.import-step { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+.import-file { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; }
+.import-file__name { color: var(--muted, #6F6B5D); font-size: .9rem; }
+.import-dup { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted,#6F6B5D); }
+.import-summary { margin: 16px 0 8px; font-weight: 600; }
+.import-preview-wrap { max-height: 340px; overflow: auto; }
+.import-actions { display: flex; gap: 10px; margin-top: 14px; }
+.import-report { margin-top: 16px; }
+.import-report__tot { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 10px; font-weight: 600; }
+.import-report__tot b { font-size: 1.2rem; }
+.imp-ok { color: #157a3f; } .imp-skip { color: #a8690b; } .imp-fail { color: #b02a1c; }
+
+/* Edit modal (also used for card preview) */
+.edit-modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; }
+.edit-modal__overlay { position: absolute; inset: 0; background: rgba(20,24,18,.5); backdrop-filter: blur(2px); }
+.edit-modal__card {
+  position: relative; z-index: 1; width: 100%; max-width: 440px;
+  background: #fff; border-radius: 16px; padding: 24px; max-height: 92vh; overflow: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+}
+.edit-modal__card h3 { margin: 0 0 4px; }
+.edit-modal__sub { margin: 0 0 16px; color: var(--muted,#6F6B5D); font-size: .9rem; }
+.edit-modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }

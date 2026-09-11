@@ -15,7 +15,9 @@
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/admin.css" />
   <link rel="stylesheet" href="/css/enhance.css" />
+  <link rel="stylesheet" href="/css/idcard.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body class="admin-body">
 
@@ -72,6 +74,9 @@
         <button class="admin-tab is-active" data-view="registrations">Registrations</button>
         <button class="admin-tab" data-view="messages">Enquiries <span class="tab-badge" id="msgBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="archived">Archived <span class="tab-badge" id="archivedBadge" hidden>0</span></button>
+        <button class="admin-tab" data-view="idcards" hidden>ID Cards</button>
+        <button class="admin-tab" data-view="meals" hidden>Meals</button>
+        <button class="admin-tab" data-view="import" hidden>Import</button>
         <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
         <button class="admin-tab" data-view="hotelBookings" hidden>Hotel Bookings <span class="tab-badge" id="hbBadge" hidden>0</span></button>
       </nav>
@@ -214,6 +219,116 @@
         </section>
       </div><!-- /viewArchived -->
 
+      <!-- ===== ID CARDS VIEW ===== -->
+      <div id="viewIdcards" hidden>
+        <p class="archived-note">Search a delegate to print their ID card, or print in bulk. The card background is <strong>pre-printed</strong> — this prints only the name, company, designation, city and a unique QR, positioned to land on your B4 template. Set the fields with the ✎ Edit button on each row. Use “Alignment” to nudge the print if it lands slightly off.</p>
+
+        <section class="toolbar toolbar--cards">
+          <div class="toolbar__filters">
+            <input type="search" id="cardSearch" class="toolbar__search" placeholder="Search name, mobile, company…" />
+            <select id="cardFilter" class="toolbar__select" aria-label="Filter cards">
+              <option value="">All delegates</option>
+              <option value="ready">Ready (has designation + city)</option>
+              <option value="incomplete">Missing designation / city</option>
+              <option value="printed">Already printed</option>
+              <option value="notprinted">Not printed yet</option>
+            </select>
+          </div>
+          <div class="card-toolbar-actions">
+            <button class="btn btn-ghost" id="cardAlignBtn" title="Fine-tune print position">Alignment</button>
+            <button class="btn btn-ghost" id="cardSelectAllBtn">Select all</button>
+            <button class="btn btn-primary" id="cardPrintBtn">Print selected (0)</button>
+          </div>
+        </section>
+
+        <!-- Alignment / calibration panel -->
+        <div class="card-align" id="cardAlign" hidden>
+          <div class="card-align__row">
+            <label>Nudge right (mm)<input type="number" id="alignX" step="0.5" value="0" /></label>
+            <label>Nudge down (mm)<input type="number" id="alignY" step="0.5" value="0" /></label>
+            <label>Scale (%)<input type="number" id="alignScale" step="1" value="100" /></label>
+            <label class="card-align__check"><input type="checkbox" id="alignTemplate" /> Print faint template (for test alignment on blank paper)</label>
+          </div>
+          <p class="card-align__hint">These are saved on this device. Print one card on a blank sheet first, hold it over your pre-printed stock against the light, then adjust.</p>
+        </div>
+
+        <section class="table-wrap">
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th class="card-check-col"><input type="checkbox" id="cardHeadCheck" aria-label="Select all" /></th>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Designation</th>
+                <th>City</th>
+                <th>Reg ID</th>
+                <th>Printed</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cardTbody"></tbody>
+          </table>
+          <div class="table-empty" id="cardEmpty" hidden>No delegates match your filters.</div>
+        </section>
+      </div><!-- /viewIdcards -->
+
+      <!-- ===== MEALS VIEW ===== -->
+      <div id="viewMeals" hidden>
+        <p class="archived-note">Set up each meal session (e.g. “Day 1 Lunch”). <strong>How many times</strong> is how many times ONE delegate may avail that meal — usually 1. The gate team picks a meal in the scanner and checks delegates in against it.</p>
+        <div class="hotel-admin-add">
+          <h3>Add a meal</h3>
+          <div class="meal-admin-form">
+            <input id="mealName" placeholder="Meal name (e.g. Day 1 Lunch)" />
+            <input id="mealDay" placeholder="Day / date label (optional)" />
+            <input id="mealMax" type="number" min="1" value="1" title="How many times per delegate" />
+            <button class="btn btn-primary" id="mealAddBtn">Add Meal</button>
+          </div>
+          <p class="login-error" id="mealAddErr" hidden></p>
+        </div>
+        <div id="mealsList" class="meals-list"></div>
+        <div class="table-empty" id="mealsEmpty" hidden>No meals yet — add one above.</div>
+      </div><!-- /viewMeals -->
+
+      <!-- ===== IMPORT VIEW ===== -->
+      <div id="viewImport" hidden>
+        <p class="archived-note">Import delegates who registered offline from an Excel file. The first row must be column headers. We match columns by name — <strong>Name</strong> and a 10-digit <strong>Mobile</strong> are required; Email, Company/Organization, Designation, City, GST are optional. Imported delegates get a QR and can be printed like everyone else.</p>
+
+        <div class="import-box">
+          <div class="import-step">
+            <label class="import-file">
+              <input type="file" id="importFile" accept=".xlsx,.xls,.csv" hidden />
+              <span class="btn btn-primary">Choose Excel file…</span>
+              <span class="import-file__name" id="importFileName">No file selected</span>
+            </label>
+            <label class="import-dup">
+              Duplicate mobiles:
+              <select id="importDup" class="toolbar__select">
+                <option value="skip">Skip (keep existing)</option>
+                <option value="update">Update existing details</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="importPreview" hidden>
+            <p class="import-summary" id="importSummary"></p>
+            <div class="table-wrap import-preview-wrap">
+              <table class="reg-table">
+                <thead>
+                  <tr><th>Row</th><th>Name</th><th>Mobile</th><th>Email</th><th>Company</th><th>Designation</th><th>City</th><th>Note</th></tr>
+                </thead>
+                <tbody id="importTbody"></tbody>
+              </table>
+            </div>
+            <div class="import-actions">
+              <button class="btn btn-primary" id="importRunBtn">Import <span id="importCount">0</span> delegates</button>
+              <button class="btn btn-ghost" id="importClearBtn">Clear</button>
+            </div>
+          </div>
+
+          <div id="importReport" class="import-report" hidden></div>
+        </div>
+      </div><!-- /viewImport -->
+
       <!-- ===== HOTELS (management) VIEW ===== -->
       <div id="viewHotels" hidden>
         <p class="archived-note">Add the hotels available for the Conclave and set how many rooms each has. A hotel stops accepting bookings automatically once its rooms are full. Prices are per room; 18% GST is added at booking.</p>
@@ -273,6 +388,50 @@
       <img id="lightboxImg" alt="Payment screenshot" />
     </div>
   </div>
+
+  <!-- ===================== EDIT DELEGATE MODAL ===================== -->
+  <div class="edit-modal" id="editModal" hidden>
+    <div class="edit-modal__overlay" data-close-edit></div>
+    <div class="edit-modal__card">
+      <button class="lightbox__close" data-close-edit aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <h3 id="editTitle">Edit delegate</h3>
+      <p class="edit-modal__sub">These print on the ID card.</p>
+      <div class="field"><label for="editName">Name</label><input type="text" id="editName" /></div>
+      <div class="field"><label for="editOrg">Company / Organization</label><input type="text" id="editOrg" /></div>
+      <div class="field"><label for="editDesignation">Designation</label><input type="text" id="editDesignation" /></div>
+      <div class="field"><label for="editCity">City</label><input type="text" id="editCity" /></div>
+      <div class="field"><label for="editMobile">Mobile</label><input type="text" id="editMobile" maxlength="10" inputmode="numeric" /></div>
+      <div class="field"><label for="editEmail">Email</label><input type="email" id="editEmail" /></div>
+      <div class="field"><label for="editGst">GST Number</label><input type="text" id="editGst" style="text-transform:uppercase" /></div>
+      <p class="login-error" id="editErr" hidden></p>
+      <div class="edit-modal__actions">
+        <button class="btn btn-ghost" data-close-edit>Cancel</button>
+        <button class="btn btn-primary" id="editSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CARD PREVIEW MODAL ===================== -->
+  <div class="edit-modal" id="cardPreviewModal" hidden>
+    <div class="edit-modal__overlay" data-close-preview></div>
+    <div class="edit-modal__card card-preview__card">
+      <button class="lightbox__close" data-close-preview aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <h3>Card preview</h3>
+      <p class="edit-modal__sub">Overlay shown on the template for reference. Only the overlay is printed onto your pre-printed stock.</p>
+      <div class="card-preview__stage" id="cardPreviewStage"></div>
+      <div class="edit-modal__actions">
+        <button class="btn btn-ghost" data-close-preview>Close</button>
+        <button class="btn btn-primary" id="cardPreviewPrintBtn">Print this card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print target: everything else is hidden when printing -->
+  <div id="printArea" class="print-area" aria-hidden="true"></div>
 
   <!-- ===================== CREDIT BAR ===================== -->
   <div class="credit-bar">

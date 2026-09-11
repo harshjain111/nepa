@@ -56,6 +56,9 @@
     registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer'], load: () => loadRegistrations() },
     messages:      { el: 'viewMessages',      roles: ['admin', 'viewer'], load: () => loadMessages() },
     archived:      { el: 'viewArchived',      roles: ['admin', 'viewer'], load: () => loadArchived() },
+    idcards:       { el: 'viewIdcards',       roles: ['admin'],           load: () => loadCards() },
+    meals:         { el: 'viewMeals',         roles: ['admin'],           load: () => loadMeals() },
+    import:        { el: 'viewImport',        roles: ['admin'],           load: () => {} },
     hotels:        { el: 'viewHotels',        roles: ['admin', 'hotel'],  load: () => loadHotels() },
     hotelBookings: { el: 'viewHotelBookings', roles: ['admin', 'hotel'],  load: () => loadHotelBookings() },
   };
@@ -68,6 +71,8 @@
   }
 
   function showDashboard() {
+    // The gate/catering team has no admin views — send them to the scanner.
+    if (role() === 'gate') { window.location.replace('/scan'); return; }
     loginScreen.hidden = true;
     dashboard.hidden = false;
     applyRoleUI();
@@ -78,6 +83,7 @@
   function reloadAll() {
     const r = role();
     if (VIEWS.registrations.roles.includes(r)) { loadRegistrations(); loadMessages(); loadArchived(); }
+    if (r === 'admin') { loadMeals(); }
     if (VIEWS.hotels.roles.includes(r)) { loadHotels(); loadHotelBookings(); }
   }
 
@@ -162,6 +168,7 @@
       records = (data.registrations || []);
       renderStats();
       renderTable();
+      if (typeof renderCards === 'function') renderCards();
     } catch (err) {
       console.error(err);
     }
@@ -771,6 +778,485 @@
     XLSX.utils.book_append_sheet(wb, ws, 'Hotel Bookings');
     XLSX.writeFile(wb, `NEPA-Hotel-Bookings-${new Date().toISOString().slice(0, 10)}.xlsx`);
   });
+
+  /* ============================================================
+     ID CARDS — search, edit, print (single + bulk), calibration
+     ============================================================ */
+  const selectedCards = new Set();
+
+  // vCard for the QR (mirrors lib/vcard.js). A hidden UID carries our token.
+  function buildVCard(r) {
+    const e = (v) => String(v == null ? '' : v)
+      .replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    const name = e(r.fullName || '');
+    const L = ['BEGIN:VCARD', 'VERSION:3.0', `N:${name};;;;`, `FN:${name}`];
+    if (r.organization) L.push(`ORG:${e(r.organization)}`);
+    if (r.designation) L.push(`TITLE:${e(r.designation)}`);
+    if (r.mobile) L.push(`TEL;TYPE=CELL:${e(r.mobile)}`);
+    if (r.email) L.push(`EMAIL;TYPE=INTERNET:${e(r.email)}`);
+    if (r.city) L.push(`ADR;TYPE=WORK:;;;${e(r.city)};;;`);
+    if (r.qrToken) L.push(`UID:NEPA26:${e(r.qrToken)}`);
+    L.push('END:VCARD');
+    return L.join('\r\n');
+  }
+
+  function renderQR(container, text) {
+    container.innerHTML = '';
+    if (typeof QRCode === 'undefined' || !text) return;
+    // eslint-disable-next-line no-new
+    new QRCode(container, {
+      text, width: 420, height: 420,
+      colorDark: '#000000', colorLight: 'rgba(255,255,255,0)',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  }
+
+  function buildCardEl(r, withTemplate) {
+    const card = document.createElement('div');
+    card.className = 'idcard' + (withTemplate ? ' idcard--template' : '');
+    const inner = document.createElement('div');
+    inner.className = 'idcard__inner';
+    const qr = document.createElement('div');
+    qr.className = 'idcard__qr';
+    inner.appendChild(qr);
+    renderQR(qr, buildVCard(r));
+    const add = (cls, txt) => { const d = document.createElement('div'); d.className = 'idcard__field ' + cls; d.textContent = txt || ''; inner.appendChild(d); };
+    add('idcard__name', r.fullName || '');
+    add('idcard__company', r.organization || '');
+    add('idcard__designation', r.designation || '');
+    add('idcard__city', r.city || '');
+    card.appendChild(inner);
+    return card;
+  }
+
+  function applyAlignVars(el) {
+    const x = parseFloat($('alignX').value) || 0;
+    const y = parseFloat($('alignY').value) || 0;
+    const s = (parseFloat($('alignScale').value) || 100) / 100;
+    el.style.setProperty('--nx', x + 'mm');
+    el.style.setProperty('--ny', y + 'mm');
+    el.style.setProperty('--scale', String(s));
+  }
+
+  // Load saved calibration
+  (function initAlign() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('nepa_card_align') || '{}');
+      if ($('alignX')) $('alignX').value = saved.x != null ? saved.x : 0;
+      if ($('alignY')) $('alignY').value = saved.y != null ? saved.y : 0;
+      if ($('alignScale')) $('alignScale').value = saved.scale != null ? saved.scale : 100;
+      if ($('alignTemplate')) $('alignTemplate').checked = !!saved.tpl;
+    } catch (e) { /* ignore */ }
+  })();
+  function saveAlign() {
+    try {
+      localStorage.setItem('nepa_card_align', JSON.stringify({
+        x: $('alignX').value, y: $('alignY').value, scale: $('alignScale').value, tpl: $('alignTemplate').checked,
+      }));
+    } catch (e) { /* ignore */ }
+  }
+
+  function cardReady(r) { return !!(r.designation && r.city); }
+
+  function filteredCards() {
+    const q = ($('cardSearch').value || '').trim().toLowerCase();
+    const f = $('cardFilter').value;
+    return records.filter((r) => {
+      if (f === 'ready' && !cardReady(r)) return false;
+      if (f === 'incomplete' && cardReady(r)) return false;
+      if (f === 'printed' && !r.cardPrintedAt) return false;
+      if (f === 'notprinted' && r.cardPrintedAt) return false;
+      if (q) {
+        const hay = `${r.fullName} ${r.mobile} ${r.organization || ''} ${r.designation || ''} ${r.city || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function updatePrintBtn() {
+    const btn = $('cardPrintBtn');
+    if (btn) btn.textContent = `Print selected (${selectedCards.size})`;
+  }
+
+  function renderCards() {
+    const tbody = $('cardTbody');
+    if (!tbody) return;
+    const rows = filteredCards();
+    if ($('cardEmpty')) $('cardEmpty').hidden = rows.length > 0;
+    const miss = '<span class="cell-missing">—</span>';
+    tbody.innerHTML = rows.map((r) => `
+      <tr>
+        <td class="card-check-col"><input type="checkbox" data-cardcheck="${esc(r.id)}" ${selectedCards.has(r.id) ? 'checked' : ''} /></td>
+        <td class="cell-name">${esc(r.fullName)}</td>
+        <td>${r.organization ? esc(r.organization) : miss}</td>
+        <td>${r.designation ? esc(r.designation) : miss}</td>
+        <td>${r.city ? esc(r.city) : miss}</td>
+        <td class="cell-muted">${esc(r.regId)}</td>
+        <td class="cell-muted">${r.cardPrintedAt ? esc(fmtDate(r.cardPrintedAt)) : '—'}</td>
+        <td>
+          <div class="status-set">
+            <button class="status-action" data-cardpreview="${esc(r.id)}">Preview</button>
+            <button class="status-action status-action--confirm" data-cardprint="${esc(r.id)}">Print</button>
+            <button class="status-action status-action--undo" data-cardedit="${esc(r.id)}">✎ Edit</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    updatePrintBtn();
+    const head = $('cardHeadCheck');
+    if (head) head.checked = rows.length > 0 && rows.every((r) => selectedCards.has(r.id));
+  }
+
+  function loadCards() {
+    if (records.length) { renderCards(); }
+    else { loadRegistrations(); } // will renderCards() when done
+  }
+
+  ['cardSearch', 'cardFilter'].forEach((id) => { const el = $(id); if (el) el.addEventListener('input', renderCards); });
+
+  const cardAlignBtn = $('cardAlignBtn');
+  if (cardAlignBtn) cardAlignBtn.addEventListener('click', () => { const p = $('cardAlign'); p.hidden = !p.hidden; });
+  ['alignX', 'alignY', 'alignScale', 'alignTemplate'].forEach((id) => { const el = $(id); if (el) el.addEventListener('change', saveAlign); });
+
+  const cardHeadCheck = $('cardHeadCheck');
+  if (cardHeadCheck) cardHeadCheck.addEventListener('change', () => {
+    const rows = filteredCards();
+    if (cardHeadCheck.checked) rows.forEach((r) => selectedCards.add(r.id));
+    else rows.forEach((r) => selectedCards.delete(r.id));
+    renderCards();
+  });
+  const cardSelectAllBtn = $('cardSelectAllBtn');
+  if (cardSelectAllBtn) cardSelectAllBtn.addEventListener('click', () => {
+    filteredCards().forEach((r) => selectedCards.add(r.id));
+    renderCards();
+  });
+
+  const cardTbody = $('cardTbody');
+  if (cardTbody) cardTbody.addEventListener('click', (e) => {
+    const chk = e.target.closest('[data-cardcheck]');
+    const prev = e.target.closest('[data-cardpreview]');
+    const prn = e.target.closest('[data-cardprint]');
+    const ed = e.target.closest('[data-cardedit]');
+    if (chk) { const id = chk.dataset.cardcheck; if (chk.checked) selectedCards.add(id); else selectedCards.delete(id); updatePrintBtn(); return; }
+    if (prev) { openCardPreview(prev.dataset.cardpreview); return; }
+    if (prn) { const r = records.find((x) => x.id === prn.dataset.cardprint); if (r) printCards([r]); return; }
+    if (ed) { openEdit(ed.dataset.cardedit); return; }
+  });
+
+  const cardPrintBtn = $('cardPrintBtn');
+  if (cardPrintBtn) cardPrintBtn.addEventListener('click', () => {
+    const regs = records.filter((r) => selectedCards.has(r.id));
+    if (!regs.length) { alert('Select at least one delegate to print.'); return; }
+    printCards(regs);
+  });
+
+  function printCards(regs) {
+    if (typeof QRCode === 'undefined') { alert('QR library failed to load. Check your connection and reload.'); return; }
+    const area = $('printArea');
+    area.innerHTML = '';
+    const withTpl = $('alignTemplate') && $('alignTemplate').checked;
+    regs.forEach((r) => { const c = buildCardEl(r, withTpl); applyAlignVars(c); area.appendChild(c); });
+    setTimeout(() => {
+      window.print();
+      markPrinted(regs.map((r) => r.id));
+    }, 80);
+  }
+
+  async function markPrinted(ids) {
+    try {
+      const res = await api('/api/registrations/mark-printed', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        const when = new Date().toISOString();
+        ids.forEach((id) => { const r = records.find((x) => x.id === id); if (r) r.cardPrintedAt = when; });
+        renderCards();
+      }
+    } catch (e) { /* non-fatal */ }
+  }
+
+  /* ---------------- card preview modal ---------------- */
+  function openCardPreview(id) {
+    const r = records.find((x) => x.id === id);
+    if (!r) return;
+    const stage = $('cardPreviewStage');
+    const card = buildCardEl(r, true);
+    // scale the 250mm card down to fit the modal (~300px wide)
+    const pxPerMm = 3.7795;
+    const scale = 300 / (250 * pxPerMm);
+    card.style.transform = `scale(${scale})`;
+    stage.style.width = (250 * pxPerMm * scale) + 'px';
+    stage.style.height = (353 * pxPerMm * scale) + 'px';
+    stage.innerHTML = '';
+    stage.appendChild(card);
+    $('cardPreviewModal').dataset.reg = id;
+    $('cardPreviewModal').hidden = false;
+  }
+  function closeCardPreview() { $('cardPreviewModal').hidden = true; }
+  document.querySelectorAll('[data-close-preview]').forEach((el) => el.addEventListener('click', closeCardPreview));
+  const cardPreviewPrintBtn = $('cardPreviewPrintBtn');
+  if (cardPreviewPrintBtn) cardPreviewPrintBtn.addEventListener('click', () => {
+    const id = $('cardPreviewModal').dataset.reg;
+    const r = records.find((x) => x.id === id);
+    closeCardPreview();
+    if (r) printCards([r]);
+  });
+
+  /* ============================================================
+     EDIT DELEGATE (designation / city / corrections)
+     ============================================================ */
+  function openEdit(id) {
+    const r = records.find((x) => x.id === id);
+    if (!r) return;
+    $('editModal').dataset.reg = id;
+    $('editTitle').textContent = `Edit — ${r.fullName || ''}`;
+    $('editName').value = r.fullName || '';
+    $('editOrg').value = r.organization || '';
+    $('editDesignation').value = r.designation || '';
+    $('editCity').value = r.city || '';
+    $('editMobile').value = r.mobile || '';
+    $('editEmail').value = r.email || '';
+    $('editGst').value = r.gstNumber || '';
+    $('editErr').hidden = true;
+    $('editModal').hidden = false;
+    setTimeout(() => $('editDesignation').focus(), 30);
+  }
+  function closeEdit() { $('editModal').hidden = true; }
+  document.querySelectorAll('[data-close-edit]').forEach((el) => el.addEventListener('click', closeEdit));
+
+  const editSaveBtn = $('editSaveBtn');
+  if (editSaveBtn) editSaveBtn.addEventListener('click', async () => {
+    const id = $('editModal').dataset.reg;
+    const err = $('editErr'); err.hidden = true;
+    const fields = {
+      fullName: $('editName').value.trim(),
+      organization: $('editOrg').value.trim(),
+      designation: $('editDesignation').value.trim(),
+      city: $('editCity').value.trim(),
+      mobile: $('editMobile').value.trim(),
+      email: $('editEmail').value.trim(),
+      gstNumber: $('editGst').value.trim().toUpperCase(),
+    };
+    if (fields.mobile && !/^\d{10}$/.test(fields.mobile)) { err.textContent = 'Mobile must be exactly 10 digits.'; err.hidden = false; return; }
+    editSaveBtn.disabled = true; const t = editSaveBtn.textContent; editSaveBtn.textContent = 'Saving…';
+    try {
+      const res = await api(`/api/registrations/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fields),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save.');
+      const r = records.find((x) => x.id === id);
+      if (r) Object.assign(r, data.registration || fields);
+      closeEdit();
+      renderCards(); renderTable();
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { editSaveBtn.disabled = false; editSaveBtn.textContent = t; }
+  });
+
+  /* ============================================================
+     MEALS — catalog management
+     ============================================================ */
+  let meals = [];
+  async function loadMeals() {
+    if (!$('mealsList')) return;
+    try {
+      const res = await api('/api/meals');
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load meals');
+      meals = data.meals || [];
+      renderMeals();
+    } catch (err) {
+      if ($('mealAddErr')) { $('mealAddErr').textContent = err.message; $('mealAddErr').hidden = false; }
+    }
+  }
+
+  function renderMeals() {
+    const list = $('mealsList'); if (!list) return;
+    if ($('mealsEmpty')) $('mealsEmpty').hidden = meals.length > 0;
+    list.innerHTML = meals.map((m) => `
+      <div class="meal-card" data-meal="${esc(m.id)}">
+        <div class="meal-card__top">
+          <strong>${esc(m.name)}</strong>
+          <span class="meal-card__served">${m.redeemed || 0}<span> served</span></span>
+        </div>
+        <div class="meal-card__fields">
+          <label>Name<input data-mf="name" value="${esc(m.name)}" /></label>
+          <label>Day / label<input data-mf="mealDay" value="${esc(m.mealDay || '')}" /></label>
+          <label>Times per delegate<input data-mf="maxPerPerson" type="number" min="1" value="${m.maxPerPerson || 1}" /></label>
+          <label class="meal-card__toggle"><input data-mf="active" type="checkbox" ${m.active !== false ? 'checked' : ''} /> Active</label>
+        </div>
+        <div class="meal-card__actions">
+          <button class="status-action status-action--confirm" data-mealsave="${esc(m.id)}">Save</button>
+          <button class="btn-delete" data-mealdelete="${esc(m.id)}" title="Delete meal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  const mealAddBtn = $('mealAddBtn');
+  if (mealAddBtn) mealAddBtn.addEventListener('click', async () => {
+    const err = $('mealAddErr'); err.hidden = true;
+    const name = $('mealName').value.trim();
+    if (!name) { err.textContent = 'Meal name is required.'; err.hidden = false; return; }
+    mealAddBtn.disabled = true;
+    try {
+      const res = await api('/api/meals', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, mealDay: $('mealDay').value.trim(), maxPerPerson: $('mealMax').value }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add meal.');
+      $('mealName').value = ''; $('mealDay').value = ''; $('mealMax').value = '1';
+      loadMeals();
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { mealAddBtn.disabled = false; }
+  });
+
+  const mealsList = $('mealsList');
+  if (mealsList) mealsList.addEventListener('click', async (e) => {
+    const save = e.target.closest('[data-mealsave]');
+    const del = e.target.closest('[data-mealdelete]');
+    if (save) {
+      const card = save.closest('[data-meal]');
+      const id = save.dataset.mealsave;
+      const fields = {};
+      card.querySelectorAll('[data-mf]').forEach((inp) => { fields[inp.dataset.mf] = inp.type === 'checkbox' ? inp.checked : inp.value; });
+      save.disabled = true; const t = save.textContent; save.textContent = 'Saving…';
+      try {
+        const res = await api(`/api/meals/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fields) });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save.');
+        loadMeals();
+      } catch (err) { alert(err.message); save.disabled = false; save.textContent = t; }
+      return;
+    }
+    if (del) {
+      const id = del.dataset.mealdelete;
+      const m = meals.find((x) => x.id === id);
+      if (!confirm(`Delete "${m ? m.name : 'this meal'}"?\n\nAll its check-in records will be removed too. This cannot be undone.`)) return;
+      try {
+        const res = await api(`/api/meals/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not delete.');
+        loadMeals();
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  /* ============================================================
+     BULK IMPORT (Excel)
+     ============================================================ */
+  let importRows = [];
+
+  function matchField(header) {
+    const h = String(header || '').trim().toLowerCase();
+    if (!h) return null;
+    if (/(company|organi|firm|business)/.test(h)) return 'organization';
+    if (/(designation|title|role|position)/.test(h)) return 'designation';
+    if (/(city|location|town|place)/.test(h)) return 'city';
+    if (/gst/.test(h)) return 'gstNumber';
+    if (/(mobile|phone|contact|whatsapp|cell|number|mob)/.test(h)) return 'mobile';
+    if (/(e-?mail)/.test(h)) return 'email';
+    if (/(note|remark|comment)/.test(h)) return 'note';
+    if (/name/.test(h)) return 'fullName';
+    return null;
+  }
+
+  const importFile = $('importFile');
+  if (importFile) importFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    $('importFileName').textContent = file.name;
+    if (typeof XLSX === 'undefined') { alert('Excel library failed to load.'); return; }
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+      if (!matrix.length) { alert('That sheet looks empty.'); return; }
+      const headers = matrix[0].map(matchField);
+      importRows = [];
+      for (let i = 1; i < matrix.length; i++) {
+        const row = matrix[i];
+        if (!row || row.every((c) => String(c).trim() === '')) continue;
+        const rec = { __row: i + 1 };
+        headers.forEach((f, idx) => { if (f && rec[f] == null) rec[f] = String(row[idx] == null ? '' : row[idx]).trim(); });
+        if (rec.mobile) rec.mobile = rec.mobile.replace(/\D/g, '');
+        importRows.push(rec);
+      }
+      renderImportPreview();
+    } catch (err) { alert('Could not read the file: ' + err.message); }
+  });
+
+  function renderImportPreview() {
+    const wrap = $('importPreview');
+    const tbody = $('importTbody');
+    const valid = importRows.filter((r) => r.fullName && /^\d{10}$/.test(r.mobile || ''));
+    const bad = importRows.length - valid.length;
+    $('importSummary').innerHTML = `Found <b>${importRows.length}</b> data rows — <span class="imp-ok">${valid.length} ready</span>${bad ? `, <span class="imp-fail">${bad} will be skipped (missing name or bad mobile)</span>` : ''}.`;
+    $('importCount').textContent = importRows.length;
+    tbody.innerHTML = importRows.slice(0, 200).map((r) => {
+      const ok = r.fullName && /^\d{10}$/.test(r.mobile || '');
+      return `<tr${ok ? '' : ' style="opacity:.55"'}>
+        <td class="cell-muted">${r.__row}</td>
+        <td>${esc(r.fullName || '') || '<span class="cell-missing">—</span>'}</td>
+        <td>${esc(r.mobile || '') || '<span class="cell-missing">—</span>'}</td>
+        <td>${esc(r.email || '')}</td>
+        <td>${esc(r.organization || '')}</td>
+        <td>${esc(r.designation || '')}</td>
+        <td>${esc(r.city || '')}</td>
+        <td>${ok ? '' : '<span class="cell-missing">will skip</span>'}</td>
+      </tr>`;
+    }).join('');
+    if (importRows.length > 200) tbody.innerHTML += `<tr><td colspan="8" class="cell-muted">…and ${importRows.length - 200} more (all will be imported)</td></tr>`;
+    wrap.hidden = false;
+    $('importReport').hidden = true;
+  }
+
+  function clearImport() {
+    importRows = [];
+    $('importFile').value = '';
+    $('importFileName').textContent = 'No file selected';
+    $('importPreview').hidden = true;
+    $('importReport').hidden = true;
+  }
+  const importClearBtn = $('importClearBtn');
+  if (importClearBtn) importClearBtn.addEventListener('click', clearImport);
+
+  const importRunBtn = $('importRunBtn');
+  if (importRunBtn) importRunBtn.addEventListener('click', async () => {
+    if (!importRows.length) return;
+    importRunBtn.disabled = true; const t = importRunBtn.textContent; importRunBtn.textContent = 'Importing…';
+    try {
+      const res = await api('/api/registrations/bulk-import', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows: importRows, onDuplicate: $('importDup').value }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Import failed.');
+      renderImportReport(data.report);
+      loadRegistrations(); // refresh lists + cards
+    } catch (e) { alert(e.message); }
+    finally { importRunBtn.disabled = false; importRunBtn.textContent = t; }
+  });
+
+  function renderImportReport(rep) {
+    $('importPreview').hidden = true;
+    const box = $('importReport');
+    const failRows = (rep.rows || []).filter((r) => r.status === 'failed' || r.status === 'skipped');
+    box.innerHTML = `
+      <div class="import-report__tot">
+        <span class="imp-ok">Inserted <b>${rep.inserted}</b></span>
+        <span>Updated <b>${rep.updated}</b></span>
+        <span class="imp-skip">Skipped <b>${rep.skipped}</b></span>
+        <span class="imp-fail">Failed <b>${rep.failed}</b></span>
+      </div>
+      ${failRows.length ? `<div class="table-wrap import-preview-wrap"><table class="reg-table"><thead><tr><th>Row</th><th>Name</th><th>Status</th><th>Reason</th></tr></thead><tbody>${failRows.map((r) => `<tr><td class="cell-muted">${r.row || ''}</td><td>${esc(r.name || '')}</td><td class="${r.status === 'skipped' ? 'imp-skip' : 'imp-fail'}">${r.status}</td><td>${esc(r.reason || '')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="cell-muted">All rows imported cleanly.</p>'}`;
+    box.hidden = false;
+    importRows = [];
+  }
 
   /* ============================================================
      BOOT — auto-login if a token exists

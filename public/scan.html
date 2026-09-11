@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Meal Check-in · Conclave 2026</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <meta name="theme-color" content="#1F3D2E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900&family=Newsreader:opsz,wght@6..72,300..700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="stylesheet" href="/css/scan.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body class="admin-body scan-body">
+
+  <!-- ===================== LOGIN GATE ===================== -->
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-card__lock" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="4" width="18" height="14" rx="2" />
+          <path d="M8 21h8M12 18v3" stroke-linecap="round" />
+          <path d="M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01" stroke-linecap="round" />
+        </svg>
+      </div>
+      <span class="eyebrow eyebrow--center">Conclave 2026</span>
+      <h1>Meal Check-in</h1>
+      <p class="login-card__sub">Sign in with the gate account to scan.</p>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="gateId">ID</label>
+          <input type="text" id="gateId" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="gatePassword">Password</label>
+          <input type="password" id="gatePassword" autocomplete="current-password" required />
+        </div>
+        <p class="login-error" id="loginError" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Sign In</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===================== SCANNER ===================== -->
+  <div class="scan-app" id="scanApp" hidden>
+    <header class="scan-header">
+      <div class="scan-header__brand">
+        <span class="brand__mark">M</span>
+        <span class="scan-header__title">Meal Check-in</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+    </header>
+
+    <main class="scan-main">
+      <div class="scan-controls">
+        <label for="mealSelect" class="scan-label">Which meal are you checking?</label>
+        <select id="mealSelect" class="scan-select"></select>
+        <p class="scan-hint" id="mealHint" hidden></p>
+      </div>
+
+      <div class="scan-stage">
+        <div id="reader" class="scan-reader"></div>
+        <div class="scan-reader__idle" id="readerIdle">
+          <p>Pick a meal, then start the camera.</p>
+        </div>
+      </div>
+
+      <div class="scan-actions">
+        <button class="btn btn-primary btn-block" id="startBtn">Start camera</button>
+        <button class="btn btn-ghost btn-block" id="stopBtn" hidden>Stop camera</button>
+      </div>
+
+      <details class="scan-manual">
+        <summary>Enter a Registration ID manually</summary>
+        <div class="scan-manual__row">
+          <input type="text" id="manualId" class="scan-select" placeholder="e.g. NEPA26-1042" />
+          <button class="btn btn-primary" id="manualBtn">Check</button>
+        </div>
+      </details>
+    </main>
+
+    <!-- Full-screen result overlay -->
+    <div class="scan-result" id="scanResult" hidden>
+      <div class="scan-result__card">
+        <div class="scan-result__icon" id="resultIcon"></div>
+        <p class="scan-result__status" id="resultStatus"></p>
+        <p class="scan-result__name" id="resultName"></p>
+        <p class="scan-result__meta" id="resultMeta"></p>
+        <p class="scan-result__sub" id="resultSub"></p>
+        <button class="btn btn-block scan-result__next" id="nextBtn">Scan next</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/scan.js"></script>
+</body>
+</html>
