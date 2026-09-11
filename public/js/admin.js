@@ -58,6 +58,7 @@
     archived:      { el: 'viewArchived',      roles: ['admin', 'viewer'], load: () => loadArchived() },
     idcards:       { el: 'viewIdcards',       roles: ['admin'],           load: () => loadCards() },
     meals:         { el: 'viewMeals',         roles: ['admin'],           load: () => loadMeals() },
+    checkins:      { el: 'viewCheckins',      roles: ['admin'],           load: () => loadCheckins() },
     import:        { el: 'viewImport',        roles: ['admin'],           load: () => {} },
     hotels:        { el: 'viewHotels',        roles: ['admin', 'hotel'],  load: () => loadHotels() },
     hotelBookings: { el: 'viewHotelBookings', roles: ['admin', 'hotel'],  load: () => loadHotelBookings() },
@@ -1143,6 +1144,99 @@
         loadMeals();
       } catch (err) { alert(err.message); }
     }
+  });
+
+  /* ============================================================
+     CHECK-INS (meal log) — who was served, when, by whom + delete
+     ============================================================ */
+  let checkins = [];
+  async function loadCheckins() {
+    if (!$('ciTbody')) return;
+    // keep the meal filter options in sync with the meals catalog
+    try {
+      if (!meals.length) { const mr = await api('/api/meals'); const md = await mr.json(); if (md.ok) meals = md.meals || []; }
+    } catch (e) { /* ignore */ }
+    const sel = $('ciMealFilter');
+    if (sel) {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">All meals</option>' +
+        meals.map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('');
+      sel.value = cur;
+    }
+    try {
+      const mealId = sel ? sel.value : '';
+      const res = await api('/api/redemptions' + (mealId ? `?mealId=${encodeURIComponent(mealId)}` : ''));
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load check-ins');
+      checkins = data.redemptions || [];
+      renderCheckins();
+    } catch (err) { alert(err.message); }
+  }
+
+  function filteredCheckins() {
+    const q = ($('ciSearch').value || '').trim().toLowerCase();
+    return checkins.filter((r) => {
+      if (!q) return true;
+      const hay = `${r.fullName || ''} ${r.regId || ''} ${r.organization || ''} ${r.mealName || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function renderCheckins() {
+    const tbody = $('ciTbody'); if (!tbody) return;
+    const rows = filteredCheckins();
+    if ($('ciEmpty')) $('ciEmpty').hidden = rows.length > 0;
+    if ($('ciCount')) $('ciCount').textContent = `${rows.length} check-in${rows.length === 1 ? '' : 's'}`;
+    tbody.innerHTML = rows.map((r) => `
+      <tr>
+        <td class="cell-name">${esc(r.fullName || '—')}</td>
+        <td class="cell-muted">${esc(r.regId || '')}</td>
+        <td>${r.organization ? esc(r.organization) : '<span class="cell-muted">—</span>'}</td>
+        <td>${esc(r.mealName || '—')}${r.mealDay ? ` <span class="cell-muted">· ${esc(r.mealDay)}</span>` : ''}</td>
+        <td class="cell-muted">${esc(fmtDate(r.redeemedAt))}</td>
+        <td class="cell-muted">${esc(r.redeemedBy || '—')}</td>
+        <td><button class="btn-delete" data-cidelete="${esc(r.id)}" title="Delete this check-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+        </button></td>
+      </tr>`).join('');
+  }
+
+  const ciSearch = $('ciSearch');
+  if (ciSearch) ciSearch.addEventListener('input', renderCheckins);
+  const ciMealFilter = $('ciMealFilter');
+  if (ciMealFilter) ciMealFilter.addEventListener('change', loadCheckins);
+
+  const ciTbody = $('ciTbody');
+  if (ciTbody) ciTbody.addEventListener('click', async (e) => {
+    const del = e.target.closest('[data-cidelete]');
+    if (!del) return;
+    const id = del.dataset.cidelete;
+    const rec = checkins.find((x) => x.id === id);
+    if (!confirm(`Delete this check-in for ${rec ? (rec.fullName || 'this delegate') : 'this delegate'} (${rec ? rec.mealName : ''})?\n\nThey will be able to avail this meal again.`)) return;
+    try {
+      const res = await api(`/api/redemptions/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not delete.');
+      checkins = checkins.filter((x) => x.id !== id);
+      renderCheckins();
+      loadMeals(); // served counts changed
+    } catch (err) { alert(err.message); }
+  });
+
+  const ciExportBtn = $('ciExportBtn');
+  if (ciExportBtn) ciExportBtn.addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') { alert('Excel library failed to load.'); return; }
+    const rows = filteredCheckins();
+    if (!rows.length) { alert('No check-ins to export.'); return; }
+    const data = rows.map((r) => ({
+      'Delegate': r.fullName || '', 'Reg ID': r.regId || '', 'Company': r.organization || '',
+      'Mobile': r.mobile || '', 'Meal': r.mealName || '', 'Day': r.mealDay || '',
+      'Served At': fmtDate(r.redeemedAt), 'By': r.redeemedBy || '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Check-ins');
+    XLSX.writeFile(wb, `NEPA-Meal-Checkins-${new Date().toISOString().slice(0, 10)}.xlsx`);
   });
 
   /* ============================================================

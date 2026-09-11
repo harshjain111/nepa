@@ -76,6 +76,7 @@
         <button class="admin-tab" data-view="archived">Archived <span class="tab-badge" id="archivedBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="idcards" hidden>ID Cards</button>
         <button class="admin-tab" data-view="meals" hidden>Meals</button>
+        <button class="admin-tab" data-view="checkins" hidden>Check-ins</button>
         <button class="admin-tab" data-view="import" hidden>Import</button>
         <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
         <button class="admin-tab" data-view="hotelBookings" hidden>Hotel Bookings <span class="tab-badge" id="hbBadge" hidden>0</span></button>
@@ -288,6 +289,40 @@
         <div id="mealsList" class="meals-list"></div>
         <div class="table-empty" id="mealsEmpty" hidden>No meals yet — add one above.</div>
       </div><!-- /viewMeals -->
+
+      <!-- ===== CHECK-INS (meal log) VIEW ===== -->
+      <div id="viewCheckins" hidden>
+        <p class="archived-note">Every meal check-in — who was served, when, and by which gate. Delete an entry to undo a mistaken scan (that delegate can then avail the meal again).</p>
+        <section class="toolbar">
+          <div class="toolbar__filters">
+            <input type="search" id="ciSearch" class="toolbar__search" placeholder="Search name, reg ID, company…" />
+            <select id="ciMealFilter" class="toolbar__select" aria-label="Filter by meal">
+              <option value="">All meals</option>
+            </select>
+          </div>
+          <div class="card-toolbar-actions">
+            <span class="ci-count" id="ciCount"></span>
+            <button class="btn btn-primary" id="ciExportBtn">Export to Excel</button>
+          </div>
+        </section>
+        <section class="table-wrap">
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th>Delegate</th>
+                <th>Reg ID</th>
+                <th>Company</th>
+                <th>Meal</th>
+                <th>Served at</th>
+                <th>By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ciTbody"></tbody>
+          </table>
+          <div class="table-empty" id="ciEmpty" hidden>No check-ins yet.</div>
+        </section>
+      </div><!-- /viewCheckins -->
 
       <!-- ===== IMPORT VIEW ===== -->
       <div id="viewImport" hidden>

@@ -646,6 +646,19 @@ app.post('/api/redeem', ...gateTeam, wrap(async (req, res) => {
   res.json({ ok: true, ...result });
 }));
 
+// Check-in log: who was served, when, by which gate. Optional ?mealId=
+app.get('/api/redemptions', auth.middleware, auth.requireRole('admin', 'viewer'), wrap(async (req, res) => {
+  const redemptions = await store.listRedemptions({ mealId: req.query.mealId || null });
+  res.json({ ok: true, redemptions });
+}));
+
+// Delete one check-in (undo a mistaken scan) — admin or gate.
+app.delete('/api/redemptions/:id', auth.middleware, auth.requireRole('admin', 'gate'), wrap(async (req, res) => {
+  const removed = await store.deleteRedemption(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, deleted: true });
+}));
+
 // Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
 const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html', '/scan': 'scan.html' };
 for (const [route, file] of Object.entries(PAGES)) {
