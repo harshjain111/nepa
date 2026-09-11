@@ -26,7 +26,7 @@
   font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 }
 /* On-screen / test-print only: show the real design behind the overlay. */
-.idcard--template { background-image: url('/img/idcard-template.jpg'); }
+.idcard--template { background-image: url('/img/idcard-template.png'); }
 
 /* Everything inside gets nudged together by the calibration controls. */
 .idcard__inner {
