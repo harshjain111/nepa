@@ -123,11 +123,19 @@
   function updateMealHint() {
     const m = currentMeal();
     const hint = $('mealHint');
-    if (!m) { hint.hidden = true; return; }
+    const banner = $('activeBanner');
+    if (!m) { hint.hidden = true; if (banner) banner.hidden = true; return; }
     const per = (m.maxPerPerson || 1) === 1 ? 'once per delegate' : `up to ${m.maxPerPerson}× per delegate`;
     const verb = m.kind === 'event' ? 'attended' : 'served';
     hint.textContent = `${m.redeemed || 0} ${verb} so far · ${per}`;
     hint.hidden = false;
+    // Big always-on reminder of the active session.
+    if (banner) {
+      banner.className = 'scan-active scan-active--' + (m.kind === 'event' ? 'event' : 'meal');
+      $('activeName').textContent = m.name + (m.mealDay ? ' · ' + m.mealDay : '');
+      $('activeCount').textContent = `${m.redeemed || 0} ${verb}`;
+      banner.hidden = false;
+    }
   }
   $('mealSelect').addEventListener('change', () => {
     sessionStorage.setItem(MEAL_KEY, $('mealSelect').value);

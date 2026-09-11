@@ -57,15 +57,22 @@
 
     <main class="scan-main">
       <div class="scan-controls">
-        <label for="mealSelect" class="scan-label">Which meal / event are you checking?</label>
+        <label for="mealSelect" class="scan-label">At the start of your shift, pick what you're scanning for:</label>
         <select id="mealSelect" class="scan-select"></select>
         <p class="scan-hint" id="mealHint" hidden></p>
+      </div>
+
+      <!-- Always-visible reminder of the active session while scanning -->
+      <div class="scan-active" id="activeBanner" hidden>
+        <span class="scan-active__label">Scanning for</span>
+        <span class="scan-active__name" id="activeName">—</span>
+        <span class="scan-active__count" id="activeCount"></span>
       </div>
 
       <div class="scan-stage">
         <div id="reader" class="scan-reader"></div>
         <div class="scan-reader__idle" id="readerIdle">
-          <p>Pick a meal, then start the camera.</p>
+          <p>Pick a session above, then start the camera.</p>
         </div>
       </div>
 
