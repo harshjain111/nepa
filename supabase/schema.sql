@@ -55,6 +55,8 @@ alter table registrations alter column status set default 'Pending';
 alter table registrations add column if not exists subtotal   integer not null default 0;
 alter table registrations add column if not exists gst_rate    numeric not null default 0;
 alter table registrations add column if not exists gst_amount  integer not null default 0;
+-- Optional GST number supplied by the registrant.
+alter table registrations add column if not exists gst_number  text;
 -- Soft-delete: the admin "delete" sets archived_at instead of removing the row,
 -- so registrations are never lost and can be restored.
 alter table registrations add column if not exists archived_at timestamptz;

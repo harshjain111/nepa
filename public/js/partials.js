@@ -110,6 +110,7 @@
           <div class="field"><label for="mobile">Mobile Number</label><input type="tel" id="mobile" name="mobile" inputmode="numeric" maxlength="10" placeholder="10-digit number" autocomplete="tel" required /><span class="field__error" data-error-for="mobile"></span></div>
           <div class="field"><label for="email">Email</label><input type="email" id="email" name="email" autocomplete="email" required /><span class="field__error" data-error-for="email"></span></div>
           <div class="field"><label for="organization">Organization</label><input type="text" id="organization" name="organization" autocomplete="organization" required /><span class="field__error" data-error-for="organization"></span></div>
+          <div class="field"><label for="gstNumber">GST Number</label><input type="text" id="gstNumber" name="gstNumber" autocomplete="off" maxlength="15" placeholder="e.g. 22AAAAA0000A1Z5" style="text-transform:uppercase" /><span class="field__error" data-error-for="gstNumber"></span></div>
           <div class="form-nav"><span></span><button type="button" class="btn btn-primary" data-next>Continue</button></div>
         </div>
         <div class="form-step" data-step-panel="2">

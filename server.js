@@ -173,6 +173,7 @@ async function handleRegister(req, res, err) {
     const mobile = (b.mobile || '').trim();
     const email = (b.email || '').trim();
     const organization = (b.organization || '').trim();
+    const gstNumber = (b.gstNumber || '').trim().toUpperCase();
     const paymentMethod = (b.paymentMethod || '').trim();
     const referenceNo = (b.referenceNo || '').trim();
     const note = (b.note || '').trim();
@@ -204,7 +205,7 @@ async function handleRegister(req, res, err) {
     let record;
     try {
       record = await store.addRegistration({
-        fullName, mobile, email, organization, nepaMember, feeType,
+        fullName, mobile, email, organization, gstNumber: gstNumber || null, nepaMember, feeType,
         delegateFee, membershipFee, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
         paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note: note || null,
       });

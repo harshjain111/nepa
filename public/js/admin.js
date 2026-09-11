@@ -220,7 +220,7 @@
       if (method && r.paymentMethod !== method) return false;
       if (status && r.status !== status) return false;
       if (q) {
-        const hay = `${r.fullName} ${r.mobile} ${r.organization} ${r.email}`.toLowerCase();
+        const hay = `${r.fullName} ${r.mobile} ${r.organization} ${r.email} ${r.gstNumber || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -256,6 +256,7 @@
         <tr>
           <td class="cell-name">${esc(r.fullName)}<br><span class="cell-muted" style="font-weight:400;font-size:.78rem">${esc(r.regId)}</span></td>
           <td>${esc(r.organization)}</td>
+          <td>${r.gstNumber ? esc(r.gstNumber) : '<span class="cell-muted">—</span>'}</td>
           <td>${esc(r.mobile)}</td>
           <td class="cell-muted">${esc(r.email)}</td>
           <td>${r.nepaMember ? '<span class="pill pill--yes">Member</span>' : '<span class="pill pill--no">No</span>'}</td>
@@ -538,6 +539,7 @@
         'Reg ID': r.regId,
         'Name': r.fullName,
         'Organization': r.organization,
+        'GST Number': r.gstNumber || '',
         'Mobile': r.mobile,
         'Email': r.email,
         'NEPA Member': r.nepaMember ? 'Yes' : 'No',

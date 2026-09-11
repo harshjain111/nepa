@@ -480,6 +480,7 @@
       fd.append('mobile', document.getElementById('mobile').value.trim());
       fd.append('email', document.getElementById('email').value.trim());
       fd.append('organization', document.getElementById('organization').value.trim());
+      fd.append('gstNumber', document.getElementById('gstNumber').value.trim().toUpperCase());
       fd.append('nepaMember', String(state.member === true));
       fd.append('paymentMethod', state.method);
       if (state.method === 'Bank') fd.append('referenceNo', document.getElementById('bankRef').value.trim());
