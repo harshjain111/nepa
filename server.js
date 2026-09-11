@@ -21,6 +21,7 @@ const multer = require('multer');
 const store = require('./lib/store');
 const uploads = require('./lib/uploads');
 const auth = require('./lib/auth');
+const vcard = require('./lib/vcard');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,6 +44,10 @@ const VIEWER_PASSWORD = process.env.VIEWER_PASSWORD || 'nepa2026';
 const HOTEL_ID = process.env.HOTEL_ID || 'hotel';
 const HOTEL_PASSWORD = process.env.HOTEL_PASSWORD || 'nepa2026';
 const HOTEL_PASSWORD_HASH = process.env.HOTEL_PASSWORD_HASH || '';
+// Gate/catering team: runs the meal QR scanner ONLY (no registrations/money).
+const GATE_ID = process.env.GATE_ID || 'gate';
+const GATE_PASSWORD = process.env.GATE_PASSWORD || 'nepa2026';
+const GATE_PASSWORD_HASH = process.env.GATE_PASSWORD_HASH || '';
 // Preferred in production: store a scrypt hash (see `npm run hash-password`)
 // so the real password is never kept in plaintext. Falls back to *_PASSWORD.
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -111,7 +116,7 @@ const upload = multer({
 /* ------------------------------------------------------------------ *
  * APP SETUP
  * ------------------------------------------------------------------ */
-app.use(express.json());
+app.use(express.json({ limit: '4mb' })); // headroom for bulk Excel imports
 // Local-disk uploads (no-op on Vercel, where Blob serves absolute URLs).
 app.use('/uploads', express.static(uploads.UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR, {
@@ -291,6 +296,8 @@ app.post('/api/admin/login', wrap(async (req, res) => {
     auth.verifyPassword(pwStr, VIEWER_PASSWORD_HASH || VIEWER_PASSWORD);
   const hotelOk = !adminOk && !viewerOk && auth.safeEqual(idStr, HOTEL_ID) &&
     auth.verifyPassword(pwStr, HOTEL_PASSWORD_HASH || HOTEL_PASSWORD);
+  const gateOk = !adminOk && !viewerOk && !hotelOk && auth.safeEqual(idStr, GATE_ID) &&
+    auth.verifyPassword(pwStr, GATE_PASSWORD_HASH || GATE_PASSWORD);
 
   if (adminOk) {
     loginAttempts.delete(key);
@@ -303,6 +310,10 @@ app.post('/api/admin/login', wrap(async (req, res) => {
   if (hotelOk) {
     loginAttempts.delete(key);
     return res.json({ ok: true, role: 'hotel', token: auth.sign('hotel') });
+  }
+  if (gateOk) {
+    loginAttempts.delete(key);
+    return res.json({ ok: true, role: 'gate', token: auth.sign('gate') });
   }
 
   loginNoteFail(key);
@@ -542,8 +553,101 @@ app.delete('/api/hotel-bookings/:id/purge', ...hotelTeam, wrap(async (req, res) 
   res.json({ ok: true, purged: true });
 }));
 
+/* ------------------------------------------------------------------ *
+ * ID CARDS — edit details, bulk import, mark printed (admin only)
+ * ------------------------------------------------------------------ */
+const adminOnly = [auth.middleware, auth.requireRole('admin')];
+
+// Edit a registrant (fill designation/city, correct details).
+app.patch('/api/registrations/:id', ...adminOnly, wrap(async (req, res) => {
+  const b = req.body || {};
+  const allowed = ['fullName', 'mobile', 'email', 'organization', 'gstNumber', 'designation', 'city'];
+  const fields = {};
+  for (const k of allowed) {
+    if (k in b) fields[k] = typeof b[k] === 'string' ? b[k].trim() : b[k];
+  }
+  if (fields.mobile && !MOBILE_RE.test(String(fields.mobile))) {
+    return res.status(400).json({ ok: false, error: 'Mobile must be exactly 10 digits' });
+  }
+  const updated = await store.updateRegistration(req.params.id, fields);
+  if (!updated) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, registration: updated });
+}));
+
+// Bulk import offline registrants parsed from an Excel file (client sends rows).
+app.post('/api/registrations/bulk-import', ...adminOnly, wrap(async (req, res) => {
+  const b = req.body || {};
+  const rows = Array.isArray(b.rows) ? b.rows : [];
+  if (!rows.length) return res.status(400).json({ ok: false, error: 'No rows to import' });
+  if (rows.length > 5000) return res.status(400).json({ ok: false, error: 'Too many rows (max 5000 per import)' });
+  const report = await store.bulkImportRegistrations(rows, { onDuplicate: b.onDuplicate });
+  res.json({ ok: true, report });
+}));
+
+// Mark one or more delegates' ID cards as printed.
+app.post('/api/registrations/mark-printed', ...adminOnly, wrap(async (req, res) => {
+  const ids = Array.isArray((req.body || {}).ids) ? req.body.ids : [];
+  if (!ids.length) return res.status(400).json({ ok: false, error: 'No ids' });
+  const result = await store.markCardPrinted(ids);
+  res.json({ ok: true, ...result });
+}));
+
+/* ------------------------------------------------------------------ *
+ * MEALS + CHECK-IN
+ *   - admin manages the meal catalog
+ *   - the 'gate' role (and admin) run the scanner + redeem
+ * ------------------------------------------------------------------ */
+const gateTeam = [auth.middleware, auth.requireRole('admin', 'gate')];
+
+// List meals (with redeemed counts) — gate picks which meal to man.
+app.get('/api/meals', ...gateTeam, wrap(async (req, res) => {
+  res.json({ ok: true, meals: await store.mealStats() });
+}));
+
+app.post('/api/meals', ...adminOnly, wrap(async (req, res) => {
+  const b = req.body || {};
+  if (!b.name || !String(b.name).trim()) return res.status(400).json({ ok: false, error: 'Meal name is required' });
+  const meal = await store.addMeal({
+    name: String(b.name).trim(), mealDay: b.mealDay, maxPerPerson: b.maxPerPerson, active: b.active, sort: b.sort,
+  });
+  res.json({ ok: true, meal });
+}));
+
+app.patch('/api/meals/:id', ...adminOnly, wrap(async (req, res) => {
+  const updated = await store.updateMeal(req.params.id, req.body || {});
+  if (!updated) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, meal: updated });
+}));
+
+app.delete('/api/meals/:id', ...adminOnly, wrap(async (req, res) => {
+  const removed = await store.deleteMeal(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, deleted: true });
+}));
+
+// Look up a delegate by scanned QR token (verify-only, no redemption).
+app.get('/api/lookup', ...gateTeam, wrap(async (req, res) => {
+  const token = vcard.tokenFromScan(req.query.token || req.query.q || '');
+  if (!token) return res.status(400).json({ ok: false, error: 'No token' });
+  const reg = await store.findRegistrationByToken(token);
+  if (!reg) return res.status(404).json({ ok: false, error: 'Not a valid delegate QR' });
+  res.json({ ok: true, registrant: reg });
+}));
+
+// The check-in. Body: { token | regId, mealId, by }. token may be a raw vCard.
+app.post('/api/redeem', ...gateTeam, wrap(async (req, res) => {
+  const b = req.body || {};
+  const mealId = b.mealId;
+  if (!mealId) return res.status(400).json({ ok: false, error: 'Pick a meal first' });
+  const token = b.token ? vcard.tokenFromScan(b.token) : null;
+  const regId = b.regId ? String(b.regId).trim() : null;
+  if (!token && !regId) return res.status(400).json({ ok: false, error: 'No QR / delegate id' });
+  const result = await store.redeemMeal({ token, regId, mealId, by: b.by || req.auth.role });
+  res.json({ ok: true, ...result });
+}));
+
 // Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
-const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html' };
+const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html', '/scan': 'scan.html' };
 for (const [route, file] of Object.entries(PAGES)) {
   app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
 }

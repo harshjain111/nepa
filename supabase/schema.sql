@@ -57,6 +57,20 @@ alter table registrations add column if not exists gst_rate    numeric not null 
 alter table registrations add column if not exists gst_amount  integer not null default 0;
 -- Optional GST number supplied by the registrant.
 alter table registrations add column if not exists gst_number  text;
+-- ID-card fields (filled by admin / bulk import; not on the public form).
+alter table registrations add column if not exists designation text;
+alter table registrations add column if not exists city        text;
+-- Where the record came from: 'web' (public form) or 'offline-import' (Excel).
+alter table registrations add column if not exists source      text not null default 'web';
+-- When this delegate's ID card was last printed (nullable).
+alter table registrations add column if not exists card_printed_at timestamptz;
+-- Per-delegate QR token: unguessable id embedded in the ID-card QR (vCard UID)
+-- and used by the meal scanner to identify the delegate. gen_random_bytes needs
+-- pgcrypto (created above). Backfill existing rows, then default new ones.
+alter table registrations add column if not exists qr_token    text;
+update registrations set qr_token = encode(gen_random_bytes(10), 'hex') where qr_token is null;
+alter table registrations alter column qr_token set default encode(gen_random_bytes(10), 'hex');
+create unique index if not exists registrations_qr_token_unique on registrations (qr_token);
 -- Soft-delete: the admin "delete" sets archived_at instead of removing the row,
 -- so registrations are never lost and can be restored.
 alter table registrations add column if not exists archived_at timestamptz;
@@ -125,3 +139,38 @@ alter table hotel_bookings alter column id set default gen_random_uuid();
 alter table hotel_bookings alter column booking_id set default ('HB26-' || nextval('hotel_booking_seq'));
 alter table hotel_bookings alter column created_at set default now();
 alter table hotel_bookings add column if not exists archived_at timestamptz;
+
+-- ============================================================
+--  MEALS / CATERING CHECK-IN (managed by admin; scanned by the 'gate' role)
+-- ============================================================
+
+-- The catalog of meal sessions you configure (e.g. Day 1 Lunch, Day 1 Dinner).
+-- max_per_person is how many times ONE delegate may avail this meal (usually 1).
+create table if not exists meals (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  name           text not null,
+  meal_day       text,                          -- free label, e.g. 'Day 1' / date
+  max_per_person integer not null default 1,
+  active         boolean not null default true,
+  sort           integer not null default 0
+);
+
+-- One row per time a delegate avails a meal. Counting rows per (delegate, meal)
+-- enforces the max_per_person limit in the app.
+create table if not exists meal_redemptions (
+  id              uuid primary key default gen_random_uuid(),
+  registration_id uuid references registrations(id) on delete cascade,
+  meal_id         uuid references meals(id) on delete cascade,
+  redeemed_at     timestamptz not null default now(),
+  redeemed_by     text                           -- which gate/staffer scanned
+);
+
+-- repair no-ops
+alter table meals alter column id set default gen_random_uuid();
+alter table meals alter column created_at set default now();
+alter table meal_redemptions alter column id set default gen_random_uuid();
+alter table meal_redemptions alter column redeemed_at set default now();
+
+create index if not exists meal_redemptions_reg_idx  on meal_redemptions (registration_id);
+create index if not exists meal_redemptions_meal_idx on meal_redemptions (meal_id);
