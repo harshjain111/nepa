@@ -59,6 +59,8 @@ alter table registrations add column if not exists gst_amount  integer not null 
 alter table registrations add column if not exists gst_number  text;
 -- Links a delegate to the paying "party" (from the allocation list), if any.
 alter table registrations add column if not exists party_id    uuid;
+-- Audit: which helpdesk user created this registration.
+alter table registrations add column if not exists registered_by text;
 -- Help-desk delegates may not have a phone/email; the public form still
 -- validates them at the API. Relax the DB constraints so those entries save.
 alter table registrations alter column mobile drop not null;
@@ -234,4 +236,30 @@ create table if not exists parties (
 );
 alter table parties alter column id set default gen_random_uuid();
 alter table parties alter column created_at set default now();
+-- Audit for manually-confirmed delegate counts (blank-in-Excel parties).
+alter table parties add column if not exists original_paid text;   -- raw Excel value
+alter table parties add column if not exists confirmed_by  text;   -- who confirmed the count
+alter table parties add column if not exists confirmed_at  timestamptz;
 create index if not exists registrations_party_idx on registrations (party_id);
+
+-- Atomically claim a paid delegate slot for a party. Locks the party row so
+-- two devices can never over-fill (final count can never exceed paid_count).
+create or replace function claim_party_slot(
+  p_party_id uuid, p_full_name text, p_org text, p_mobile text, p_designation text, p_by text
+) returns table(id uuid, reg_id text, qr_token text)
+language plpgsql as $$
+declare v_cap integer; v_filled integer;
+begin
+  select paid_count into v_cap from parties where parties.id = p_party_id for update;
+  if not found then raise exception 'NO_PARTY'; end if;
+  if v_cap is null then raise exception 'NO_COUNT'; end if;
+  select count(*) into v_filled from registrations
+    where registrations.party_id = p_party_id and registrations.archived_at is null;
+  if v_filled >= v_cap then raise exception 'PARTY_FULL'; end if;
+  return query
+  insert into registrations (full_name, mobile, organization, designation, source, party_id,
+                             fee_type, payment_method, status, registered_by)
+  values (p_full_name, nullif(p_mobile,''), nullif(p_org,''), nullif(p_designation,''), 'helpdesk', p_party_id,
+          'Prepaid', 'Prepaid', 'Confirmed', nullif(p_by,''))
+  returning registrations.id, registrations.reg_id, registrations.qr_token;
+end $$;

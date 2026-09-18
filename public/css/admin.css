@@ -375,8 +375,21 @@
 .party-card__status--full { color: var(--muted); }
 .party-card__dels { margin: 10px 0 4px; display: grid; gap: 6px; }
 .party-del { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .9rem; padding: 6px 10px; background: rgba(245,236,214,.5); border-radius: 8px; }
-.party-card__actions { margin-top: 10px; }
+.party-card__actions { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .party-card__actions .btn { padding: 10px 16px; }
+.party-card__stats { margin-top: 10px; display: flex; gap: 22px; flex-wrap: wrap; }
+.party-stat { display: flex; flex-direction: column; gap: 2px; }
+.party-stat span { font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.party-stat b { font-size: 1.15rem; color: var(--green); font-variant-numeric: tabular-nums; }
+.party-reg-btn { font-size: 1rem; padding: 13px 22px !important; }
+.party-call { font-size: .88rem; color: #a8690b; font-weight: 600; }
+.party-msg { padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px dashed rgba(197,162,83,.6); color: var(--muted); font-size: .92rem; }
+.party-msg--err { border-color: #c0392b; color: #c0392b; background: rgba(192,57,43,.05); }
+/* Mobile-first: bigger touch targets, single-column stats on small screens */
+@media (max-width: 520px) {
+  .party-card__stats { gap: 16px; }
+  .party-reg-btn { width: 100%; text-align: center; }
+}
 
 /* ===================== BACKUP ===================== */
 .backup-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }

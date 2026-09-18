@@ -332,7 +332,7 @@ app.post('/api/admin/login', wrap(async (req, res) => {
     try { u = await store.findAdminUserByUsername(idStr); } catch (e) { u = null; }
     if (u && auth.verifyPassword(pwStr, u.passwordHash)) {
       loginAttempts.delete(key);
-      return res.json({ ok: true, role: u.role, uid: u.id, token: auth.sign(u.role, { uid: u.id }) });
+      return res.json({ ok: true, role: u.role, uid: u.id, token: auth.sign(u.role, { uid: u.id, uname: u.username }) });
     }
   }
 
@@ -414,6 +414,8 @@ app.post('/api/admin/clear', auth.middleware, auth.requireRole('admin'), wrap(as
 /* ---- Parties (paid delegate allocations) + help-desk delegate entry ---- */
 const helpTeam = [auth.middleware, auth.requireRole('admin', 'print', 'staff')];
 const upper = (s) => String(s == null ? '' : s).trim().toUpperCase();
+// Human label for audit: the staff username, else the built-in role.
+const whoami = (req) => (req.auth && (req.auth.uname || req.auth.role)) || 'admin';
 
 // List all parties with live filled/remaining counts (admin + help desk).
 app.get('/api/parties', ...helpTeam, wrap(async (req, res) => {
@@ -433,7 +435,7 @@ app.post('/api/admin/parties/import', auth.middleware, auth.requireRole('admin')
 app.patch('/api/parties/:id/count', ...helpTeam, wrap(async (req, res) => {
   const count = Number((req.body || {}).count);
   if (!Number.isFinite(count) || count < 0 || count > 999) return res.status(400).json({ ok: false, error: 'Enter a valid number of delegates.' });
-  const party = await store.setPartyCount(req.params.id, count);
+  const party = await store.setPartyCount(req.params.id, count, whoami(req));
   if (!party) return res.status(404).json({ ok: false, error: 'Party not found' });
   res.json({ ok: true, party });
 }));
@@ -448,7 +450,7 @@ app.post('/api/parties/:id/delegates', ...helpTeam, wrap(async (req, res) => {
   if (!fullName) return res.status(400).json({ ok: false, error: 'Name is required' });
   if (mobile && !MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Phone must be 10 digits (or leave it blank)' });
   try {
-    const reg = await store.addPartyDelegate(req.params.id, { fullName, organization, designation, mobile: mobile || null });
+    const reg = await store.addPartyDelegate(req.params.id, { fullName, organization, designation, mobile: mobile || null, registeredBy: whoami(req) });
     res.json({ ok: true, registration: reg });
   } catch (e) {
     if (e && ['NO_PARTY', 'NO_COUNT', 'PARTY_FULL'].includes(e.code)) return res.status(409).json({ ok: false, error: e.message });
@@ -755,6 +757,7 @@ async function handleOnspot(req, res, err) {
       designation: designation || null, city: city || null, gstNumber: null, nepaMember: false,
       feeType: 'Spot', delegateFee: DELEGATE_FEE_SPOT, membershipFee: 0, subtotal, gstRate: GST_RATE,
       gstAmount, totalAmount, paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note, source: 'onspot',
+      registeredBy: whoami(req),
     });
   } catch (e) {
     if (e && e.code === 'DUPLICATE_MOBILE') {
@@ -800,7 +803,7 @@ app.post('/api/registrations/manual', ...adminOnly, wrap(async (req, res) => {
       fullName, mobile, email, organization, gstNumber: gstNumber || null,
       designation: designation || null, city: city || null, source: 'manual',
       nepaMember, feeType, delegateFee, membershipFee, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
-      paymentMethod, referenceNo: null, screenshotUrl: null, note: note || null,
+      paymentMethod, referenceNo: null, screenshotUrl: null, note: note || null, registeredBy: whoami(req),
     });
   } catch (e) {
     if (e && e.code === 'DUPLICATE_MOBILE') return res.status(409).json({ ok: false, error: 'That mobile is already registered.' });

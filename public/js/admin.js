@@ -1022,7 +1022,15 @@
     loadParties(); // party (paid allocation) search results
   }
 
-  if ($('cardSearch')) $('cardSearch').addEventListener('input', () => { renderCards(); renderPartyResults(); });
+  let partyRefreshT = null;
+  if ($('cardSearch')) $('cardSearch').addEventListener('input', () => {
+    renderCards();
+    renderPartyResults();
+    // Debounced re-sync of party counts from the server so the operator always
+    // sees the latest X/N (even when another device just registered someone).
+    clearTimeout(partyRefreshT);
+    if (($('cardSearch').value || '').trim().length >= 2) partyRefreshT = setTimeout(loadParties, 400);
+  });
   if ($('cardFilter')) $('cardFilter').addEventListener('input', renderCards);
 
   const cardAlignBtn = $('cardAlignBtn');
@@ -1850,53 +1858,80 @@
      PARTIES (paid allocations) — help-desk search + fill + print
      ============================================================ */
   let parties = [];
+  let partiesLoaded = false;
+  let partiesError = false;
   async function loadParties() {
     if (!$('partyResults')) return;
     try {
       const res = await api('/api/parties');
       const data = await res.json();
-      if (res.ok && data.ok) { parties = data.parties || []; renderPartyResults(); }
-    } catch (e) { /* non-fatal */ }
+      if (!res.ok || !data.ok) throw new Error(data.error || 'load failed');
+      parties = data.parties || []; partiesLoaded = true; partiesError = false;
+    } catch (e) { partiesError = true; }
+    renderPartyResults();
   }
 
-  function partyStatus(p) {
-    if (p.paidCount == null) return { cls: 'call', text: 'No delegate count — call accountant / coordinator' };
-    const left = Math.max(0, p.paidCount - p.filled);
-    if (left === 0) return { cls: 'full', text: `${p.paidCount} paid · ${p.filled} done · full` };
-    return { cls: 'open', text: `${p.paidCount} paid · ${p.filled} done · ${left} left` };
+  // Normalize for search: lowercase, punctuation -> space, collapse spaces.
+  // This is what makes "SILCHAR UNITED COMMERCIAL COMPANY" match the stored
+  // "SILCHAR- UNITED COMMERCIAL COMPANY" (hyphens/commas/|| etc. don't block it).
+  const normStr = (x) => String(x == null ? '' : x).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+  function searchParties(q) {
+    const toks = normStr(q).split(' ').filter(Boolean);
+    if (!toks.length) return [];
+    return parties.filter((p) => { const n = normStr(p.name); return toks.every((t) => n.includes(t)); });
+  }
+
+  function partyMsg(text, cls) {
+    return `<div class="party-msg party-msg--${cls || 'info'}">${esc(text)}</div>`;
+  }
+
+  function partyCardHtml(p) {
+    const filledRegs = records.filter((r) => r.partyId === p.id);
+    const dels = filledRegs.length
+      ? `<div class="party-card__dels">${filledRegs.map((r) => `
+          <div class="party-del">
+            <span>${esc(r.fullName)}${r.organization ? ' · <span class="cell-muted">' + esc(r.organization) + '</span>' : ''}</span>
+            <button class="status-action status-action--confirm" data-pprint="${esc(r.id)}">Reprint</button>
+          </div>`).join('')}</div>`
+      : '';
+    let cls; let status; let stats; let action;
+    if (p.paidCount == null) {
+      cls = 'call';
+      status = 'PAYMENT CONFIRMATION REQUIRED';
+      stats = `<div class="party-stat"><span>Delegates Paid</span><b>NOT CONFIRMED</b></div>`;
+      action = `<span class="party-call">Call accountant / coordinator, then:</span><button class="btn btn-primary" data-pcontact="${esc(p.id)}">Contacted</button>`;
+    } else {
+      const left = Math.max(0, p.paidCount - p.filled);
+      stats = `<div class="party-stat"><span>Delegates Paid</span><b>${p.paidCount}</b></div>`
+        + `<div class="party-stat"><span>Registered</span><b>${p.filled} / ${p.paidCount}</b></div>`
+        + `<div class="party-stat"><span>Remaining</span><b>${left}</b></div>`;
+      if (left > 0) { cls = 'open'; status = 'READY FOR REGISTRATION'; action = `<button class="btn btn-primary party-reg-btn" data-padd="${esc(p.id)}">Register delegate</button>`; }
+      else { cls = 'full'; status = `REGISTRATION COMPLETE (${p.filled} / ${p.paidCount})`; action = '<span class="cell-muted">All paid passes registered. To add more, contact the accountant.</span>'; }
+    }
+    return `
+      <div class="party-card party-card--${cls}" data-party="${esc(p.id)}">
+        <div class="party-card__head">
+          <strong>${esc(p.name)}</strong>
+          <span class="party-card__status party-card__status--${cls}">${status}</span>
+        </div>
+        <div class="party-card__stats">${stats}</div>
+        ${dels}
+        <div class="party-card__actions">${action}</div>
+      </div>`;
   }
 
   function renderPartyResults() {
     const box = $('partyResults');
     if (!box) return;
-    const q = ($('cardSearch') && $('cardSearch').value || '').trim().toLowerCase();
-    if (!q) { box.hidden = true; box.innerHTML = ''; return; }
-    const matches = parties.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 25);
-    if (!matches.length) { box.hidden = true; box.innerHTML = ''; return; }
+    const q = ($('cardSearch') && $('cardSearch').value || '').trim();
+    if (q.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
     box.hidden = false;
-    box.innerHTML = '<div class="party-results__head">Parties (paid allocations)</div>' + matches.map((p) => {
-      const st = partyStatus(p);
-      const filledRegs = records.filter((r) => r.partyId === p.id);
-      const left = p.paidCount == null ? 0 : Math.max(0, p.paidCount - p.filled);
-      const delegatesHtml = filledRegs.map((r) => `
-        <div class="party-del">
-          <span>${esc(r.fullName)}${r.organization ? ' · <span class="cell-muted">' + esc(r.organization) + '</span>' : ''}</span>
-          <button class="status-action status-action--confirm" data-pprint="${esc(r.id)}">Print</button>
-        </div>`).join('');
-      let action = '';
-      if (p.paidCount == null) action = `<button class="btn btn-primary" data-pcontact="${esc(p.id)}">Contacted — set count</button>`;
-      else if (left > 0) action = `<button class="btn btn-primary" data-padd="${esc(p.id)}">＋ Add delegate (${left} left)</button>`;
-      else action = '<span class="cell-muted">All paid passes used. To add more, contact the accountant.</span>';
-      return `
-        <div class="party-card party-card--${st.cls}" data-party="${esc(p.id)}">
-          <div class="party-card__head">
-            <strong>${esc(p.name)}</strong>
-            <span class="party-card__status party-card__status--${st.cls}">${st.text}</span>
-          </div>
-          ${delegatesHtml ? `<div class="party-card__dels">${delegatesHtml}</div>` : ''}
-          <div class="party-card__actions">${action}</div>
-        </div>`;
-    }).join('');
+    const head = '<div class="party-results__head">Parties (paid allocations)</div>';
+    if (partiesError) { box.innerHTML = head + partyMsg('Unable to load parties — tap Refresh and try again.', 'err'); return; }
+    if (!partiesLoaded) { box.innerHTML = head + partyMsg('Searching…'); return; }
+    const matches = searchParties(q).slice(0, 25);
+    if (!matches.length) { box.innerHTML = head + partyMsg(`No party found for “${q}”. Check the spelling — or the delegate may be listed below.`); return; }
+    box.innerHTML = head + matches.map(partyCardHtml).join('');
   }
 
   const partyResults = $('partyResults');
@@ -1904,20 +1939,21 @@
     const add = e.target.closest('[data-padd]');
     const contact = e.target.closest('[data-pcontact]');
     const prn = e.target.closest('[data-pprint]');
-    if (prn) { const r = records.find((x) => x.id === prn.dataset.pprint); if (r) printCards([r]); return; }
+    if (prn) { const r = records.find((x) => x.id === prn.dataset.pprint); if (r) printCards([r]); return; } // reprint only, no new reg
     if (add) { openPartyDelegate(add.dataset.padd); return; }
     if (contact) {
       const p = parties.find((x) => x.id === contact.dataset.pcontact);
-      const ans = prompt(`How many delegates has the accountant confirmed payment for?\n\nParty: ${p ? p.name : ''}`, '');
+      const ans = prompt(`HOW MANY DELEGATES HAS PAYMENT BEEN RECEIVED FOR?\n\nParty: ${p ? p.name : ''}\n\nEnter a number:`, '');
       if (ans == null) return;
       const n = parseInt(ans, 10);
-      if (!Number.isFinite(n) || n < 0) { alert('Enter a valid number.'); return; }
+      if (!Number.isFinite(n) || n < 0 || n > 999) { alert('Enter a valid number of delegates.'); return; }
       try {
         const res = await api(`/api/parties/${contact.dataset.pcontact}/count`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: n }) });
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Could not set count.');
-        if (p) p.paidCount = n;
+        if (p) { p.paidCount = n; p.remaining = Math.max(0, n - (p.filled || 0)); }
         renderPartyResults();
+        loadParties(); // refresh from server (also for other devices' view on next load)
       } catch (err) { alert(err.message); }
     }
   });
@@ -1928,15 +1964,24 @@
     if (!p) return;
     const left = p.paidCount == null ? 0 : Math.max(0, p.paidCount - p.filled);
     $('pdModal').dataset.party = partyId;
-    $('pdTitle').textContent = 'Add delegate';
+    $('pdTitle').textContent = 'Register delegate';
     $('pdSub').textContent = `${p.name} · ${left} pass(es) left`;
-    ['pdName', 'pdOrg', 'pdPhone', 'pdDesignation'].forEach((id) => { $(id).value = ''; });
+    ['pdName', 'pdPhone', 'pdDesignation'].forEach((id) => { $(id).value = ''; });
+    $('pdOrg').value = String(p.name || '').toUpperCase(); // auto-populate company from the party
     $('pdErr').hidden = true;
     $('pdModal').hidden = false;
     setTimeout(() => $('pdName').focus(), 30);
   }
   function closePd() { $('pdModal').hidden = true; }
   document.querySelectorAll('[data-close-pd]').forEach((el) => el.addEventListener('click', closePd));
+  // Force UPPERCASE at input level (not just CSS) so the stored value is uppercase.
+  ['pdName', 'pdOrg', 'pdDesignation'].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener('input', () => {
+      const s = el.selectionStart; el.value = el.value.toUpperCase();
+      try { el.setSelectionRange(s, s); } catch (e) { /* ignore */ }
+    });
+  });
 
   async function savePartyDelegate(thenPrint) {
     const partyId = $('pdModal').dataset.party;
@@ -1946,7 +1991,8 @@
     const designation = $('pdDesignation').value.trim().toUpperCase();
     const mobile = $('pdPhone').value.replace(/\D/g, '');
     if (!fullName) { err.textContent = 'Name is required.'; err.hidden = false; return; }
-    if (mobile && !/^\d{10}$/.test(mobile)) { err.textContent = 'Phone must be 10 digits, or leave it blank.'; err.hidden = false; return; }
+    if (!organization) { err.textContent = 'Company name is required.'; err.hidden = false; return; }
+    if (!/^\d{10}$/.test(mobile)) { err.textContent = 'A 10-digit phone number is required.'; err.hidden = false; return; }
     const btns = [$('pdSaveBtn'), $('pdSavePrintBtn')]; btns.forEach((b) => { b.disabled = true; });
     try {
       const res = await api(`/api/parties/${partyId}/delegates`, {
@@ -1956,13 +2002,15 @@
       if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add delegate.');
       const reg = Object.assign({ organization, designation, city: '', mobile, partyId, status: 'Confirmed', cardPrintedAt: null }, data.registration);
       records.unshift(reg);
-      const p = parties.find((x) => x.id === partyId); if (p) p.filled = (p.filled || 0) + 1;
+      const p = parties.find((x) => x.id === partyId); if (p) { p.filled = (p.filled || 0) + 1; p.remaining = Math.max(0, (p.paidCount || 0) - p.filled); }
       closePd();
       renderPartyResults(); renderCards();
       if (thenPrint) printCards([reg]);
+      loadParties(); // re-sync counts from the server (source of truth across devices)
     } catch (e) {
       err.textContent = e.message; err.hidden = false;
-      if (/already used|full|count/i.test(e.message)) { loadParties(); }
+      // Server rejected (e.g. another device took the last slot) — re-sync counts.
+      if (/already used|full|count|slot|PARTY_FULL/i.test(e.message)) { loadParties(); }
     } finally { btns.forEach((b) => { b.disabled = false; }); }
   }
   if ($('pdSaveBtn')) $('pdSaveBtn').addEventListener('click', () => savePartyDelegate(false));
