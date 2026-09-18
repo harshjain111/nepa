@@ -884,8 +884,12 @@
     const hz = printSettings.center
       ? `--card-left:50%;--card-ml:calc(${c.w}mm / -2)`
       : `--card-left:${Number(printSettings.left) || 0}mm;--card-ml:0mm`;
-    // Vertical: either centered on the selected paper (dynamic) or a manual top margin.
-    const topMm = printSettings.centerV ? Math.max(0, (pg.h - c.h) / 2) : (Number(printSettings.top) || 0);
+    // Vertical: either centered on the selected paper (dynamic) or a manual top
+    // margin — but always kept within the page so the card is never pushed off
+    // the top/bottom edge (which would crop it, as it can't print past the paper).
+    const maxTop = Math.max(0, pg.h - c.h);
+    let topMm = printSettings.centerV ? (pg.h - c.h) / 2 : (Number(printSettings.top) || 0);
+    topMm = Math.min(Math.max(topMm, 0), maxTop);
     return `--page-w:${pg.w}mm;--page-h:${pg.h}mm;--card-w:${c.w}mm;--card-h:${c.h}mm;` +
       `--card-top:${topMm}mm;${hz};--fs:${c.h / 353};` +
       `--nx:${Number(printSettings.x) || 0}mm;--ny:${Number(printSettings.y) || 0}mm;--scale:${(Number(printSettings.scale) || 100) / 100}`;
@@ -921,7 +925,7 @@
     if (g('psOrient')) printSettings.orient = g('psOrient').value;
     if (g('psCardW')) printSettings.cardW = Number(g('psCardW').value) || 3.5;
     if (g('psCardH')) printSettings.cardH = Number(g('psCardH').value) || 5;
-    if (g('psTop')) printSettings.top = Number(g('psTop').value) || 0;
+    if (g('psTop')) { printSettings.top = Math.max(0, Number(g('psTop').value) || 0); g('psTop').value = printSettings.top; }
     if (g('psCenterV')) printSettings.centerV = g('psCenterV').checked;
     if (g('psCenter')) printSettings.center = g('psCenter').checked;
     if (g('psLeft')) printSettings.left = Number(g('psLeft').value) || 0;

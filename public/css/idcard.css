@@ -41,10 +41,12 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
-  overflow: hidden;
   color: #1F3D2E;
   font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 }
+/* Only the template background needs clipping to the card; the overlay text/QR
+   must never be cut by the card edge. */
+.idcard--template { overflow: hidden; }
 /* On-screen / test-print only: show the real design behind the overlay. */
 .idcard--template { background-image: url('/img/idcard-template.png'); }
 

@@ -273,7 +273,7 @@
               <span class="ps-custom"><input type="number" id="psCardW" step="0.1" min="1" value="3.5" /> × <input type="number" id="psCardH" step="0.1" min="1" value="5" /></span>
             </label>
             <label class="card-align__check"><input type="checkbox" id="psCenterV" /> Center vertically</label>
-            <label id="psTopWrap">Top margin (mm) <span class="cell-muted">from paper top</span><input type="number" id="psTop" step="1" value="0" /></label>
+            <label id="psTopWrap">Top margin (mm) <span class="cell-muted">from paper top</span><input type="number" id="psTop" step="1" min="0" value="0" /></label>
             <label class="card-align__check"><input type="checkbox" id="psCenter" checked /> Center horizontally</label>
             <label id="psLeftWrap" hidden>Left margin (mm)<input type="number" id="psLeft" step="1" value="0" /></label>
           </div>
@@ -287,7 +287,7 @@
             <button class="btn btn-ghost" id="psTestBtn" type="button">🖨 Print test page</button>
             <button class="btn btn-ghost" id="psLockBtn" type="button">🔒 Lock settings</button>
           </div>
-          <p class="card-align__hint">Settings save on <strong>this device</strong> (each operator's laptop keeps its own printer setup). Put the paper you print on in <em>Paper in printer</em>; the 3.5 × 5 in card is placed on it at the top margin. Use <strong>Print test page</strong> to print an outline card and check the position, then adjust Top margin / Nudge / Scale. <strong>Lock settings</strong> to prevent accidental changes during the event.</p>
+          <p class="card-align__hint">Settings save on <strong>this device</strong> (each operator's laptop keeps its own printer setup). Set <em>Paper in printer</em> to the sheet you actually print on — if you feed the 3.5 × 5 cards directly, pick <strong>Card — 3.5 × 5 in</strong> so the card fills the sheet. The card is always kept fully on the page (it can't be pushed off the top). To shift the printed name/QR up or down <em>on the card</em>, use <strong>Nudge down</strong> (negative = up); use <strong>Print test page</strong> to check, then <strong>Lock settings</strong>.</p>
         </div>
 
         <section class="table-wrap">
