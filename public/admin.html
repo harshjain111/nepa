@@ -79,6 +79,7 @@
         <button class="admin-tab" data-view="checkins" hidden>Check-ins</button>
         <button class="admin-tab" data-view="import" hidden>Import</button>
         <button class="admin-tab" data-view="users" hidden>Users</button>
+        <button class="admin-tab" data-view="backup" hidden>Backup</button>
         <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
         <button class="admin-tab" data-view="hotelBookings" hidden>Hotel Bookings <span class="tab-badge" id="hbBadge" hidden>0</span></button>
       </nav>
@@ -404,6 +405,37 @@
         </div>
       </div><!-- /viewImport -->
 
+      <!-- ===== BACKUP VIEW ===== -->
+      <div id="viewBackup" hidden>
+        <p class="archived-note">Create a complete snapshot of <strong>all data</strong> — registrations, hotel bookings, meals, check-ins and enquiries. Each backup is kept here permanently (even after you clear the live data), can be <strong>viewed</strong> on this page and <strong>downloaded as Excel</strong>.</p>
+        <div class="hotel-admin-add">
+          <div class="backup-actions">
+            <button class="btn btn-primary" id="backupCreateBtn">＋ Create backup now</button>
+            <span class="cell-muted" id="backupHint"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="reg-table">
+            <thead><tr><th>Created</th><th>Label</th><th>Registrations</th><th>Hotel</th><th>Meals</th><th>Check-ins</th><th>Enquiries</th><th>Actions</th></tr></thead>
+            <tbody id="backupTbody"></tbody>
+          </table>
+          <div class="table-empty" id="backupEmpty" hidden>No backups yet — create one above.</div>
+        </div>
+
+        <div class="danger-zone">
+          <h3>Clear live data</h3>
+          <p>This permanently removes the chosen live data. A fresh backup is <strong>always taken automatically first</strong>, so it stays available above and downloadable as Excel.</p>
+          <div class="danger-zone__row">
+            <select id="clearScope" class="toolbar__select">
+              <option value="all">Registrations + Hotel bookings</option>
+              <option value="registrations">Registrations only</option>
+              <option value="hotels">Hotel bookings only</option>
+            </select>
+            <button class="btn btn-danger" id="clearBtn">Back up &amp; clear</button>
+          </div>
+        </div>
+      </div><!-- /viewBackup -->
+
       <!-- ===== USERS (print operators) VIEW ===== -->
       <div id="viewUsers" hidden>
         <p class="archived-note">Create <strong>ID-card printing</strong> logins for your team. Each person signs in with their own username, sees only <strong>Registrations</strong> and <strong>ID Cards</strong>, and sets their <strong>own printer settings</strong> on their own device. They can print and edit card details but <strong>cannot</strong> delete anyone, import, or touch hotels / enquiries.</p>
@@ -562,6 +594,28 @@
       <div class="edit-modal__actions">
         <button class="btn btn-ghost" data-close-manual>Cancel</button>
         <button class="btn btn-primary" id="mrSaveBtn">Register</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== BACKUP VIEW MODAL ===================== -->
+  <div class="edit-modal" id="backupModal" hidden>
+    <div class="edit-modal__overlay" data-close-backup></div>
+    <div class="edit-modal__card backup-modal__card">
+      <button class="lightbox__close" data-close-backup aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <h3 id="backupModalTitle">Backup</h3>
+      <p class="edit-modal__sub" id="backupModalMeta"></p>
+      <div class="backup-modal__tabs">
+        <button class="admin-tab is-active" data-btab="reg">Registrations</button>
+        <button class="admin-tab" data-btab="hotel">Hotel bookings</button>
+      </div>
+      <div class="table-wrap backup-modal__wrap" id="backupViewReg"></div>
+      <div class="table-wrap backup-modal__wrap" id="backupViewHotel" hidden></div>
+      <div class="edit-modal__actions">
+        <button class="btn btn-ghost" data-close-backup>Close</button>
+        <button class="btn btn-primary" id="backupExcelBtn">Download Excel</button>
       </div>
     </div>
   </div>

@@ -64,6 +64,7 @@
     checkins:      { el: 'viewCheckins',      roles: ['admin'],           load: () => loadCheckins() },
     import:        { el: 'viewImport',        roles: ['admin'],           load: () => {} },
     users:         { el: 'viewUsers',         roles: ['admin'],           load: () => loadUsers() },
+    backup:        { el: 'viewBackup',        roles: ['admin'],           load: () => loadBackups() },
     hotels:        { el: 'viewHotels',        roles: ['admin', 'hotel'],  load: () => loadHotels() },
     hotelBookings: { el: 'viewHotelBookings', roles: ['admin', 'hotel'],  load: () => loadHotelBookings() },
   };
@@ -1653,6 +1654,187 @@
       adminUsers = adminUsers.filter((x) => x.id !== id);
       renderUsers();
     } catch (err) { alert(err.message); }
+  });
+
+  /* ============================================================
+     BACKUP — full snapshots, view, Excel, clear (admin only)
+     ============================================================ */
+  let backups = [];
+  async function loadBackups() {
+    if (!$('backupTbody')) return;
+    try {
+      const res = await api('/api/admin/backups');
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load backups');
+      backups = data.backups || [];
+      renderBackups();
+    } catch (err) { if ($('backupHint')) $('backupHint').textContent = err.message; }
+  }
+
+  function renderBackups() {
+    const tbody = $('backupTbody'); if (!tbody) return;
+    if ($('backupEmpty')) $('backupEmpty').hidden = backups.length > 0;
+    const c = (b, k) => (b.counts && b.counts[k] != null) ? b.counts[k] : 0;
+    tbody.innerHTML = backups.map((b) => `
+      <tr>
+        <td class="cell-muted">${esc(fmtDate(b.createdAt))}</td>
+        <td>${b.label ? esc(b.label) : '<span class="cell-muted">—</span>'}</td>
+        <td>${c(b, 'registrations')}</td>
+        <td>${c(b, 'hotelBookings')}</td>
+        <td>${c(b, 'meals')}</td>
+        <td>${c(b, 'checkins')}</td>
+        <td>${c(b, 'messages')}</td>
+        <td>
+          <div class="status-set">
+            <button class="status-action" data-bview="${esc(b.id)}">View</button>
+            <button class="status-action status-action--confirm" data-bexcel="${esc(b.id)}">Excel</button>
+            <button class="status-action status-action--undo" data-bdelete="${esc(b.id)}">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  const backupCreateBtn = $('backupCreateBtn');
+  if (backupCreateBtn) backupCreateBtn.addEventListener('click', async () => {
+    backupCreateBtn.disabled = true; const t = backupCreateBtn.textContent; backupCreateBtn.textContent = 'Backing up…';
+    try {
+      const res = await api('/api/admin/backups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Backup failed.');
+      if ($('backupHint')) $('backupHint').textContent = 'Backup created.';
+      loadBackups();
+    } catch (e) { alert(e.message); }
+    finally { backupCreateBtn.disabled = false; backupCreateBtn.textContent = t; }
+  });
+
+  // cache the last-fetched full backup for the modal + excel
+  let currentBackup = null;
+  async function fetchBackup(id) {
+    if (currentBackup && currentBackup.id === id) return currentBackup;
+    const res = await api(`/api/admin/backups/${id}`);
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load backup');
+    currentBackup = data.backup;
+    return currentBackup;
+  }
+
+  function backupTableHtml(rows, cols) {
+    if (!rows || !rows.length) return '<p class="cell-muted" style="padding:12px">None in this backup.</p>';
+    const head = cols.map((c) => `<th>${esc(c.label)}</th>`).join('');
+    const body = rows.map((r) => '<tr>' + cols.map((c) => `<td>${esc(c.get(r))}</td>`).join('') + '</tr>').join('');
+    return `<table class="reg-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  async function openBackupView(id) {
+    let b;
+    try { b = await fetchBackup(id); } catch (e) { alert(e.message); return; }
+    const d = b.data || {};
+    $('backupModalTitle').textContent = 'Backup · ' + fmtDate(b.createdAt);
+    $('backupModalMeta').textContent = (b.label ? b.label + ' · ' : '') +
+      `${(d.registrations || []).length} registrations · ${(d.hotelBookings || []).length} hotel bookings · ${(d.redemptions || []).length} check-ins`;
+    $('backupViewReg').innerHTML = backupTableHtml(d.registrations, [
+      { label: 'Reg ID', get: (r) => r.regId }, { label: 'Name', get: (r) => r.fullName },
+      { label: 'Company', get: (r) => r.organization }, { label: 'Designation', get: (r) => r.designation || '' },
+      { label: 'City', get: (r) => r.city || '' }, { label: 'Mobile', get: (r) => r.mobile },
+      { label: 'Email', get: (r) => r.email || '' }, { label: 'Amount', get: (r) => r.totalAmount },
+      { label: 'Method', get: (r) => r.paymentMethod }, { label: 'Status', get: (r) => r.status },
+    ]);
+    $('backupViewHotel').innerHTML = backupTableHtml(d.hotelBookings, [
+      { label: 'Booking', get: (b2) => b2.bookingId }, { label: 'Name', get: (b2) => b2.fullName },
+      { label: 'Firm', get: (b2) => b2.firm || '' }, { label: 'Mobile', get: (b2) => b2.mobile },
+      { label: 'Hotel', get: (b2) => b2.hotelName || '' }, { label: 'Occupancy', get: (b2) => b2.occupancy },
+      { label: 'Amount', get: (b2) => b2.totalAmount }, { label: 'Status', get: (b2) => b2.status },
+    ]);
+    // default to registrations tab
+    document.querySelectorAll('[data-btab]').forEach((t) => t.classList.toggle('is-active', t.dataset.btab === 'reg'));
+    $('backupViewReg').hidden = false; $('backupViewHotel').hidden = true;
+    $('backupModal').dataset.id = id;
+    $('backupModal').hidden = false;
+  }
+  document.querySelectorAll('[data-close-backup]').forEach((el) => el.addEventListener('click', () => { $('backupModal').hidden = true; }));
+  document.querySelectorAll('[data-btab]').forEach((btn) => btn.addEventListener('click', () => {
+    const which = btn.dataset.btab;
+    document.querySelectorAll('[data-btab]').forEach((t) => t.classList.toggle('is-active', t === btn));
+    $('backupViewReg').hidden = which !== 'reg';
+    $('backupViewHotel').hidden = which !== 'hotel';
+  }));
+
+  async function downloadBackupExcel(id) {
+    if (typeof XLSX === 'undefined') { alert('Excel library failed to load.'); return; }
+    let b;
+    try { b = await fetchBackup(id); } catch (e) { alert(e.message); return; }
+    const d = b.data || {};
+    const origin = window.location.origin;
+    const shot = (u) => u ? (/^https?:\/\//.test(u) ? u : origin + u) : '';
+    const wb = XLSX.utils.book_new();
+    const add = (name, rows) => { if (rows && rows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name); };
+    add('Registrations', (d.registrations || []).map((r) => ({
+      'Reg ID': r.regId, 'Name': r.fullName, 'Company': r.organization, 'Designation': r.designation || '', 'City': r.city || '',
+      'Mobile': r.mobile, 'Email': r.email || '', 'GST Number': r.gstNumber || '', 'NEPA Member': r.nepaMember ? 'Yes' : 'No',
+      'Fee Type': r.feeType, 'Subtotal': r.subtotal, 'GST': r.gstAmount, 'Total Amount': r.totalAmount,
+      'Payment Method': r.paymentMethod, 'Reference No': r.referenceNo || '', 'Screenshot URL': shot(r.screenshotUrl),
+      'Source': r.source || '', 'Status': r.status, 'Registered': fmtDate(r.createdAt),
+    })));
+    add('Hotel Bookings', (d.hotelBookings || []).map((b2) => ({
+      'Booking ID': b2.bookingId, 'Name': b2.fullName, 'Firm': b2.firm || '', 'Address': b2.address || '', 'Mobile': b2.mobile,
+      'Email': b2.email || '', 'Hotel': b2.hotelName || '', 'Occupancy': b2.occupancy, 'Second Guest': b2.guestName || '',
+      'Room Price': b2.roomPrice, 'GST': b2.gstAmount, 'Total Amount': b2.totalAmount, 'Payment Method': b2.paymentMethod,
+      'Reference No': b2.referenceNo || '', 'Screenshot URL': shot(b2.screenshotUrl), 'Status': b2.status, 'Booked': fmtDate(b2.createdAt),
+    })));
+    add('Meals & Events', (d.meals || []).map((m) => ({
+      'Name': m.name, 'Type': m.kind === 'event' ? 'Event' : 'Meal', 'Day': m.mealDay || '',
+      'Times per delegate': m.maxPerPerson, 'Check-ins': m.redeemed || 0, 'Unique': m.unique || 0,
+    })));
+    add('Check-ins', (d.redemptions || []).map((x) => ({
+      'Delegate': x.fullName || '', 'Reg ID': x.regId || '', 'Company': x.organization || '', 'Meal/Event': x.mealName || '',
+      'Type': x.mealKind === 'event' ? 'Event' : 'Meal', 'Served At': fmtDate(x.redeemedAt), 'By': x.redeemedBy || '',
+    })));
+    add('Enquiries', (d.messages || []).map((m) => ({
+      'Name': m.name, 'Email': m.email, 'Phone': m.phone || '', 'Subject': m.subject || '', 'Message': m.message, 'Received': fmtDate(m.createdAt),
+    })));
+    if (!wb.SheetNames.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Note: 'Empty backup' }]), 'Backup');
+    const stamp = new Date(b.createdAt).toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    XLSX.writeFile(wb, `NEPA-Backup-${stamp}.xlsx`);
+  }
+
+  const backupTbody = $('backupTbody');
+  if (backupTbody) backupTbody.addEventListener('click', async (e) => {
+    const v = e.target.closest('[data-bview]'); const x = e.target.closest('[data-bexcel]'); const del = e.target.closest('[data-bdelete]');
+    if (v) { openBackupView(v.dataset.bview); return; }
+    if (x) { downloadBackupExcel(x.dataset.bexcel); return; }
+    if (del) {
+      const id = del.dataset.bdelete;
+      if (!confirm('Delete this backup permanently? Make sure you have downloaded it if you still need it.')) return;
+      try {
+        const res = await api(`/api/admin/backups/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not delete.');
+        backups = backups.filter((b) => b.id !== id); if (currentBackup && currentBackup.id === id) currentBackup = null;
+        renderBackups();
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  const backupExcelBtn = $('backupExcelBtn');
+  if (backupExcelBtn) backupExcelBtn.addEventListener('click', () => { const id = $('backupModal').dataset.id; if (id) downloadBackupExcel(id); });
+
+  const clearBtn = $('clearBtn');
+  if (clearBtn) clearBtn.addEventListener('click', async () => {
+    const scope = $('clearScope').value;
+    const what = scope === 'all' ? 'ALL registrations AND hotel bookings' : scope === 'registrations' ? 'ALL registrations' : 'ALL hotel bookings';
+    if (!confirm(`This will BACK UP everything, then permanently clear ${what} from the live site.\n\nThe backup stays on this page and downloadable as Excel. Continue?`)) return;
+    if (!confirm(`Are you sure? ${what} will be removed from the live lists. This cannot be undone (only restored by re-entering from the backup).`)) return;
+    clearBtn.disabled = true; const t = clearBtn.textContent; clearBtn.textContent = 'Backing up & clearing…';
+    try {
+      const res = await api('/api/admin/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope }) });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Clear failed.');
+      alert('Done. A backup was created and the selected live data was cleared.');
+      loadBackups();
+      if (scope !== 'hotels') loadRegistrations();
+      if (scope !== 'registrations') { loadHotels(); loadHotelBookings(); }
+    } catch (e) { alert(e.message); }
+    finally { clearBtn.disabled = false; clearBtn.textContent = t; }
   });
 
   /* ============================================================

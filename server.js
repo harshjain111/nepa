@@ -377,6 +377,40 @@ app.delete('/api/admin/users/:id', auth.middleware, auth.requireRole('admin'), w
   res.json({ ok: true, deleted: true });
 }));
 
+/* ---- Backups (full snapshots) + clearing live data (admin only) ---- */
+app.get('/api/admin/backups', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  res.json({ ok: true, backups: await store.listBackups() });
+}));
+
+app.post('/api/admin/backups', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const label = String((req.body || {}).label || '').trim() || null;
+  const backup = await store.addBackup(label);
+  res.json({ ok: true, backup });
+}));
+
+app.get('/api/admin/backups/:id', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const backup = await store.getBackup(req.params.id);
+  if (!backup) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, backup });
+}));
+
+app.delete('/api/admin/backups/:id', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const removed = await store.deleteBackup(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, deleted: true });
+}));
+
+// Back up everything, then clear the chosen live data. Always snapshots first
+// so nothing is ever lost. scope: 'registrations' | 'hotels' | 'all'.
+app.post('/api/admin/clear', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const scope = ['registrations', 'hotels', 'all'].includes((req.body || {}).scope) ? req.body.scope : 'all';
+  const backup = await store.addBackup(`Auto backup before clearing ${scope}`);
+  const cleared = {};
+  if (scope === 'registrations' || scope === 'all') { await store.clearAllRegistrations(); cleared.registrations = true; }
+  if (scope === 'hotels' || scope === 'all') { await store.clearAllHotelBookings(); cleared.hotels = true; }
+  res.json({ ok: true, backup, cleared });
+}));
+
 // Logout — tokens are stateless; the client clears its own session.
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
 

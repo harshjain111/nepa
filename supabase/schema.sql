@@ -194,3 +194,18 @@ create table if not exists admin_users (
 );
 alter table admin_users alter column id set default gen_random_uuid();
 alter table admin_users alter column created_at set default now();
+
+-- ============================================================
+--  BACKUPS — full point-in-time snapshots of registrations,
+--  hotel bookings, meals, check-ins & enquiries (kept even after
+--  the live data is cleared). `data` holds the whole snapshot.
+-- ============================================================
+create table if not exists backups (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  label      text,
+  counts     jsonb,
+  data       jsonb
+);
+alter table backups alter column id set default gen_random_uuid();
+alter table backups alter column created_at set default now();
