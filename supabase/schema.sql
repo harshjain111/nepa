@@ -57,6 +57,12 @@ alter table registrations add column if not exists gst_rate    numeric not null 
 alter table registrations add column if not exists gst_amount  integer not null default 0;
 -- Optional GST number supplied by the registrant.
 alter table registrations add column if not exists gst_number  text;
+-- Links a delegate to the paying "party" (from the allocation list), if any.
+alter table registrations add column if not exists party_id    uuid;
+-- Help-desk delegates may not have a phone/email; the public form still
+-- validates them at the API. Relax the DB constraints so those entries save.
+alter table registrations alter column mobile drop not null;
+alter table registrations alter column email  drop not null;
 -- ID-card fields (filled by admin / bulk import; not on the public form).
 alter table registrations add column if not exists designation text;
 alter table registrations add column if not exists city        text;
@@ -209,3 +215,23 @@ create table if not exists backups (
 );
 alter table backups alter column id set default gen_random_uuid();
 alter table backups alter column created_at set default now();
+
+-- ============================================================
+--  PARTIES — paying parties from the allocation list. Each has a
+--  number of paid delegate passes (paid_count, null = ask accountant).
+--  Delegates entered at the help desk link back via registrations.party_id.
+-- ============================================================
+create table if not exists parties (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  name       text not null,
+  category   text,               -- 'full' | 'free' | 'action'
+  paid_count integer,            -- null = unknown (call accountant)
+  amount     integer,
+  notes      text,
+  sort       integer not null default 0,
+  active     boolean not null default true
+);
+alter table parties alter column id set default gen_random_uuid();
+alter table parties alter column created_at set default now();
+create index if not exists registrations_party_idx on registrations (party_id);

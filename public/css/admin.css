@@ -357,6 +357,27 @@
   .hotel-admin-card__actions { flex-direction: row; align-items: center; }
 }
 
+/* ===================== PARTY (help-desk) RESULTS ===================== */
+.party-results { margin: 4px 0 18px; display: grid; gap: 12px; }
+.party-results__head { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.party-card {
+  background: #fff; border: 1px solid rgba(197,162,83,.5); border-left: 4px solid var(--muted);
+  border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow-soft);
+}
+.party-card--open { border-left-color: #1e8a4c; }
+.party-card--call { border-left-color: #d68910; }
+.party-card--full { border-left-color: var(--muted); }
+.party-card__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.party-card__head strong { font-size: 1.02rem; color: var(--green); }
+.party-card__status { font-size: .82rem; font-weight: 600; white-space: nowrap; }
+.party-card__status--open { color: #157a3f; }
+.party-card__status--call { color: #a8690b; }
+.party-card__status--full { color: var(--muted); }
+.party-card__dels { margin: 10px 0 4px; display: grid; gap: 6px; }
+.party-del { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .9rem; padding: 6px 10px; background: rgba(245,236,214,.5); border-radius: 8px; }
+.party-card__actions { margin-top: 10px; }
+.party-card__actions .btn { padding: 10px 16px; }
+
 /* ===================== BACKUP ===================== */
 .backup-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .danger-zone {

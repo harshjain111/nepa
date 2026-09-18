@@ -411,6 +411,52 @@ app.post('/api/admin/clear', auth.middleware, auth.requireRole('admin'), wrap(as
   res.json({ ok: true, backup, cleared });
 }));
 
+/* ---- Parties (paid delegate allocations) + help-desk delegate entry ---- */
+const helpTeam = [auth.middleware, auth.requireRole('admin', 'print')];
+const upper = (s) => String(s == null ? '' : s).trim().toUpperCase();
+
+// List all parties with live filled/remaining counts (admin + help desk).
+app.get('/api/parties', ...helpTeam, wrap(async (req, res) => {
+  res.json({ ok: true, parties: await store.listParties() });
+}));
+
+// One-time import of the allocation list (admin). Replaces the parties list.
+app.post('/api/admin/parties/import', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const rows = Array.isArray((req.body || {}).rows) ? req.body.rows : [];
+  if (!rows.length) return res.status(400).json({ ok: false, error: 'No party rows to import' });
+  if (rows.length > 5000) return res.status(400).json({ ok: false, error: 'Too many rows' });
+  const result = await store.importParties(rows);
+  res.json({ ok: true, ...result });
+}));
+
+// Set/raise a party's paid delegate count (accountant flow).
+app.patch('/api/parties/:id/count', ...helpTeam, wrap(async (req, res) => {
+  const count = Number((req.body || {}).count);
+  if (!Number.isFinite(count) || count < 0 || count > 999) return res.status(400).json({ ok: false, error: 'Enter a valid number of delegates.' });
+  const party = await store.setPartyCount(req.params.id, count);
+  if (!party) return res.status(404).json({ ok: false, error: 'Party not found' });
+  res.json({ ok: true, party });
+}));
+
+// Add a delegate against a party's paid pass (help desk). Uppercased; capped.
+app.post('/api/parties/:id/delegates', ...helpTeam, wrap(async (req, res) => {
+  const b = req.body || {};
+  const fullName = upper(b.fullName);
+  const organization = upper(b.organization);
+  const designation = upper(b.designation);
+  const mobile = String(b.mobile || '').replace(/\D/g, '');
+  if (!fullName) return res.status(400).json({ ok: false, error: 'Name is required' });
+  if (mobile && !MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Phone must be 10 digits (or leave it blank)' });
+  try {
+    const reg = await store.addPartyDelegate(req.params.id, { fullName, organization, designation, mobile: mobile || null });
+    res.json({ ok: true, registration: reg });
+  } catch (e) {
+    if (e && ['NO_PARTY', 'NO_COUNT', 'PARTY_FULL'].includes(e.code)) return res.status(409).json({ ok: false, error: e.message });
+    if (e && e.code === 'DUPLICATE_MOBILE') return res.status(409).json({ ok: false, error: 'That phone is already registered.' });
+    throw e;
+  }
+}));
+
 // Logout — tokens are stateless; the client clears its own session.
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
 

@@ -181,6 +181,7 @@
       renderStats();
       renderTable();
       if (typeof renderCards === 'function') renderCards();
+      if (typeof renderPartyResults === 'function') renderPartyResults();
     } catch (err) {
       console.error(err);
     }
@@ -1016,9 +1017,11 @@
   function loadCards() {
     if (records.length) { renderCards(); }
     else { loadRegistrations(); } // will renderCards() when done
+    loadParties(); // party (paid allocation) search results
   }
 
-  ['cardSearch', 'cardFilter'].forEach((id) => { const el = $(id); if (el) el.addEventListener('input', renderCards); });
+  if ($('cardSearch')) $('cardSearch').addEventListener('input', () => { renderCards(); renderPartyResults(); });
+  if ($('cardFilter')) $('cardFilter').addEventListener('input', renderCards);
 
   const cardAlignBtn = $('cardAlignBtn');
   if (cardAlignBtn) cardAlignBtn.addEventListener('click', () => { const p = $('cardAlign'); p.hidden = !p.hidden; });
@@ -1839,6 +1842,192 @@
       if (scope !== 'registrations') { loadHotels(); loadHotelBookings(); }
     } catch (e) { alert(e.message); }
     finally { clearBtn.disabled = false; clearBtn.textContent = t; }
+  });
+
+  /* ============================================================
+     PARTIES (paid allocations) — help-desk search + fill + print
+     ============================================================ */
+  let parties = [];
+  async function loadParties() {
+    if (!$('partyResults')) return;
+    try {
+      const res = await api('/api/parties');
+      const data = await res.json();
+      if (res.ok && data.ok) { parties = data.parties || []; renderPartyResults(); }
+    } catch (e) { /* non-fatal */ }
+  }
+
+  function partyStatus(p) {
+    if (p.paidCount == null) return { cls: 'call', text: 'No delegate count — call accountant / coordinator' };
+    const left = Math.max(0, p.paidCount - p.filled);
+    if (left === 0) return { cls: 'full', text: `${p.paidCount} paid · ${p.filled} done · full` };
+    return { cls: 'open', text: `${p.paidCount} paid · ${p.filled} done · ${left} left` };
+  }
+
+  function renderPartyResults() {
+    const box = $('partyResults');
+    if (!box) return;
+    const q = ($('cardSearch') && $('cardSearch').value || '').trim().toLowerCase();
+    if (!q) { box.hidden = true; box.innerHTML = ''; return; }
+    const matches = parties.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 25);
+    if (!matches.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.innerHTML = '<div class="party-results__head">Parties (paid allocations)</div>' + matches.map((p) => {
+      const st = partyStatus(p);
+      const filledRegs = records.filter((r) => r.partyId === p.id);
+      const left = p.paidCount == null ? 0 : Math.max(0, p.paidCount - p.filled);
+      const delegatesHtml = filledRegs.map((r) => `
+        <div class="party-del">
+          <span>${esc(r.fullName)}${r.organization ? ' · <span class="cell-muted">' + esc(r.organization) + '</span>' : ''}</span>
+          <button class="status-action status-action--confirm" data-pprint="${esc(r.id)}">Print</button>
+        </div>`).join('');
+      let action = '';
+      if (p.paidCount == null) action = `<button class="btn btn-primary" data-pcontact="${esc(p.id)}">Contacted — set count</button>`;
+      else if (left > 0) action = `<button class="btn btn-primary" data-padd="${esc(p.id)}">＋ Add delegate (${left} left)</button>`;
+      else action = '<span class="cell-muted">All paid passes used. To add more, contact the accountant.</span>';
+      return `
+        <div class="party-card party-card--${st.cls}" data-party="${esc(p.id)}">
+          <div class="party-card__head">
+            <strong>${esc(p.name)}</strong>
+            <span class="party-card__status party-card__status--${st.cls}">${st.text}</span>
+          </div>
+          ${delegatesHtml ? `<div class="party-card__dels">${delegatesHtml}</div>` : ''}
+          <div class="party-card__actions">${action}</div>
+        </div>`;
+    }).join('');
+  }
+
+  const partyResults = $('partyResults');
+  if (partyResults) partyResults.addEventListener('click', async (e) => {
+    const add = e.target.closest('[data-padd]');
+    const contact = e.target.closest('[data-pcontact]');
+    const prn = e.target.closest('[data-pprint]');
+    if (prn) { const r = records.find((x) => x.id === prn.dataset.pprint); if (r) printCards([r]); return; }
+    if (add) { openPartyDelegate(add.dataset.padd); return; }
+    if (contact) {
+      const p = parties.find((x) => x.id === contact.dataset.pcontact);
+      const ans = prompt(`How many delegates has the accountant confirmed payment for?\n\nParty: ${p ? p.name : ''}`, '');
+      if (ans == null) return;
+      const n = parseInt(ans, 10);
+      if (!Number.isFinite(n) || n < 0) { alert('Enter a valid number.'); return; }
+      try {
+        const res = await api(`/api/parties/${contact.dataset.pcontact}/count`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: n }) });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Could not set count.');
+        if (p) p.paidCount = n;
+        renderPartyResults();
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  /* ---- add-delegate modal ---- */
+  function openPartyDelegate(partyId) {
+    const p = parties.find((x) => x.id === partyId);
+    if (!p) return;
+    const left = p.paidCount == null ? 0 : Math.max(0, p.paidCount - p.filled);
+    $('pdModal').dataset.party = partyId;
+    $('pdTitle').textContent = 'Add delegate';
+    $('pdSub').textContent = `${p.name} · ${left} pass(es) left`;
+    ['pdName', 'pdOrg', 'pdPhone', 'pdDesignation'].forEach((id) => { $(id).value = ''; });
+    $('pdErr').hidden = true;
+    $('pdModal').hidden = false;
+    setTimeout(() => $('pdName').focus(), 30);
+  }
+  function closePd() { $('pdModal').hidden = true; }
+  document.querySelectorAll('[data-close-pd]').forEach((el) => el.addEventListener('click', closePd));
+
+  async function savePartyDelegate(thenPrint) {
+    const partyId = $('pdModal').dataset.party;
+    const err = $('pdErr'); err.hidden = true;
+    const fullName = $('pdName').value.trim().toUpperCase();
+    const organization = $('pdOrg').value.trim().toUpperCase();
+    const designation = $('pdDesignation').value.trim().toUpperCase();
+    const mobile = $('pdPhone').value.replace(/\D/g, '');
+    if (!fullName) { err.textContent = 'Name is required.'; err.hidden = false; return; }
+    if (mobile && !/^\d{10}$/.test(mobile)) { err.textContent = 'Phone must be 10 digits, or leave it blank.'; err.hidden = false; return; }
+    const btns = [$('pdSaveBtn'), $('pdSavePrintBtn')]; btns.forEach((b) => { b.disabled = true; });
+    try {
+      const res = await api(`/api/parties/${partyId}/delegates`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName, organization, mobile, designation }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add delegate.');
+      const reg = Object.assign({ organization, designation, city: '', mobile, partyId, status: 'Confirmed', cardPrintedAt: null }, data.registration);
+      records.unshift(reg);
+      const p = parties.find((x) => x.id === partyId); if (p) p.filled = (p.filled || 0) + 1;
+      closePd();
+      renderPartyResults(); renderCards();
+      if (thenPrint) printCards([reg]);
+    } catch (e) {
+      err.textContent = e.message; err.hidden = false;
+      if (/already used|full|count/i.test(e.message)) { loadParties(); }
+    } finally { btns.forEach((b) => { b.disabled = false; }); }
+  }
+  if ($('pdSaveBtn')) $('pdSaveBtn').addEventListener('click', () => savePartyDelegate(false));
+  if ($('pdSavePrintBtn')) $('pdSavePrintBtn').addEventListener('click', () => savePartyDelegate(true));
+
+  /* ---- party import (admin) ---- */
+  let parsedParties = [];
+  function parsePartiesMatrix(matrix) {
+    const out = []; let section = null;
+    for (const row of matrix) {
+      const a = String(row[0] == null ? '' : row[0]).trim();
+      if (!a) continue;
+      const up = a.toUpperCase();
+      if (up.includes('PAYMENT RECEIVED IN FULL')) { section = 'full'; continue; }
+      if (up.includes('FREE SERVICE')) { section = 'free'; continue; }
+      if (up.includes('ACTION TO BE TAKEN')) { section = 'action'; continue; }
+      if (up.includes('PAYMENT NOT RECEIVED') || up.includes('SUSPENSE')) { section = 'ignore'; continue; }
+      if (up === 'NAME OF PARTIES') continue;
+      if (!section || section === 'ignore') continue;
+      const f = row[5];
+      let paidCount = null;
+      if (f !== '' && f != null && Number.isFinite(Number(f))) paidCount = Math.max(0, Math.floor(Number(f)));
+      const b = row[1];
+      const amount = (b !== '' && b != null && Number.isFinite(Number(b))) ? Math.floor(Number(b)) : null;
+      const notes = String(row[3] == null ? '' : row[3]).trim() || null;
+      out.push({ name: a, category: section, paidCount, amount, notes });
+    }
+    return out;
+  }
+
+  const partyFile = $('partyFile');
+  if (partyFile) partyFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    $('partyFileName').textContent = file.name;
+    if (typeof XLSX === 'undefined') { alert('Excel library failed to load.'); return; }
+    try {
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+      parsedParties = parsePartiesMatrix(matrix);
+      const withCount = parsedParties.filter((p) => p.paidCount != null).length;
+      const byCat = (c) => parsedParties.filter((p) => p.category === c).length;
+      $('partySummary').innerHTML = `Found <b>${parsedParties.length}</b> parties — full: ${byCat('full')}, free: ${byCat('free')}, action: ${byCat('action')}. ${withCount} have a delegate count; ${parsedParties.length - withCount} will show “call accountant”.`;
+      $('partySummary').hidden = false;
+      $('partyCount').textContent = parsedParties.length;
+      $('partyImportActions').hidden = false;
+      $('partyReport').hidden = true;
+    } catch (err) { alert('Could not read the file: ' + err.message); }
+  });
+  if ($('partyClearBtn')) $('partyClearBtn').addEventListener('click', () => {
+    parsedParties = []; $('partyFile').value = ''; $('partyFileName').textContent = 'No file selected';
+    $('partySummary').hidden = true; $('partyImportActions').hidden = true; $('partyReport').hidden = true;
+  });
+  if ($('partyImportBtn')) $('partyImportBtn').addEventListener('click', async () => {
+    if (!parsedParties.length) return;
+    if (!confirm(`Import ${parsedParties.length} parties? This REPLACES the current parties list (delegates already entered are kept).`)) return;
+    const btn = $('partyImportBtn'); btn.disabled = true; const t = btn.textContent; btn.textContent = 'Importing…';
+    try {
+      const res = await api('/api/admin/parties/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows: parsedParties }) });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Import failed.');
+      $('partyReport').innerHTML = `<div class="import-report__tot"><span class="imp-ok">Imported <b>${data.count}</b> parties</span></div>`;
+      $('partyReport').hidden = false;
+      $('partyImportActions').hidden = true;
+      loadParties();
+    } catch (e) { alert(e.message); }
+    finally { btn.disabled = false; btn.textContent = t; }
   });
 
   /* ============================================================

@@ -290,6 +290,9 @@
           <p class="card-align__hint">Settings save on <strong>this device</strong> (each operator's laptop keeps its own printer setup). Set <em>Paper in printer</em> to the sheet you actually print on — if you feed the 3.5 × 5 cards directly, pick <strong>Card — 3.5 × 5 in</strong> so the card fills the sheet. The card is always kept fully on the page (it can't be pushed off the top). To shift the printed name/QR up or down <em>on the card</em>, use <strong>Nudge down</strong> (negative = up); use <strong>Print test page</strong> to check, then <strong>Lock settings</strong>.</p>
         </div>
 
+        <!-- Party (paid allocation) search results — shown while searching -->
+        <div id="partyResults" class="party-results" hidden></div>
+
         <section class="table-wrap">
           <table class="reg-table">
             <thead>
@@ -402,6 +405,24 @@
           </div>
 
           <div id="importReport" class="import-report" hidden></div>
+        </div>
+
+        <div class="import-box" style="margin-top:18px">
+          <h3 style="margin:0 0 6px;color:var(--green)">Import parties (allocation list)</h3>
+          <p class="archived-note" style="margin:0 0 12px">Upload the <strong>“LIST OF DELIGATE AND ALLOCATION”</strong> sheet. Only the valid sections are imported — <em>Payment received in full</em>, <em>Free services</em>, and <em>Amount received but action to be taken</em>; “committed but payment not received” and “suspense” are skipped. This <strong>replaces</strong> the current parties list. Column A = party name, column F (“Deligates”) = paid passes.</p>
+          <div class="import-step">
+            <label class="import-file">
+              <input type="file" id="partyFile" accept=".xlsx,.xls,.csv" hidden />
+              <span class="btn btn-primary">Choose allocation file…</span>
+              <span class="import-file__name" id="partyFileName">No file selected</span>
+            </label>
+          </div>
+          <p class="import-summary" id="partySummary" hidden></p>
+          <div class="import-actions" id="partyImportActions" hidden>
+            <button class="btn btn-primary" id="partyImportBtn">Import <span id="partyCount">0</span> parties</button>
+            <button class="btn btn-ghost" id="partyClearBtn">Clear</button>
+          </div>
+          <div class="import-report" id="partyReport" hidden></div>
         </div>
       </div><!-- /viewImport -->
 
@@ -616,6 +637,28 @@
       <div class="edit-modal__actions">
         <button class="btn btn-ghost" data-close-backup>Close</button>
         <button class="btn btn-primary" id="backupExcelBtn">Download Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ADD PARTY DELEGATE MODAL ===================== -->
+  <div class="edit-modal" id="pdModal" hidden>
+    <div class="edit-modal__overlay" data-close-pd></div>
+    <div class="edit-modal__card">
+      <button class="lightbox__close" data-close-pd aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <h3 id="pdTitle">Add delegate</h3>
+      <p class="edit-modal__sub" id="pdSub"></p>
+      <div class="field"><label for="pdName">Name *</label><input type="text" id="pdName" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div class="field"><label for="pdOrg">Company name</label><input type="text" id="pdOrg" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div class="field"><label for="pdPhone">Phone</label><input type="text" id="pdPhone" maxlength="10" inputmode="numeric" autocomplete="off" /></div>
+      <div class="field"><label for="pdDesignation">Designation <span class="cell-muted">(optional)</span></label><input type="text" id="pdDesignation" style="text-transform:uppercase" autocomplete="off" /></div>
+      <p class="login-error" id="pdErr" hidden></p>
+      <div class="edit-modal__actions">
+        <button class="btn btn-ghost" data-close-pd>Cancel</button>
+        <button class="btn btn-ghost" id="pdSaveBtn">Save</button>
+        <button class="btn btn-primary" id="pdSavePrintBtn">Save &amp; Print</button>
       </div>
     </div>
   </div>
