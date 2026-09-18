@@ -787,30 +787,31 @@
      ============================================================ */
   const selectedCards = new Set();
 
-  // vCard for the QR (mirrors lib/vcard.js). A hidden UID carries our token.
+  // vCard for the QR (a hidden UID carries our check-in token). Kept SHORT —
+  // name, company, phone + token only — so the QR stays low-density with big,
+  // print-friendly modules. Designation/city/email are printed on the card
+  // (and shown on scan), so they're omitted here to keep the code scannable.
   function buildVCard(r) {
     const e = (v) => String(v == null ? '' : v)
       .replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
     const name = e(r.fullName || '');
     const L = ['BEGIN:VCARD', 'VERSION:3.0', `N:${name};;;;`, `FN:${name}`];
     if (r.organization) L.push(`ORG:${e(r.organization)}`);
-    if (r.designation) L.push(`TITLE:${e(r.designation)}`);
     if (r.mobile) L.push(`TEL;TYPE=CELL:${e(r.mobile)}`);
-    if (r.email) L.push(`EMAIL;TYPE=INTERNET:${e(r.email)}`);
-    if (r.city) L.push(`ADR;TYPE=WORK:;;;${e(r.city)};;;`);
     if (r.qrToken) L.push(`UID:NEPA26:${e(r.qrToken)}`);
     L.push('END:VCARD');
     return L.join('\r\n');
   }
 
+  // Higher error correction + big render so blurry/faint prints still scan.
   function renderQR(container, text) {
     container.innerHTML = '';
     if (typeof QRCode === 'undefined' || !text) return;
     // eslint-disable-next-line no-new
     new QRCode(container, {
-      text, width: 420, height: 420,
+      text, width: 600, height: 600,
       colorDark: '#000000', colorLight: 'rgba(255,255,255,0)',
-      correctLevel: QRCode.CorrectLevel.M,
+      correctLevel: QRCode.CorrectLevel.Q,
     });
   }
 
@@ -1002,7 +1003,7 @@
     let url = '';
     try {
       /* eslint-disable no-new */
-      new QRCode(tmp, { text, width: 600, height: 600, colorDark: '#000000', colorLight: 'rgba(255,255,255,0)', correctLevel: QRCode.CorrectLevel.M });
+      new QRCode(tmp, { text, width: 1400, height: 1400, colorDark: '#000000', colorLight: 'rgba(255,255,255,0)', correctLevel: QRCode.CorrectLevel.Q });
       const canvas = tmp.querySelector('canvas');
       if (canvas) url = canvas.toDataURL('image/png');
       else { const img = tmp.querySelector('img'); if (img) url = img.src; }
