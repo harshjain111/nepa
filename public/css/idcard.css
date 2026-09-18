@@ -71,19 +71,11 @@
 .idcard__designation { top: 79.0%; font-size: calc(22pt * var(--fs, 1)); font-weight: 500; text-transform: uppercase; }
 .idcard__city        { top: 83.6%; font-size: calc(22pt * var(--fs, 1)); font-weight: 500; text-transform: uppercase; }
 
-/* ---------------- print ---------------- */
+/* ---------------- print ----------------
+   Cards are printed inside a dedicated hidden iframe (see admin.js printCards),
+   which supplies its own @page size + page-breaks. The old #printArea div is
+   left hidden and unused. */
 .print-area { display: none; }
-
-/* @page size is injected by the Print settings panel (#printPageStyle);
-   this is the default if no setting is applied. */
-@page { size: 250mm 353mm; margin: 0; }
-@media print {
-  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-  body.admin-body > *:not(.print-area) { display: none !important; }
-  .print-area { display: block !important; }
-  .print-area .idcard { page-break-after: always; break-after: page; box-shadow: none !important; }
-  .print-area .idcard:last-child { page-break-after: auto; break-after: auto; }
-}
 
 /* ---------------- preview thumbnail (scaled) ---------------- */
 .card-preview__card { max-width: 420px; }

@@ -857,14 +857,6 @@
     el.style.setProperty('--scale', String((Number(printSettings.scale) || 100) / 100));
   }
 
-  // Drive the @page size so the sheet matches the chosen paper.
-  function setPageSize() {
-    const d = currentDims();
-    let s = document.getElementById('printPageStyle');
-    if (!s) { s = document.createElement('style'); s.id = 'printPageStyle'; document.head.appendChild(s); }
-    s.textContent = `@media print{ @page{ size:${d.w}mm ${d.h}mm; margin:0; } }`;
-  }
-
   function loadPrintSettings() {
     try { const s = JSON.parse(localStorage.getItem(PRINT_KEY) || 'null'); if (s) Object.assign(printSettings, s); }
     catch (e) { /* ignore */ }
@@ -889,7 +881,7 @@
     if ($('alignY')) printSettings.y = Number($('alignY').value) || 0;
     if ($('alignScale')) printSettings.scale = Number($('alignScale').value) || 100;
     if ($('alignTemplate')) printSettings.tpl = $('alignTemplate').checked;
-    savePrintSettings(); togglePaperCustom(); setPageSize();
+    savePrintSettings(); togglePaperCustom();
   }
 
   (function initPrintUI() {
@@ -901,7 +893,7 @@
     if ($('alignY')) $('alignY').value = printSettings.y;
     if ($('alignScale')) $('alignScale').value = printSettings.scale;
     if ($('alignTemplate')) $('alignTemplate').checked = !!printSettings.tpl;
-    togglePaperCustom(); setPageSize();
+    togglePaperCustom();
   })();
 
   function cardReady(r) { return !!(r.designation && r.city); }
@@ -1000,17 +992,78 @@
     printCards(regs);
   });
 
+  // Render a QR to a PNG data URL (transparent light modules so only the dark
+  // ink prints over the pre-printed stock).
+  function qrDataUrl(text) {
+    if (typeof QRCode === 'undefined' || !text) return '';
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(tmp);
+    let url = '';
+    try {
+      /* eslint-disable no-new */
+      new QRCode(tmp, { text, width: 600, height: 600, colorDark: '#000000', colorLight: 'rgba(255,255,255,0)', correctLevel: QRCode.CorrectLevel.M });
+      const canvas = tmp.querySelector('canvas');
+      if (canvas) url = canvas.toDataURL('image/png');
+      else { const img = tmp.querySelector('img'); if (img) url = img.src; }
+    } catch (e) { /* ignore */ }
+    tmp.remove();
+    return url;
+  }
+
+  // Print via a hidden same-origin iframe — the whole card is sized to the
+  // chosen paper, so nothing is clipped and no SPA chrome interferes. This is
+  // far more reliable across browsers than hiding the page and window.print().
   function printCards(regs) {
     if (typeof QRCode === 'undefined') { alert('QR library failed to load. Check your connection and reload.'); return; }
-    setPageSize();
-    const area = $('printArea');
-    area.innerHTML = '';
+    const d = currentDims();
+    const fs = d.h / 353;
+    const nx = Number(printSettings.x) || 0;
+    const ny = Number(printSettings.y) || 0;
+    const sc = (Number(printSettings.scale) || 100) / 100;
     const withTpl = !!printSettings.tpl;
-    regs.forEach((r) => { const c = buildCardEl(r, withTpl); applyPrintVars(c); area.appendChild(c); });
-    setTimeout(() => {
-      window.print();
+    const cardStyle = `--card-w:${d.w}mm;--card-h:${d.h}mm;--fs:${fs};--nx:${nx}mm;--ny:${ny}mm;--scale:${sc}`;
+
+    const cardsHtml = regs.map((r) => `
+      <div class="idcard${withTpl ? ' idcard--template' : ''}" style="${cardStyle}">
+        <div class="idcard__inner">
+          <div class="idcard__qr"><img src="${qrDataUrl(buildVCard(r))}" alt="" /></div>
+          <div class="idcard__field idcard__name">${esc(r.fullName || '')}</div>
+          <div class="idcard__field idcard__company">${esc(r.organization || '')}</div>
+          <div class="idcard__field idcard__designation">${esc(r.designation || '')}</div>
+          <div class="idcard__field idcard__city">${esc(r.city || '')}</div>
+        </div>
+      </div>`).join('');
+
+    const docHtml = `<!doctype html><html><head><meta charset="utf-8" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..900&display=swap" />
+      <link rel="stylesheet" href="/css/idcard.css" />
+      <style>
+        @page { size: ${d.w}mm ${d.h}mm; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        .idcard { display: block !important; page-break-after: always; break-after: page; box-shadow: none; }
+        .idcard:last-child { page-break-after: auto; break-after: auto; }
+      </style></head><body>${cardsHtml}</body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(iframe);
+    const cw = iframe.contentWindow;
+    cw.document.open();
+    cw.document.write(docHtml);
+    cw.document.close();
+
+    let done = false;
+    const go = () => {
+      if (done) return; done = true;
+      try { cw.focus(); cw.print(); } catch (e) { /* ignore */ }
       markPrinted(regs.map((r) => r.id));
-    }, 120);
+      setTimeout(() => { try { iframe.remove(); } catch (e) { /* ignore */ } }, 2000);
+    };
+    // Wait for the stylesheet (and template image, if used) to load.
+    iframe.onload = () => setTimeout(go, withTpl ? 700 : 350);
+    setTimeout(go, withTpl ? 1600 : 900); // fallback if onload doesn't fire
   }
 
   async function markPrinted(ids) {
