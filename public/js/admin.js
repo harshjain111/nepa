@@ -815,9 +815,10 @@
     });
   }
 
-  function buildCardEl(r, withTemplate) {
+  function buildCardEl(r, opts) {
+    opts = opts || {};
     const card = document.createElement('div');
-    card.className = 'idcard' + (withTemplate ? ' idcard--template' : '');
+    card.className = 'idcard' + (opts.template ? ' idcard--template' : '') + (opts.test ? ' idcard--test' : '');
     const inner = document.createElement('div');
     inner.className = 'idcard__inner';
     const qr = document.createElement('div');
@@ -833,68 +834,102 @@
     return card;
   }
 
-  /* ---------------- print settings (paper size, scale, nudge) ---------------- */
-  const PAPER = {
-    B4: { w: 250, h: 353 }, A4: { w: 210, h: 297 }, A5: { w: 148, h: 210 },
-    A6: { w: 105, h: 148 }, Letter: { w: 216, h: 279 }, Custom: { w: 250, h: 353 },
-  };
+  // A full printer page with the card positioned on it (for on-screen preview).
+  function buildPageEl(r, opts) {
+    const page = document.createElement('div');
+    page.className = 'idcard-page';
+    page.appendChild(buildCardEl(r, opts));
+    applyVars(page);
+    return page;
+  }
+
+  /* ---------------- print settings (paper, card size, position, scale) --------
+     The pre-printed card is 3.5 x 5 in; it is placed on the printer's PAGE at a
+     top margin (centered or left-offset). Settings are saved on THIS device and
+     can be Locked so an operator can't change them mid-event. Each person prints
+     from their own laptop/printer, so per-device settings = per-user settings. */
+  const IN = 25.4;
+  const PAPER = { A4: { w: 210, h: 297 }, A5: { w: 148, h: 210 }, A6: { w: 105, h: 148 }, Letter: { w: 216, h: 279 }, B4: { w: 250, h: 353 } };
   const PRINT_KEY = 'nepa_card_print';
-  const printSettings = { paper: 'B4', cw: 250, ch: 353, x: 0, y: 0, scale: 100, tpl: false };
+  const printSettings = {
+    paper: 'Card35', pageW: 210, pageH: 297, orient: 'portrait',
+    cardW: 3.5, cardH: 5, top: 0, center: true, left: 0,
+    x: 0, y: 0, scale: 100, tpl: false, locked: false,
+  };
 
-  function currentDims() {
-    if (printSettings.paper === 'Custom') return { w: Number(printSettings.cw) || 250, h: Number(printSettings.ch) || 353 };
-    const p = PAPER[printSettings.paper] || PAPER.B4;
-    return { w: p.w, h: p.h };
+  function cardMm() { return { w: (Number(printSettings.cardW) || 3.5) * IN, h: (Number(printSettings.cardH) || 5) * IN }; }
+  function pageDims() {
+    let w; let h;
+    if (printSettings.paper === 'Card35') { const c = cardMm(); w = c.w; h = c.h; }
+    else if (printSettings.paper === 'Custom') { w = Number(printSettings.pageW) || 210; h = Number(printSettings.pageH) || 297; }
+    else { const p = PAPER[printSettings.paper] || PAPER.A4; w = p.w; h = p.h; }
+    return printSettings.orient === 'landscape' ? { w: h, h: w } : { w, h };
   }
 
-  // Apply paper size, font-scale, nudge and user-scale to a card element.
-  function applyPrintVars(el) {
-    const d = currentDims();
-    el.style.setProperty('--card-w', d.w + 'mm');
-    el.style.setProperty('--card-h', d.h + 'mm');
-    el.style.setProperty('--fs', String(d.h / 353));
-    el.style.setProperty('--nx', (Number(printSettings.x) || 0) + 'mm');
-    el.style.setProperty('--ny', (Number(printSettings.y) || 0) + 'mm');
-    el.style.setProperty('--scale', String((Number(printSettings.scale) || 100) / 100));
+  // The inline CSS-var string shared by preview + print.
+  function varsStyle() {
+    const pg = pageDims(); const c = cardMm();
+    const hz = printSettings.center
+      ? `--card-left:50%;--card-ml:calc(${c.w}mm / -2)`
+      : `--card-left:${Number(printSettings.left) || 0}mm;--card-ml:0mm`;
+    return `--page-w:${pg.w}mm;--page-h:${pg.h}mm;--card-w:${c.w}mm;--card-h:${c.h}mm;` +
+      `--card-top:${Number(printSettings.top) || 0}mm;${hz};--fs:${c.h / 353};` +
+      `--nx:${Number(printSettings.x) || 0}mm;--ny:${Number(printSettings.y) || 0}mm;--scale:${(Number(printSettings.scale) || 100) / 100}`;
   }
+  function applyVars(el) { el.setAttribute('style', varsStyle()); }
 
   function loadPrintSettings() {
     try { const s = JSON.parse(localStorage.getItem(PRINT_KEY) || 'null'); if (s) Object.assign(printSettings, s); }
     catch (e) { /* ignore */ }
-    // migrate the older align-only key
-    try {
-      const old = JSON.parse(localStorage.getItem('nepa_card_align') || 'null');
-      if (old && !localStorage.getItem(PRINT_KEY)) {
-        printSettings.x = parseFloat(old.x) || 0; printSettings.y = parseFloat(old.y) || 0;
-        printSettings.scale = parseFloat(old.scale) || 100; printSettings.tpl = !!old.tpl;
-      }
-    } catch (e) { /* ignore */ }
   }
   function savePrintSettings() { try { localStorage.setItem(PRINT_KEY, JSON.stringify(printSettings)); } catch (e) { /* ignore */ } }
 
-  function togglePaperCustom() { const c = $('psCustom'); if (c) c.hidden = $('psPaper').value !== 'Custom'; }
+  function togglePaperExtras() {
+    if ($('psCustom')) $('psCustom').hidden = $('psPaper').value !== 'Custom';
+    if ($('psLeftWrap')) $('psLeftWrap').hidden = !!($('psCenter') && $('psCenter').checked);
+  }
 
   function readPrintUI() {
-    if ($('psPaper')) printSettings.paper = $('psPaper').value;
-    if ($('psCustomW')) printSettings.cw = Number($('psCustomW').value) || 250;
-    if ($('psCustomH')) printSettings.ch = Number($('psCustomH').value) || 353;
-    if ($('alignX')) printSettings.x = Number($('alignX').value) || 0;
-    if ($('alignY')) printSettings.y = Number($('alignY').value) || 0;
-    if ($('alignScale')) printSettings.scale = Number($('alignScale').value) || 100;
-    if ($('alignTemplate')) printSettings.tpl = $('alignTemplate').checked;
-    savePrintSettings(); togglePaperCustom();
+    const g = (id) => $(id);
+    if (g('psPaper')) printSettings.paper = g('psPaper').value;
+    if (g('psCustomW')) printSettings.pageW = Number(g('psCustomW').value) || 210;
+    if (g('psCustomH')) printSettings.pageH = Number(g('psCustomH').value) || 297;
+    if (g('psOrient')) printSettings.orient = g('psOrient').value;
+    if (g('psCardW')) printSettings.cardW = Number(g('psCardW').value) || 3.5;
+    if (g('psCardH')) printSettings.cardH = Number(g('psCardH').value) || 5;
+    if (g('psTop')) printSettings.top = Number(g('psTop').value) || 0;
+    if (g('psCenter')) printSettings.center = g('psCenter').checked;
+    if (g('psLeft')) printSettings.left = Number(g('psLeft').value) || 0;
+    if (g('alignX')) printSettings.x = Number(g('alignX').value) || 0;
+    if (g('alignY')) printSettings.y = Number(g('alignY').value) || 0;
+    if (g('alignScale')) printSettings.scale = Number(g('alignScale').value) || 100;
+    if (g('alignTemplate')) printSettings.tpl = g('alignTemplate').checked;
+    savePrintSettings(); togglePaperExtras();
+  }
+
+  function fillPrintUI() {
+    const set = (id, v) => { const el = $(id); if (el) { if (el.type === 'checkbox') el.checked = !!v; else el.value = v; } };
+    set('psPaper', printSettings.paper); set('psCustomW', printSettings.pageW); set('psCustomH', printSettings.pageH);
+    set('psOrient', printSettings.orient); set('psCardW', printSettings.cardW); set('psCardH', printSettings.cardH);
+    set('psTop', printSettings.top); set('psCenter', printSettings.center); set('psLeft', printSettings.left);
+    set('alignX', printSettings.x); set('alignY', printSettings.y); set('alignScale', printSettings.scale);
+    set('alignTemplate', printSettings.tpl);
+    togglePaperExtras();
+  }
+
+  const PS_FIELDS = ['psPaper', 'psCustomW', 'psCustomH', 'psOrient', 'psCardW', 'psCardH', 'psTop', 'psCenter', 'psLeft', 'alignX', 'alignY', 'alignScale', 'alignTemplate'];
+  function applyLockUI() {
+    const locked = !!printSettings.locked;
+    PS_FIELDS.forEach((id) => { const el = $(id); if (el) el.disabled = locked; });
+    const btn = $('psLockBtn');
+    if (btn) btn.textContent = locked ? '🔓 Unlock settings' : '🔒 Lock settings';
+    const panel = $('cardAlign'); if (panel) panel.classList.toggle('is-locked', locked);
   }
 
   (function initPrintUI() {
     loadPrintSettings();
-    if ($('psPaper')) $('psPaper').value = printSettings.paper;
-    if ($('psCustomW')) $('psCustomW').value = printSettings.cw;
-    if ($('psCustomH')) $('psCustomH').value = printSettings.ch;
-    if ($('alignX')) $('alignX').value = printSettings.x;
-    if ($('alignY')) $('alignY').value = printSettings.y;
-    if ($('alignScale')) $('alignScale').value = printSettings.scale;
-    if ($('alignTemplate')) $('alignTemplate').checked = !!printSettings.tpl;
-    togglePaperCustom();
+    fillPrintUI();
+    applyLockUI();
   })();
 
   function cardReady(r) { return !!(r.designation && r.city); }
@@ -957,8 +992,15 @@
 
   const cardAlignBtn = $('cardAlignBtn');
   if (cardAlignBtn) cardAlignBtn.addEventListener('click', () => { const p = $('cardAlign'); p.hidden = !p.hidden; });
-  ['psPaper', 'psCustomW', 'psCustomH', 'alignX', 'alignY', 'alignScale', 'alignTemplate'].forEach((id) => {
-    const el = $(id); if (el) el.addEventListener('change', () => { readPrintUI(); if ($('cardPreviewModal') && !$('cardPreviewModal').hidden) reRenderPreview(); });
+  PS_FIELDS.forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener('change', () => { readPrintUI(); if ($('cardPreviewModal') && !$('cardPreviewModal').hidden) reRenderPreview(); });
+  });
+  const psLockBtn = $('psLockBtn');
+  if (psLockBtn) psLockBtn.addEventListener('click', () => { printSettings.locked = !printSettings.locked; savePrintSettings(); applyLockUI(); });
+  const psTestBtn = $('psTestBtn');
+  if (psTestBtn) psTestBtn.addEventListener('click', () => {
+    printCards([{ fullName: 'TEST — Full Name', organization: 'Company Name', designation: 'Designation', city: 'City', mobile: '9999999999', qrToken: 'TESTTESTTEST0000' }], { test: true, template: true });
   });
 
   const cardHeadCheck = $('cardHeadCheck');
@@ -1015,24 +1057,25 @@
   // Print via a hidden same-origin iframe — the whole card is sized to the
   // chosen paper, so nothing is clipped and no SPA chrome interferes. This is
   // far more reliable across browsers than hiding the page and window.print().
-  function printCards(regs) {
+  function printCards(regs, opts) {
+    opts = opts || {};
     if (typeof QRCode === 'undefined') { alert('QR library failed to load. Check your connection and reload.'); return; }
-    const d = currentDims();
-    const fs = d.h / 353;
-    const nx = Number(printSettings.x) || 0;
-    const ny = Number(printSettings.y) || 0;
-    const sc = (Number(printSettings.scale) || 100) / 100;
-    const withTpl = !!printSettings.tpl;
-    const cardStyle = `--card-w:${d.w}mm;--card-h:${d.h}mm;--fs:${fs};--nx:${nx}mm;--ny:${ny}mm;--scale:${sc}`;
+    const pg = pageDims();
+    const withTpl = !!printSettings.tpl || !!opts.template;
+    const isTest = !!opts.test;
+    const style = varsStyle();
+    const cardCls = `idcard${withTpl ? ' idcard--template' : ''}${isTest ? ' idcard--test' : ''}`;
 
-    const cardsHtml = regs.map((r) => `
-      <div class="idcard${withTpl ? ' idcard--template' : ''}" style="${cardStyle}">
-        <div class="idcard__inner">
-          <div class="idcard__qr"><img src="${qrDataUrl(buildVCard(r))}" alt="" /></div>
-          <div class="idcard__field idcard__name">${esc(r.fullName || '')}</div>
-          <div class="idcard__field idcard__company">${esc(r.organization || '')}</div>
-          <div class="idcard__field idcard__designation">${esc(r.designation || '')}</div>
-          <div class="idcard__field idcard__city">${esc(r.city || '')}</div>
+    const pagesHtml = regs.map((r) => `
+      <div class="idcard-page" style="${style}">
+        <div class="${cardCls}">
+          <div class="idcard__inner">
+            <div class="idcard__qr"><img src="${qrDataUrl(buildVCard(r))}" alt="" /></div>
+            <div class="idcard__field idcard__name">${esc(r.fullName || '')}</div>
+            <div class="idcard__field idcard__company">${esc(r.organization || '')}</div>
+            <div class="idcard__field idcard__designation">${esc(r.designation || '')}</div>
+            <div class="idcard__field idcard__city">${esc(r.city || '')}</div>
+          </div>
         </div>
       </div>`).join('');
 
@@ -1040,11 +1083,11 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..900&display=swap" />
       <link rel="stylesheet" href="/css/idcard.css" />
       <style>
-        @page { size: ${d.w}mm ${d.h}mm; margin: 0; }
+        @page { size: ${pg.w}mm ${pg.h}mm; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
-        .idcard { display: block !important; page-break-after: always; break-after: page; box-shadow: none; }
-        .idcard:last-child { page-break-after: auto; break-after: auto; }
-      </style></head><body>${cardsHtml}</body></html>`;
+        .idcard-page { page-break-after: always; break-after: page; }
+        .idcard-page:last-child { page-break-after: auto; break-after: auto; }
+      </style></head><body>${pagesHtml}</body></html>`;
 
     const iframe = document.createElement('iframe');
     iframe.setAttribute('aria-hidden', 'true');
@@ -1059,10 +1102,9 @@
     const go = () => {
       if (done) return; done = true;
       try { cw.focus(); cw.print(); } catch (e) { /* ignore */ }
-      markPrinted(regs.map((r) => r.id));
+      if (!isTest) markPrinted(regs.map((r) => r.id));
       setTimeout(() => { try { iframe.remove(); } catch (e) { /* ignore */ } }, 2000);
     };
-    // Wait for the stylesheet (and template image, if used) to load.
     iframe.onload = () => setTimeout(go, withTpl ? 700 : 350);
     setTimeout(go, withTpl ? 1600 : 900); // fallback if onload doesn't fire
   }
@@ -1086,18 +1128,18 @@
     const r = records.find((x) => x.id === id);
     if (!r) return;
     const stage = $('cardPreviewStage');
-    const d = currentDims();
-    const card = buildCardEl(r, true);
-    applyPrintVars(card);
-    // scale the card down to fit the modal (~300px wide), preserving paper ratio
+    const pg = pageDims();
+    const page = buildPageEl(r, { template: true });
+    // scale the whole page down to fit the modal so its position is visible
     const pxPerMm = 3.7795;
-    const scale = 300 / (d.w * pxPerMm);
-    card.style.transformOrigin = 'top left';
-    card.style.transform = `scale(${scale})`;
-    stage.style.width = (d.w * pxPerMm * scale) + 'px';
-    stage.style.height = (d.h * pxPerMm * scale) + 'px';
+    const maxW = 300; const maxH = 380;
+    const scale = Math.min(maxW / (pg.w * pxPerMm), maxH / (pg.h * pxPerMm));
+    page.style.transformOrigin = 'top left';
+    page.style.transform = `scale(${scale})`;
+    stage.style.width = (pg.w * pxPerMm * scale) + 'px';
+    stage.style.height = (pg.h * pxPerMm * scale) + 'px';
     stage.innerHTML = '';
-    stage.appendChild(card);
+    stage.appendChild(page);
   }
   function reRenderPreview() { const id = $('cardPreviewModal').dataset.reg; if (id) renderPreviewCard(id); }
   function openCardPreview(id) {

@@ -356,3 +356,55 @@
   .hotel-admin-card__meter { border-right: 0; border-bottom: 1px dashed rgba(197,162,83,.4); padding: 0 0 12px; display: flex; gap: 10px; align-items: baseline; justify-content: flex-start; }
   .hotel-admin-card__actions { flex-direction: row; align-items: center; }
 }
+
+/* ===================== PRINT-SETTINGS ACTIONS ===================== */
+.card-align__actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.card-align.is-locked { position: relative; }
+.card-align.is-locked::before {
+  content: '🔒 Locked'; position: absolute; top: 10px; right: 14px;
+  font-size: .72rem; font-weight: 700; color: #a8690b;
+}
+
+/* ===================== MOBILE (admin) ===================== */
+/* Never let the whole page scroll sideways; wide tables scroll inside their box. */
+body.admin-body { overflow-x: hidden; }
+.admin-main { max-width: 100%; }
+
+/* Tabs: one scrollable row instead of wrapping/overflowing */
+.admin-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tab { flex: 0 0 auto; white-space: nowrap; }
+
+@media (max-width: 640px) {
+  /* Header: drop the brand text so the action buttons never overlap it */
+  .admin-header__inner { gap: 8px; }
+  .admin-header .brand__text { display: none; }
+  .admin-header__actions { gap: 6px; margin-left: auto; }
+  .admin-header__actions .btn-ghost { padding: 7px 10px; font-size: .76rem; }
+  .admin-tab { padding: 11px 13px; font-size: .86rem; }
+  /* Toolbars + their button groups stack full-width */
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar__filters { flex-direction: column; align-items: stretch; width: 100%; }
+  .toolbar__search, .toolbar__select { width: 100%; }
+  .card-toolbar-actions { width: 100%; flex-wrap: wrap; }
+  .card-toolbar-actions .btn { flex: 1 1 auto; justify-content: center; }
+  /* Print settings inputs: full width, no overflow */
+  .card-align__row { gap: 10px 14px; }
+  .card-align__row label { flex: 1 1 140px; }
+  .card-align__row input, .card-align__row select { max-width: 100%; }
+  .ps-custom { flex-wrap: wrap; }
+  .card-align__actions .btn { flex: 1 1 auto; justify-content: center; }
+  /* Meals + import cards: single column, no overflow */
+  .meals-list { grid-template-columns: 1fr; }
+  .meal-admin-form input, .meal-admin-form select, .meal-admin-form .btn { width: 100%; }
+  .import-step { flex-direction: column; align-items: stretch; }
+  /* Edit / manual / preview modals fit the screen */
+  .edit-modal__card { max-width: 96vw; padding: 18px; }
+  /* Bigger tap targets in dense action cells */
+  .status-set { flex-wrap: wrap; gap: 6px; }
+}

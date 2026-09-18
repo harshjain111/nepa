@@ -2,23 +2,42 @@
    idcard.css — printable delegate ID card (overlay only) +
    the ID Cards / Meals / Import admin controls.
 
-   The card BACKGROUND is pre-printed on B4 (250 x 353 mm) stock.
-   We print ONLY the overlay: name, company, designation, city + QR,
-   positioned in millimetres to land on the blank areas of the stock.
-   Edit the *_mm positions below to match your actual template.
+   The pre-printed card is 3.5 x 5 inch (88.9 x 127 mm). It is placed on the
+   printer's PAGE (A4, the card itself, etc.) at (--card-top, --card-left).
+   We print ONLY the overlay: name, company, designation, city + QR, positioned
+   as a % of the CARD so it scales to any card/paper size. All sizes/positions
+   are driven by the Print settings panel (see admin.js).
    ============================================================ */
 
 :root {
-  --card-w: 250mm;   /* set by the Print settings panel (paper size) */
-  --card-h: 353mm;
-  --fs: 1;           /* font scale = card height / 353mm (B4 reference) */
+  --page-w: 88.9mm;  /* the printer sheet */
+  --page-h: 127mm;
+  --card-w: 88.9mm;  /* the pre-printed card (3.5 x 5 in) */
+  --card-h: 127mm;
+  --card-top: 0mm;   /* card position on the sheet */
+  --card-left: 50%;
+  --card-ml: calc(var(--card-w) / -2); /* margin-left for horizontal centering */
+  --fs: 0.36;        /* font scale = card height / 353 (design reference) */
+  --nx: 0mm; --ny: 0mm; --scale: 1;
+}
+
+/* The printer sheet — cards sit on it at the configured position. */
+.idcard-page {
+  position: relative;
+  width: var(--page-w);
+  height: var(--page-h);
+  background: transparent;
+  overflow: hidden;
 }
 
 .idcard {
-  position: relative;
+  position: absolute;
+  top: var(--card-top, 0mm);
+  left: var(--card-left, 50%);
+  margin-left: var(--card-ml, 0);
   width: var(--card-w);
   height: var(--card-h);
-  background: #fff;
+  background: transparent;      /* transparent so only the overlay ink prints */
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
@@ -28,6 +47,11 @@
 }
 /* On-screen / test-print only: show the real design behind the overlay. */
 .idcard--template { background-image: url('/img/idcard-template.png'); }
+
+/* Test print: outline the card + the field/QR boxes so placement is visible. */
+.idcard--test { outline: 0.3mm dashed #c0392b; outline-offset: -0.3mm; }
+.idcard--test .idcard__qr { outline: 0.25mm solid #2F5D3A; }
+.idcard--test .idcard__field { outline: 0.2mm dotted #8a6a1c; }
 
 /* Everything inside gets nudged together by the calibration controls. */
 .idcard__inner {
@@ -88,10 +112,12 @@
   position: relative;
   margin: 6px auto 4px;
   border: 1px solid var(--gold-soft, #D8C08A);
-  background: #f3ead4;
+  background: #fff;
   overflow: hidden;
 }
-.card-preview__stage .idcard { transform-origin: top left; box-shadow: none; }
+.card-preview__stage .idcard-page { transform-origin: top left; box-shadow: none; background: #fff; }
+/* faint sheet edge + card outline so the position on the page is visible */
+.card-preview__stage .idcard-page .idcard { box-shadow: 0 0 0 0.3mm rgba(31,61,46,.25); }
 
 /* ============================================================
    Admin controls: ID Cards toolbar, alignment, Meals, Import
