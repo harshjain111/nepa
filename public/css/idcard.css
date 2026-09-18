@@ -9,8 +9,9 @@
    ============================================================ */
 
 :root {
-  --card-w: 250mm;
+  --card-w: 250mm;   /* set by the Print settings panel (paper size) */
   --card-h: 353mm;
+  --fs: 1;           /* font scale = card height / 353mm (B4 reference) */
 }
 
 .idcard {
@@ -41,10 +42,10 @@
 .idcard__qr {
   position: absolute;
   left: 50%;
-  top: 210mm;              /* QR CENTRE */
-  width: 52mm;
-  height: 52mm;
-  padding: 2mm;            /* transparent quiet zone */
+  top: 59.5%;             /* QR CENTRE (% of card height) */
+  width: 20.8%;           /* % of card width; stays square */
+  aspect-ratio: 1 / 1;
+  padding: 0.8%;          /* transparent quiet zone */
   box-sizing: border-box;
   transform: translate(-50%, -50%);
   background: transparent;
@@ -57,23 +58,26 @@
   left: 0; right: 0;
   text-align: center;
   transform: translateY(-50%);
-  padding: 0 16mm;
+  padding: 0 6.4%;
   box-sizing: border-box;
   line-height: 1.1;
   color: #1F3D2E;
 }
-/* Vertical CENTRE of each line, in mm. Even ~14mm spacing to match the template.
-   Tweak these four (and the QR top above) to fine-tune placement. */
-.idcard__name        { top: 246mm; font-size: 32pt; font-weight: 700; }
-.idcard__company     { top: 263mm; font-size: 22pt; font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
-.idcard__designation { top: 279mm; font-size: 22pt; font-weight: 500; text-transform: uppercase; }
-.idcard__city        { top: 295mm; font-size: 22pt; font-weight: 500; text-transform: uppercase; }
+/* Vertical CENTRE of each line as a % of card height, and font size scaled by
+   --fs (= card height / B4 353mm) so any paper size keeps the same layout.
+   Tweak the top % (and the QR top above) to fine-tune placement. */
+.idcard__name        { top: 69.7%; font-size: calc(32pt * var(--fs, 1)); font-weight: 700; }
+.idcard__company     { top: 74.5%; font-size: calc(22pt * var(--fs, 1)); font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
+.idcard__designation { top: 79.0%; font-size: calc(22pt * var(--fs, 1)); font-weight: 500; text-transform: uppercase; }
+.idcard__city        { top: 83.6%; font-size: calc(22pt * var(--fs, 1)); font-weight: 500; text-transform: uppercase; }
 
 /* ---------------- print ---------------- */
 .print-area { display: none; }
 
+/* @page size is injected by the Print settings panel (#printPageStyle);
+   this is the default if no setting is applied. */
+@page { size: 250mm 353mm; margin: 0; }
 @media print {
-  @page { size: 250mm 353mm; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
   body.admin-body > *:not(.print-area) { display: none !important; }
   .print-area { display: block !important; }
@@ -110,6 +114,9 @@
 .card-align__row { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
 .card-align__row label { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--muted, #6F6B5D); }
 .card-align__row input[type="number"] { width: 96px; padding: 8px 10px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; }
+.card-align__row select { padding: 8px 10px; border: 1px solid var(--gold-soft, #D8C08A); border-radius: 8px; background: #fff; }
+.ps-custom { display: inline-flex; align-items: center; gap: 6px; }
+.ps-custom input { width: 72px !important; }
 .card-align__check { flex-direction: row !important; align-items: center; gap: 8px !important; }
 .card-align__hint { font-size: .82rem; color: var(--muted, #6F6B5D); margin: 10px 0 0; }
 

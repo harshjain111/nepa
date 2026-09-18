@@ -832,32 +832,77 @@
     return card;
   }
 
-  function applyAlignVars(el) {
-    const x = parseFloat($('alignX').value) || 0;
-    const y = parseFloat($('alignY').value) || 0;
-    const s = (parseFloat($('alignScale').value) || 100) / 100;
-    el.style.setProperty('--nx', x + 'mm');
-    el.style.setProperty('--ny', y + 'mm');
-    el.style.setProperty('--scale', String(s));
+  /* ---------------- print settings (paper size, scale, nudge) ---------------- */
+  const PAPER = {
+    B4: { w: 250, h: 353 }, A4: { w: 210, h: 297 }, A5: { w: 148, h: 210 },
+    A6: { w: 105, h: 148 }, Letter: { w: 216, h: 279 }, Custom: { w: 250, h: 353 },
+  };
+  const PRINT_KEY = 'nepa_card_print';
+  const printSettings = { paper: 'B4', cw: 250, ch: 353, x: 0, y: 0, scale: 100, tpl: false };
+
+  function currentDims() {
+    if (printSettings.paper === 'Custom') return { w: Number(printSettings.cw) || 250, h: Number(printSettings.ch) || 353 };
+    const p = PAPER[printSettings.paper] || PAPER.B4;
+    return { w: p.w, h: p.h };
   }
 
-  // Load saved calibration
-  (function initAlign() {
+  // Apply paper size, font-scale, nudge and user-scale to a card element.
+  function applyPrintVars(el) {
+    const d = currentDims();
+    el.style.setProperty('--card-w', d.w + 'mm');
+    el.style.setProperty('--card-h', d.h + 'mm');
+    el.style.setProperty('--fs', String(d.h / 353));
+    el.style.setProperty('--nx', (Number(printSettings.x) || 0) + 'mm');
+    el.style.setProperty('--ny', (Number(printSettings.y) || 0) + 'mm');
+    el.style.setProperty('--scale', String((Number(printSettings.scale) || 100) / 100));
+  }
+
+  // Drive the @page size so the sheet matches the chosen paper.
+  function setPageSize() {
+    const d = currentDims();
+    let s = document.getElementById('printPageStyle');
+    if (!s) { s = document.createElement('style'); s.id = 'printPageStyle'; document.head.appendChild(s); }
+    s.textContent = `@media print{ @page{ size:${d.w}mm ${d.h}mm; margin:0; } }`;
+  }
+
+  function loadPrintSettings() {
+    try { const s = JSON.parse(localStorage.getItem(PRINT_KEY) || 'null'); if (s) Object.assign(printSettings, s); }
+    catch (e) { /* ignore */ }
+    // migrate the older align-only key
     try {
-      const saved = JSON.parse(localStorage.getItem('nepa_card_align') || '{}');
-      if ($('alignX')) $('alignX').value = saved.x != null ? saved.x : 0;
-      if ($('alignY')) $('alignY').value = saved.y != null ? saved.y : 0;
-      if ($('alignScale')) $('alignScale').value = saved.scale != null ? saved.scale : 100;
-      if ($('alignTemplate')) $('alignTemplate').checked = !!saved.tpl;
-    } catch (e) { /* ignore */ }
-  })();
-  function saveAlign() {
-    try {
-      localStorage.setItem('nepa_card_align', JSON.stringify({
-        x: $('alignX').value, y: $('alignY').value, scale: $('alignScale').value, tpl: $('alignTemplate').checked,
-      }));
+      const old = JSON.parse(localStorage.getItem('nepa_card_align') || 'null');
+      if (old && !localStorage.getItem(PRINT_KEY)) {
+        printSettings.x = parseFloat(old.x) || 0; printSettings.y = parseFloat(old.y) || 0;
+        printSettings.scale = parseFloat(old.scale) || 100; printSettings.tpl = !!old.tpl;
+      }
     } catch (e) { /* ignore */ }
   }
+  function savePrintSettings() { try { localStorage.setItem(PRINT_KEY, JSON.stringify(printSettings)); } catch (e) { /* ignore */ } }
+
+  function togglePaperCustom() { const c = $('psCustom'); if (c) c.hidden = $('psPaper').value !== 'Custom'; }
+
+  function readPrintUI() {
+    if ($('psPaper')) printSettings.paper = $('psPaper').value;
+    if ($('psCustomW')) printSettings.cw = Number($('psCustomW').value) || 250;
+    if ($('psCustomH')) printSettings.ch = Number($('psCustomH').value) || 353;
+    if ($('alignX')) printSettings.x = Number($('alignX').value) || 0;
+    if ($('alignY')) printSettings.y = Number($('alignY').value) || 0;
+    if ($('alignScale')) printSettings.scale = Number($('alignScale').value) || 100;
+    if ($('alignTemplate')) printSettings.tpl = $('alignTemplate').checked;
+    savePrintSettings(); togglePaperCustom(); setPageSize();
+  }
+
+  (function initPrintUI() {
+    loadPrintSettings();
+    if ($('psPaper')) $('psPaper').value = printSettings.paper;
+    if ($('psCustomW')) $('psCustomW').value = printSettings.cw;
+    if ($('psCustomH')) $('psCustomH').value = printSettings.ch;
+    if ($('alignX')) $('alignX').value = printSettings.x;
+    if ($('alignY')) $('alignY').value = printSettings.y;
+    if ($('alignScale')) $('alignScale').value = printSettings.scale;
+    if ($('alignTemplate')) $('alignTemplate').checked = !!printSettings.tpl;
+    togglePaperCustom(); setPageSize();
+  })();
 
   function cardReady(r) { return !!(r.designation && r.city); }
 
@@ -919,7 +964,9 @@
 
   const cardAlignBtn = $('cardAlignBtn');
   if (cardAlignBtn) cardAlignBtn.addEventListener('click', () => { const p = $('cardAlign'); p.hidden = !p.hidden; });
-  ['alignX', 'alignY', 'alignScale', 'alignTemplate'].forEach((id) => { const el = $(id); if (el) el.addEventListener('change', saveAlign); });
+  ['psPaper', 'psCustomW', 'psCustomH', 'alignX', 'alignY', 'alignScale', 'alignTemplate'].forEach((id) => {
+    const el = $(id); if (el) el.addEventListener('change', () => { readPrintUI(); if ($('cardPreviewModal') && !$('cardPreviewModal').hidden) reRenderPreview(); });
+  });
 
   const cardHeadCheck = $('cardHeadCheck');
   if (cardHeadCheck) cardHeadCheck.addEventListener('change', () => {
@@ -955,14 +1002,15 @@
 
   function printCards(regs) {
     if (typeof QRCode === 'undefined') { alert('QR library failed to load. Check your connection and reload.'); return; }
+    setPageSize();
     const area = $('printArea');
     area.innerHTML = '';
-    const withTpl = $('alignTemplate') && $('alignTemplate').checked;
-    regs.forEach((r) => { const c = buildCardEl(r, withTpl); applyAlignVars(c); area.appendChild(c); });
+    const withTpl = !!printSettings.tpl;
+    regs.forEach((r) => { const c = buildCardEl(r, withTpl); applyPrintVars(c); area.appendChild(c); });
     setTimeout(() => {
       window.print();
       markPrinted(regs.map((r) => r.id));
-    }, 80);
+    }, 120);
   }
 
   async function markPrinted(ids) {
@@ -980,20 +1028,27 @@
   }
 
   /* ---------------- card preview modal ---------------- */
-  function openCardPreview(id) {
+  function renderPreviewCard(id) {
     const r = records.find((x) => x.id === id);
     if (!r) return;
     const stage = $('cardPreviewStage');
+    const d = currentDims();
     const card = buildCardEl(r, true);
-    // scale the 250mm card down to fit the modal (~300px wide)
+    applyPrintVars(card);
+    // scale the card down to fit the modal (~300px wide), preserving paper ratio
     const pxPerMm = 3.7795;
-    const scale = 300 / (250 * pxPerMm);
+    const scale = 300 / (d.w * pxPerMm);
+    card.style.transformOrigin = 'top left';
     card.style.transform = `scale(${scale})`;
-    stage.style.width = (250 * pxPerMm * scale) + 'px';
-    stage.style.height = (353 * pxPerMm * scale) + 'px';
+    stage.style.width = (d.w * pxPerMm * scale) + 'px';
+    stage.style.height = (d.h * pxPerMm * scale) + 'px';
     stage.innerHTML = '';
     stage.appendChild(card);
+  }
+  function reRenderPreview() { const id = $('cardPreviewModal').dataset.reg; if (id) renderPreviewCard(id); }
+  function openCardPreview(id) {
     $('cardPreviewModal').dataset.reg = id;
+    renderPreviewCard(id);
     $('cardPreviewModal').hidden = false;
   }
   function closeCardPreview() { $('cardPreviewModal').hidden = true; }
@@ -1079,20 +1134,23 @@
     if ($('mealsEmpty')) $('mealsEmpty').hidden = meals.length > 0;
     list.innerHTML = meals.map((m) => {
       const isEvent = m.kind === 'event';
+      const cap = m.maxPerPerson == null ? 1 : Number(m.maxPerPerson);
+      const multi = isEvent || cap !== 1; // allows repeat check-ins
+      const word = isEvent ? 'entries' : 'served';
       return `
       <div class="meal-card" data-meal="${esc(m.id)}">
         <div class="meal-card__top">
           <strong>${esc(m.name)} <span class="meal-badge meal-badge--${isEvent ? 'event' : 'meal'}">${isEvent ? 'Event' : 'Meal'}</span></strong>
           <span class="meal-card__stat">
-            <span class="meal-card__served">${m.redeemed || 0}<span> ${isEvent ? 'entries' : 'served'}</span></span>
-            ${isEvent ? `<span class="meal-card__unique">${m.unique || 0} unique</span>` : ''}
+            <span class="meal-card__served">${m.redeemed || 0}<span> ${word}</span></span>
+            ${multi ? `<span class="meal-card__unique">${m.unique || 0} unique</span>` : ''}
           </span>
         </div>
         <div class="meal-card__fields">
           <label>Type<select data-mf="kind"><option value="meal"${isEvent ? '' : ' selected'}>Meal</option><option value="event"${isEvent ? ' selected' : ''}>Event</option></select></label>
           <label>Name<input data-mf="name" value="${esc(m.name)}" /></label>
           <label>Day / label<input data-mf="mealDay" value="${esc(m.mealDay || '')}" /></label>
-          <label>Times per delegate<input data-mf="maxPerPerson" type="number" min="1" value="${m.maxPerPerson || 1}" /></label>
+          <label>Times per delegate <span class="cell-muted">(0 = unlimited)</span><input data-mf="maxPerPerson" type="number" min="0" value="${cap}" /></label>
           <label class="meal-card__toggle"><input data-mf="active" type="checkbox" ${m.active !== false ? 'checked' : ''} /> Active</label>
         </div>
         <div class="meal-card__actions">

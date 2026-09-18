@@ -239,21 +239,36 @@
             </select>
           </div>
           <div class="card-toolbar-actions">
-            <button class="btn btn-ghost" id="cardAlignBtn" title="Fine-tune print position">Alignment</button>
+            <button class="btn btn-ghost" id="cardAlignBtn" title="Paper size, scale &amp; position">⚙ Print settings</button>
             <button class="btn btn-ghost" id="cardSelectAllBtn">Select all</button>
             <button class="btn btn-primary" id="cardPrintBtn">Print selected (0)</button>
           </div>
         </section>
 
-        <!-- Alignment / calibration panel -->
+        <!-- Print settings / calibration panel -->
         <div class="card-align" id="cardAlign" hidden>
+          <div class="card-align__row">
+            <label>Paper size
+              <select id="psPaper">
+                <option value="B4">B4 — 250 × 353 mm</option>
+                <option value="A4">A4 — 210 × 297 mm</option>
+                <option value="A5">A5 — 148 × 210 mm</option>
+                <option value="A6">A6 — 105 × 148 mm</option>
+                <option value="Letter">Letter — 216 × 279 mm</option>
+                <option value="Custom">Custom…</option>
+              </select>
+            </label>
+            <label id="psCustom" hidden>Custom W × H (mm)
+              <span class="ps-custom"><input type="number" id="psCustomW" step="1" min="20" value="250" /> × <input type="number" id="psCustomH" step="1" min="20" value="353" /></span>
+            </label>
+          </div>
           <div class="card-align__row">
             <label>Nudge right (mm)<input type="number" id="alignX" step="0.5" value="0" /></label>
             <label>Nudge down (mm)<input type="number" id="alignY" step="0.5" value="0" /></label>
             <label>Scale (%)<input type="number" id="alignScale" step="1" value="100" /></label>
             <label class="card-align__check"><input type="checkbox" id="alignTemplate" /> Print faint template (for test alignment on blank paper)</label>
           </div>
-          <p class="card-align__hint">These are saved on this device. Print one card on a blank sheet first, hold it over your pre-printed stock against the light, then adjust.</p>
+          <p class="card-align__hint">All settings save on this device. Pick the paper size loaded in your printer, then print one card on a blank sheet, hold it over your pre-printed stock against the light, and use Nudge / Scale to line it up. The card layout scales to any paper size automatically.</p>
         </div>
 
         <section class="table-wrap">
@@ -278,7 +293,7 @@
 
       <!-- ===== MEALS VIEW ===== -->
       <div id="viewMeals" hidden>
-        <p class="archived-note">Set up each <strong>meal</strong> (e.g. “Day 1 Lunch”) or <strong>event</strong> (e.g. “Afternoon Seminar”) delegates check in to. <strong>Meals</strong> can be availed a limited number of times (set “times per delegate”, usually 1). <strong>Events allow re-entry</strong> — a delegate may enter as many times as they like; each entry is logged, and the card shows total entries plus how many <em>unique</em> people attended.</p>
+        <p class="archived-note">Set up each <strong>meal</strong> (e.g. “Day 1 Lunch” — or just “Meals”) or <strong>event</strong> (e.g. “Afternoon Seminar”) delegates check in to. <strong>Times per delegate</strong> caps how many times one delegate may check in — set it to <strong>0 for unlimited</strong> (so lunch/meals allow repeat entry), 1 for once only, or any number. <strong>Events</strong> are always unlimited re-entry. When repeats are allowed, the card shows total check-ins plus how many <em>unique</em> people came.</p>
         <div class="hotel-admin-add">
           <h3>Add a meal or event</h3>
           <div class="meal-admin-form">
@@ -288,7 +303,7 @@
             </select>
             <input id="mealName" placeholder="Name (e.g. Day 1 Lunch / Afternoon Seminar)" />
             <input id="mealDay" placeholder="Day / date label (optional)" />
-            <input id="mealMax" type="number" min="1" value="1" title="How many times per delegate" />
+            <input id="mealMax" type="number" min="0" value="1" title="Times per delegate (0 = unlimited re-entry)" placeholder="Times (0=∞)" />
             <button class="btn btn-primary" id="mealAddBtn">Add</button>
           </div>
           <p class="login-error" id="mealAddErr" hidden></p>

@@ -126,16 +126,21 @@
     const banner = $('activeBanner');
     if (!m) { hint.hidden = true; if (banner) banner.hidden = true; return; }
     const isEvent = m.kind === 'event';
-    hint.textContent = isEvent
-      ? `${m.redeemed || 0} entries · ${m.unique || 0} unique · re-entry allowed`
-      : `${m.redeemed || 0} served so far · ${(m.maxPerPerson || 1) === 1 ? 'once per delegate' : `up to ${m.maxPerPerson}× per delegate`}`;
+    const cap = m.maxPerPerson == null ? 1 : Number(m.maxPerPerson);
+    const unlimited = isEvent || cap <= 0;
+    const multi = isEvent || cap !== 1;
+    const word = isEvent ? 'entries' : 'served';
+    const per = unlimited ? 're-entry allowed' : (cap === 1 ? 'once per delegate' : `up to ${cap}× per delegate`);
+    hint.textContent = multi
+      ? `${m.redeemed || 0} ${word} · ${m.unique || 0} unique · ${per}`
+      : `${m.redeemed || 0} served so far · ${per}`;
     hint.hidden = false;
     // Big always-on reminder of the active session.
     if (banner) {
       banner.className = 'scan-active scan-active--' + (isEvent ? 'event' : 'meal');
       $('activeName').textContent = m.name + (m.mealDay ? ' · ' + m.mealDay : '');
-      $('activeCount').textContent = isEvent
-        ? `${m.redeemed || 0} entries · ${m.unique || 0} unique`
+      $('activeCount').textContent = multi
+        ? `${m.redeemed || 0} ${word} · ${m.unique || 0} unique`
         : `${m.redeemed || 0} served`;
       banner.hidden = false;
     }
@@ -205,8 +210,7 @@
       // keep the local counters current
       if (data.status === 'ok') {
         meal.redeemed = (meal.redeemed || 0) + 1;
-        if (meal.kind === 'event' && !data.reentry) meal.unique = (meal.unique || 0) + 1;
-        else if (meal.kind !== 'event') meal.unique = (meal.unique || 0) + 1;
+        if (!data.reentry) meal.unique = (meal.unique || 0) + 1;
         updateMealHint();
       }
     } catch (err) {
@@ -220,8 +224,13 @@
     const metaBits = [r.organization, r.designation, r.city].filter(Boolean).join(' · ');
     const isEvent = meal.kind === 'event';
     if (data.status === 'ok') {
-      const status = isEvent ? (data.reentry ? '✓ Re-entry logged' : '✓ Entry logged') : '✓ Checked in';
-      const sub = isEvent ? `${esc(meal.name)} — admit${data.used ? ` (entry #${data.used})` : ''}` : `${esc(meal.name)} — serve now`;
+      const again = !!data.reentry;
+      const status = isEvent
+        ? (again ? '✓ Re-entry logged' : '✓ Entry logged')
+        : (again ? '✓ Served again' : '✓ Checked in');
+      const sub = isEvent
+        ? `${esc(meal.name)} — admit${data.used ? ` (entry #${data.used})` : ''}`
+        : `${esc(meal.name)} — serve now${again && data.used ? ` (serving #${data.used})` : ''}`;
       showResult('ok', status, name, metaBits, sub);
       buzz([120]);
     } else if (data.status === 'already') {
