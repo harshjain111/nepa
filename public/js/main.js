@@ -494,6 +494,7 @@
       try {
         const res = await fetch('/api/register', { method: 'POST', body: fd });
         const data = await res.json();
+        if (data && data.closed) { applyRegistrationClosed(); return; }
         if (!res.ok || !data.ok) throw new Error(data.error || 'Registration failed. Please try again.');
         showConfirmation(data);
       } catch (err) {
@@ -745,7 +746,48 @@
     } catch (e) { /* keep the default text */ }
   }
 
+  /* ============================================================
+     REGISTRATIONS CLOSED
+     ============================================================ */
+  function closedNoticeHTML() {
+    return `
+      <div class="reg-closed">
+        <div class="reg-closed__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="eyebrow eyebrow--center">Delegate Registration</span>
+        <h2>Registrations are now closed</h2>
+        <p>Thank you for the tremendous response. Delegate registration for the National Edible Oil Conclave 2026 is closed.</p>
+        <p class="reg-closed__sub">For any assistance, please contact the Conclave Secretariat — <a href="tel:+919435040234">94350-40234</a> · <a href="mailto:nepaconnect2026@gmail.com">nepaconnect2026@gmail.com</a>.</p>
+        <a class="btn btn-ghost" href="/">Back to home</a>
+      </div>`;
+  }
+
+  function applyRegistrationClosed() {
+    // Relabel + disable every "Register" CTA and the floating pill.
+    document.querySelectorAll('a[href="/register"], a.floating-register').forEach((a) => {
+      a.classList.add('is-closed');
+      a.setAttribute('aria-disabled', 'true');
+      const span = a.querySelector('span');
+      if (span) span.textContent = 'Registrations Closed';
+      else {
+        a.childNodes.forEach((n) => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = 'Registrations Closed'; });
+      }
+      a.removeAttribute('href'); // no longer navigates
+    });
+    // On the /register page, swap the form for the closed notice.
+    const mount = document.getElementById('registerMount');
+    if (mount) {
+      mount.innerHTML = closedNoticeHTML();
+      const heroH = document.querySelector('.page-hero h1');
+      if (heroH) heroH.textContent = 'Registrations Closed';
+      const heroP = document.querySelector('.page-hero p');
+      if (heroP) heroP.textContent = 'Delegate registration for the Conclave is now closed. Thank you for the overwhelming response.';
+    }
+  }
+
   function boot(config) {
+    if (config && config.registrationsOpen === false) applyRegistrationClosed();
     renderWhy();
     renderProgramme();
     renderSponsors();

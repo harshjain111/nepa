@@ -35,6 +35,11 @@ const DELEGATE_FEE_SPOT = 10000;
 const MEMBERSHIP_FEE = 3100;
 const GST_RATE = 0.18; // 18% GST added on top of delegate + membership fees
 
+// Public registration is CLOSED by default now. Set REGISTRATIONS_OPEN=true in
+// the environment to reopen the public form. The admin panel can always add a
+// delegate manually regardless of this flag.
+const REGISTRATIONS_OPEN = process.env.REGISTRATIONS_OPEN === 'true';
+
 const ADMIN_ID = process.env.ADMIN_ID || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nepa2026';
 // Read-only account: can view all records & screenshots, cannot edit or delete.
@@ -152,7 +157,7 @@ const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((err) => 
 // Pricing constants + cutoff
 app.get('/api/config', (req, res) => {
   const { feeType, delegateFee } = currentFee();
-  res.json({ earlyBirdCutoff: EARLY_BIRD_CUTOFF, feeType, delegateFee, membershipFee: MEMBERSHIP_FEE, gstRate: GST_RATE });
+  res.json({ earlyBirdCutoff: EARLY_BIRD_CUTOFF, feeType, delegateFee, membershipFee: MEMBERSHIP_FEE, gstRate: GST_RATE, registrationsOpen: REGISTRATIONS_OPEN });
 });
 
 // Public registration (multipart: optional "screenshot")
@@ -172,6 +177,11 @@ app.post('/api/register', (req, res) => {
 
 async function handleRegister(req, res, err) {
     if (err) return res.status(400).json({ ok: false, error: err.message });
+
+    // Public registration is closed — new delegates are added by the admin only.
+    if (!REGISTRATIONS_OPEN) {
+      return res.status(403).json({ ok: false, closed: true, error: 'Registrations are now closed.' });
+    }
 
     const b = req.body || {};
     const fullName = (b.fullName || '').trim();
@@ -572,6 +582,50 @@ app.patch('/api/registrations/:id', ...adminOnly, wrap(async (req, res) => {
   const updated = await store.updateRegistration(req.params.id, fields);
   if (!updated) return res.status(404).json({ ok: false, error: 'Not found' });
   res.json({ ok: true, registration: updated });
+}));
+
+// Admin manually registers one delegate (works even when public reg is closed).
+app.post('/api/registrations/manual', ...adminOnly, wrap(async (req, res) => {
+  const b = req.body || {};
+  const fullName = (b.fullName || '').trim();
+  const mobile = (b.mobile || '').replace(/\D/g, '');
+  const email = (b.email || '').trim();
+  const organization = (b.organization || '').trim();
+  const gstNumber = (b.gstNumber || '').trim().toUpperCase();
+  const designation = (b.designation || '').trim();
+  const city = (b.city || '').trim();
+  const note = (b.note || '').trim();
+  const nepaMember = b.nepaMember === true || b.nepaMember === 'true';
+  const paymentMethod = (b.paymentMethod || 'Offline').trim();
+  const status = b.status === 'Pending' ? 'Pending' : 'Confirmed';
+
+  if (!fullName) return res.status(400).json({ ok: false, error: 'Full name is required' });
+  if (!MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Mobile must be exactly 10 digits' });
+  if (email && !EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'Enter a valid email or leave it blank' });
+
+  const existing = await store.findRegistrationByMobile(mobile);
+  if (existing) return res.status(409).json({ ok: false, error: `That mobile is already registered (${existing.regId || 'existing delegate'}).` });
+
+  const { feeType, delegateFee } = currentFee();
+  const membershipFee = nepaMember ? MEMBERSHIP_FEE : 0;
+  const subtotal = delegateFee + membershipFee;
+  const gstAmount = Math.round(subtotal * GST_RATE);
+  const totalAmount = subtotal + gstAmount;
+
+  let record;
+  try {
+    record = await store.addRegistration({
+      fullName, mobile, email, organization, gstNumber: gstNumber || null,
+      designation: designation || null, city: city || null, source: 'manual',
+      nepaMember, feeType, delegateFee, membershipFee, subtotal, gstRate: GST_RATE, gstAmount, totalAmount,
+      paymentMethod, referenceNo: null, screenshotUrl: null, note: note || null,
+    });
+  } catch (e) {
+    if (e && e.code === 'DUPLICATE_MOBILE') return res.status(409).json({ ok: false, error: 'That mobile is already registered.' });
+    throw e;
+  }
+  if (status === 'Confirmed' && record && record.id) { try { await store.setRegistrationStatus(record.id, 'Confirmed'); } catch { /* non-fatal */ } }
+  res.json({ ok: true, registration: record });
 }));
 
 // Bulk import offline registrants parsed from an Excel file (client sends rows).

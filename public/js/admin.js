@@ -105,6 +105,8 @@
     });
     // Backup is a registrations feature — hide it for the hotel team.
     if ($('backupBtn')) $('backupBtn').hidden = !(r === 'admin' || r === 'viewer');
+    // Only a full admin can manually register a delegate.
+    if ($('manualRegBtn')) $('manualRegBtn').hidden = r !== 'admin';
     if (firstAllowed) activateView(firstAllowed);
   }
   function showLogin() {
@@ -1358,6 +1360,54 @@
     box.hidden = false;
     importRows = [];
   }
+
+  /* ============================================================
+     MANUAL REGISTER (admin adds a delegate; public reg is closed)
+     ============================================================ */
+  function openManual() {
+    ['mrName', 'mrMobile', 'mrEmail', 'mrOrg', 'mrDesignation', 'mrCity', 'mrGst'].forEach((id) => { if ($(id)) $(id).value = ''; });
+    if ($('mrMember')) $('mrMember').checked = false;
+    if ($('mrMethod')) $('mrMethod').value = 'Offline';
+    if ($('mrStatus')) $('mrStatus').value = 'Confirmed';
+    $('mrErr').hidden = true;
+    $('manualModal').hidden = false;
+    setTimeout(() => $('mrName').focus(), 30);
+  }
+  function closeManual() { $('manualModal').hidden = true; }
+  const manualRegBtn = $('manualRegBtn');
+  if (manualRegBtn) manualRegBtn.addEventListener('click', openManual);
+  document.querySelectorAll('[data-close-manual]').forEach((el) => el.addEventListener('click', closeManual));
+
+  const mrSaveBtn = $('mrSaveBtn');
+  if (mrSaveBtn) mrSaveBtn.addEventListener('click', async () => {
+    const err = $('mrErr'); err.hidden = true;
+    const payload = {
+      fullName: $('mrName').value.trim(),
+      mobile: $('mrMobile').value.replace(/\D/g, ''),
+      email: $('mrEmail').value.trim(),
+      organization: $('mrOrg').value.trim(),
+      designation: $('mrDesignation').value.trim(),
+      city: $('mrCity').value.trim(),
+      gstNumber: $('mrGst').value.trim().toUpperCase(),
+      nepaMember: $('mrMember').checked,
+      paymentMethod: $('mrMethod').value,
+      status: $('mrStatus').value,
+    };
+    if (!payload.fullName) { err.textContent = 'Full name is required.'; err.hidden = false; return; }
+    if (!/^\d{10}$/.test(payload.mobile)) { err.textContent = 'Mobile must be exactly 10 digits.'; err.hidden = false; return; }
+    mrSaveBtn.disabled = true; const t = mrSaveBtn.textContent; mrSaveBtn.textContent = 'Registering…';
+    try {
+      const res = await api('/api/registrations/manual', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not register.');
+      closeManual();
+      loadRegistrations();
+      alert(`Registered ${data.registration.fullName} — ${data.registration.regId}.`);
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { mrSaveBtn.disabled = false; mrSaveBtn.textContent = t; }
+  });
 
   /* ============================================================
      BOOT — auto-login if a token exists

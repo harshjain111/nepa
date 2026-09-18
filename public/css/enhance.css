@@ -1247,3 +1247,24 @@ h1, h2, h3, h4 {
   }
   .nav-toggle { display: flex; }
 }
+
+/* ============================================================
+   Registrations closed — muted CTAs + notice
+   ============================================================ */
+a.is-closed {
+  opacity: .55;
+  filter: grayscale(.35);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.reg-closed { text-align: center; padding: 40px 24px; }
+.reg-closed__icon {
+  width: 66px; height: 66px; margin: 0 auto 18px; border-radius: 50%;
+  display: grid; place-items: center; background: #e7f0e9; color: #1e6b3c;
+}
+.reg-closed__icon svg { width: 32px; height: 32px; }
+.reg-closed h2 { margin: 6px 0 14px; }
+.reg-closed p { color: var(--muted, #6F6B5D); max-width: 48ch; margin: 0 auto 10px; }
+.reg-closed__sub { font-size: .9rem; }
+.reg-closed__sub a { color: var(--green-2, #2F5D3A); font-weight: 600; }
+.reg-closed .btn { margin-top: 20px; }

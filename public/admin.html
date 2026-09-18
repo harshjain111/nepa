@@ -135,7 +135,10 @@
             <option value="Pending">Pending</option>
           </select>
         </div>
-        <button class="btn btn-primary" id="exportBtn">Export to Excel</button>
+        <div class="card-toolbar-actions">
+          <button class="btn btn-primary" id="manualRegBtn">＋ Register delegate</button>
+          <button class="btn btn-ghost" id="exportBtn">Export to Excel</button>
+        </div>
       </section>
 
       <!-- Table -->
@@ -465,6 +468,45 @@
       <div class="edit-modal__actions">
         <button class="btn btn-ghost" data-close-preview>Close</button>
         <button class="btn btn-primary" id="cardPreviewPrintBtn">Print this card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MANUAL REGISTER MODAL ===================== -->
+  <div class="edit-modal" id="manualModal" hidden>
+    <div class="edit-modal__overlay" data-close-manual></div>
+    <div class="edit-modal__card">
+      <button class="lightbox__close" data-close-manual aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <h3>Register a delegate</h3>
+      <p class="edit-modal__sub">Public registration is closed — add a new delegate here. They get a QR and ID card like everyone else.</p>
+      <div class="field"><label for="mrName">Full Name *</label><input type="text" id="mrName" /></div>
+      <div class="field"><label for="mrMobile">Mobile * (10 digits)</label><input type="text" id="mrMobile" maxlength="10" inputmode="numeric" /></div>
+      <div class="field"><label for="mrEmail">Email</label><input type="email" id="mrEmail" /></div>
+      <div class="field"><label for="mrOrg">Company / Organization</label><input type="text" id="mrOrg" /></div>
+      <div class="field"><label for="mrDesignation">Designation</label><input type="text" id="mrDesignation" /></div>
+      <div class="field"><label for="mrCity">City</label><input type="text" id="mrCity" /></div>
+      <div class="field"><label for="mrGst">GST Number</label><input type="text" id="mrGst" style="text-transform:uppercase" /></div>
+      <div class="field"><label class="meal-card__toggle"><input type="checkbox" id="mrMember" /> NEPA member (+ membership fee)</label></div>
+      <div class="field"><label for="mrMethod">Payment method</label>
+        <select id="mrMethod" class="toolbar__select">
+          <option value="Offline">Offline / At desk</option>
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="Bank">Bank</option>
+        </select>
+      </div>
+      <div class="field"><label for="mrStatus">Status</label>
+        <select id="mrStatus" class="toolbar__select">
+          <option value="Confirmed">Confirmed</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
+      <p class="login-error" id="mrErr" hidden></p>
+      <div class="edit-modal__actions">
+        <button class="btn btn-ghost" data-close-manual>Cancel</button>
+        <button class="btn btn-primary" id="mrSaveBtn">Register</button>
       </div>
     </div>
   </div>
