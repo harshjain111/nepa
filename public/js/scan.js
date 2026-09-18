@@ -54,8 +54,8 @@
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'Invalid credentials');
-      if (data.role !== 'gate' && data.role !== 'admin') {
-        throw new Error('This login cannot run the scanner. Use the gate account.');
+      if (!['gate', 'admin', 'staff'].includes(data.role)) {
+        throw new Error('This login cannot run the scanner.');
       }
       sessionStorage.setItem(TOKEN_KEY, data.token);
       sessionStorage.setItem(ROLE_KEY, data.role);
@@ -272,6 +272,6 @@
   function buzz(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch { /* ignore */ } }
 
   /* ---------------- boot ---------------- */
-  if (token() && (role() === 'gate' || role() === 'admin')) showApp();
+  if (token() && ['gate', 'admin', 'staff'].includes(role())) showApp();
   else { loginScreen.hidden = false; }
 })();

@@ -352,7 +352,7 @@ app.post('/api/admin/users', auth.middleware, auth.requireRole('admin'), wrap(as
   const username = String(b.username || '').trim();
   const password = String(b.password || '');
   const label = String(b.label || '').trim();
-  const role = 'print'; // only print operators are created from the panel for now
+  const role = 'staff'; // staff = ID cards + party help desk + on-spot + scanner
   if (!/^[a-zA-Z0-9._-]{3,32}$/.test(username)) {
     return res.status(400).json({ ok: false, error: 'Username: 3–32 letters, numbers, dot, dash or underscore.' });
   }
@@ -412,7 +412,7 @@ app.post('/api/admin/clear', auth.middleware, auth.requireRole('admin'), wrap(as
 }));
 
 /* ---- Parties (paid delegate allocations) + help-desk delegate entry ---- */
-const helpTeam = [auth.middleware, auth.requireRole('admin', 'print')];
+const helpTeam = [auth.middleware, auth.requireRole('admin', 'print', 'staff')];
 const upper = (s) => String(s == null ? '' : s).trim().toUpperCase();
 
 // List all parties with live filled/remaining counts (admin + help desk).
@@ -461,7 +461,7 @@ app.post('/api/parties/:id/delegates', ...helpTeam, wrap(async (req, res) => {
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
 
 // Registrations (active list) — admin + viewer + print (for ID cards)
-app.get('/api/registrations', auth.middleware, auth.requireRole('admin', 'viewer', 'print'), wrap(async (req, res) => {
+app.get('/api/registrations', auth.middleware, auth.requireRole('admin', 'viewer', 'print', 'staff'), wrap(async (req, res) => {
   res.json({ ok: true, registrations: await store.listRegistrations() });
 }));
 
@@ -696,7 +696,7 @@ app.delete('/api/hotel-bookings/:id/purge', ...hotelTeam, wrap(async (req, res) 
 const adminOnly = [auth.middleware, auth.requireRole('admin')];
 
 // Edit a registrant (fill designation/city, correct details). Admin + print.
-app.patch('/api/registrations/:id', auth.middleware, auth.requireRole('admin', 'print'), wrap(async (req, res) => {
+app.patch('/api/registrations/:id', auth.middleware, auth.requireRole('admin', 'print', 'staff'), wrap(async (req, res) => {
   const b = req.body || {};
   const allowed = ['fullName', 'mobile', 'email', 'organization', 'gstNumber', 'designation', 'city'];
   const fields = {};
@@ -712,6 +712,61 @@ app.patch('/api/registrations/:id', auth.middleware, auth.requireRole('admin', '
 }));
 
 // Admin manually registers one delegate (works even when public reg is closed).
+// On-spot registration by staff/admin (multipart: "screenshot" for non-cash).
+// Fixed Spot rate + GST. Non-cash requires a screenshot; cash requires the
+// name of who received it. Works even though public registration is closed.
+app.post('/api/registrations/onspot', auth.middleware, auth.requireRole('admin', 'staff', 'print'), (req, res) => {
+  upload.single('screenshot')(req, res, (err) => {
+    handleOnspot(req, res, err).catch((e) => {
+      console.error('onspot failed:', e);
+      if (!res.headersSent) res.status(500).json({ ok: false, error: 'Could not save. Please try again.' });
+    });
+  });
+});
+async function handleOnspot(req, res, err) {
+  if (err) return res.status(400).json({ ok: false, error: err.message });
+  const b = req.body || {};
+  const fullName = upper(b.fullName);
+  const organization = upper(b.organization);
+  const designation = upper(b.designation);
+  const city = upper(b.city);
+  const mobile = String(b.mobile || '').replace(/\D/g, '');
+  const paymentMethod = String(b.paymentMethod || '').trim();
+  const cashCollectedBy = upper(b.cashCollectedBy);
+  const referenceNo = String(b.referenceNo || '').trim();
+  if (!fullName) return res.status(400).json({ ok: false, error: 'Name is required' });
+  if (mobile && !MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Phone must be 10 digits (or leave it blank)' });
+  if (!VALID_METHODS.includes(paymentMethod)) return res.status(400).json({ ok: false, error: 'Choose a payment method' });
+  if ((paymentMethod === 'UPI' || paymentMethod === 'Bank') && !req.file) {
+    return res.status(400).json({ ok: false, error: 'Upload the payment screenshot for UPI / Bank' });
+  }
+  if (paymentMethod === 'Cash' && !cashCollectedBy) {
+    return res.status(400).json({ ok: false, error: 'Enter who received the cash' });
+  }
+  const subtotal = DELEGATE_FEE_SPOT;               // fixed Spot rate
+  const gstAmount = Math.round(subtotal * GST_RATE);
+  const totalAmount = subtotal + gstAmount;
+  const screenshotUrl = req.file ? await uploads.saveUpload(req.file) : null;
+  const note = paymentMethod === 'Cash' ? `Cash received by: ${cashCollectedBy}` : null;
+  let record;
+  try {
+    record = await store.addRegistration({
+      fullName, mobile: mobile || null, email: null, organization: organization || null,
+      designation: designation || null, city: city || null, gstNumber: null, nepaMember: false,
+      feeType: 'Spot', delegateFee: DELEGATE_FEE_SPOT, membershipFee: 0, subtotal, gstRate: GST_RATE,
+      gstAmount, totalAmount, paymentMethod, referenceNo: referenceNo || null, screenshotUrl, note, source: 'onspot',
+    });
+  } catch (e) {
+    if (e && e.code === 'DUPLICATE_MOBILE') {
+      if (screenshotUrl) await uploads.deleteUpload(screenshotUrl);
+      return res.status(409).json({ ok: false, error: 'That phone is already registered.' });
+    }
+    throw e;
+  }
+  if (record && record.id) { try { await store.setRegistrationStatus(record.id, 'Confirmed'); } catch (e) { /* non-fatal */ } }
+  res.json({ ok: true, registration: record });
+}
+
 app.post('/api/registrations/manual', ...adminOnly, wrap(async (req, res) => {
   const b = req.body || {};
   const fullName = (b.fullName || '').trim();
@@ -766,7 +821,7 @@ app.post('/api/registrations/bulk-import', ...adminOnly, wrap(async (req, res) =
 }));
 
 // Mark one or more delegates' ID cards as printed. Admin + print.
-app.post('/api/registrations/mark-printed', auth.middleware, auth.requireRole('admin', 'print'), wrap(async (req, res) => {
+app.post('/api/registrations/mark-printed', auth.middleware, auth.requireRole('admin', 'print', 'staff'), wrap(async (req, res) => {
   const ids = Array.isArray((req.body || {}).ids) ? req.body.ids : [];
   if (!ids.length) return res.status(400).json({ ok: false, error: 'No ids' });
   const result = await store.markCardPrinted(ids);
@@ -778,7 +833,7 @@ app.post('/api/registrations/mark-printed', auth.middleware, auth.requireRole('a
  *   - admin manages the meal catalog
  *   - the 'gate' role (and admin) run the scanner + redeem
  * ------------------------------------------------------------------ */
-const gateTeam = [auth.middleware, auth.requireRole('admin', 'gate')];
+const gateTeam = [auth.middleware, auth.requireRole('admin', 'gate', 'staff')];
 
 // List meals (with redeemed counts) — gate picks which meal to man.
 app.get('/api/meals', ...gateTeam, wrap(async (req, res) => {

@@ -61,6 +61,7 @@
           </span>
         </div>
         <div class="admin-header__actions">
+          <a class="btn btn-ghost" id="scannerBtn" href="/scan" target="_blank" rel="noopener" title="Open the meal / event check-in scanner" hidden>Scanner</a>
           <button class="btn btn-ghost" id="backupBtn" title="Download a full JSON backup of all registrations &amp; enquiries">Backup</button>
           <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
           <button class="btn btn-ghost" id="logoutBtn">Logout</button>
@@ -241,6 +242,7 @@
             </select>
           </div>
           <div class="card-toolbar-actions">
+            <button class="btn btn-primary" id="onspotBtn">＋ On-spot register</button>
             <button class="btn btn-ghost" id="cardAlignBtn" title="Paper size, scale &amp; position">⚙ Print settings</button>
             <button class="btn btn-ghost" id="cardSelectAllBtn">Select all</button>
             <button class="btn btn-primary" id="cardPrintBtn">Print selected (0)</button>
@@ -459,9 +461,9 @@
 
       <!-- ===== USERS (print operators) VIEW ===== -->
       <div id="viewUsers" hidden>
-        <p class="archived-note">Create <strong>ID-card printing</strong> logins for your team. Each person signs in with their own username, sees only <strong>Registrations</strong> and <strong>ID Cards</strong>, and sets their <strong>own printer settings</strong> on their own device. They can print and edit card details but <strong>cannot</strong> delete anyone, import, or touch hotels / enquiries.</p>
+        <p class="archived-note">Create <strong>Staff</strong> logins for your help-desk team. Each signs in with their own username and can: search parties &amp; <strong>print ID cards</strong>, <strong>on-spot register</strong> walk-ins, and run the <strong>meal / event check-in scanner</strong>. Each keeps their <strong>own printer settings</strong> on their device. They <strong>cannot</strong> delete anyone, import, clear data, or touch hotels / enquiries / meals setup / users.</p>
         <div class="hotel-admin-add">
-          <h3>Add a print user</h3>
+          <h3>Add a staff user</h3>
           <div class="meal-admin-form">
             <input id="puName" placeholder="Name / label (optional)" />
             <input id="puUser" placeholder="Username (login)" autocomplete="off" />
@@ -659,6 +661,46 @@
         <button class="btn btn-ghost" data-close-pd>Cancel</button>
         <button class="btn btn-ghost" id="pdSaveBtn">Save</button>
         <button class="btn btn-primary" id="pdSavePrintBtn">Save &amp; Print</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ON-SPOT REGISTER MODAL ===================== -->
+  <div class="edit-modal" id="osModal" hidden>
+    <div class="edit-modal__overlay" data-close-os></div>
+    <div class="edit-modal__card">
+      <button class="lightbox__close" data-close-os aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <h3>On-spot registration</h3>
+      <p class="edit-modal__sub" id="osAmount">Delegate fee: ₹11,800 (₹10,000 + 18% GST)</p>
+      <div class="field"><label for="osName">Name *</label><input type="text" id="osName" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div class="field"><label for="osOrg">Company name</label><input type="text" id="osOrg" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div class="field"><label for="osPhone">Phone</label><input type="text" id="osPhone" maxlength="10" inputmode="numeric" autocomplete="off" /></div>
+      <div class="field"><label for="osDesignation">Designation <span class="cell-muted">(optional)</span></label><input type="text" id="osDesignation" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div class="field"><label for="osCity">City <span class="cell-muted">(optional)</span></label><input type="text" id="osCity" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div class="field"><label for="osMethod">Payment method *</label>
+        <select id="osMethod" class="toolbar__select">
+          <option value="">Select…</option>
+          <option value="UPI">UPI</option>
+          <option value="Bank">Bank Transfer</option>
+          <option value="Cash">Cash</option>
+        </select>
+      </div>
+      <div class="field" id="osShotWrap" hidden>
+        <label for="osShot">Payment screenshot *</label>
+        <input type="file" id="osShot" accept="image/*" />
+        <div class="field" style="margin-top:8px"><label for="osRef">Reference no. <span class="cell-muted">(optional)</span></label><input type="text" id="osRef" autocomplete="off" /></div>
+      </div>
+      <div class="field" id="osCashWrap" hidden>
+        <label for="osCashBy">Cash received by *</label>
+        <input type="text" id="osCashBy" style="text-transform:uppercase" placeholder="Name of staff who took the cash" autocomplete="off" />
+      </div>
+      <p class="login-error" id="osErr" hidden></p>
+      <div class="edit-modal__actions">
+        <button class="btn btn-ghost" data-close-os>Cancel</button>
+        <button class="btn btn-ghost" id="osSaveBtn">Save</button>
+        <button class="btn btn-primary" id="osSavePrintBtn">Save &amp; Print</button>
       </div>
     </div>
   </div>

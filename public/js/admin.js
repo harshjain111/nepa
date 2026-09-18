@@ -16,7 +16,7 @@
   const role = () => sessionStorage.getItem(ROLE_KEY) || 'admin';
   const uid = () => sessionStorage.getItem(UID_KEY) || '';
   const isViewer = () => role() === 'viewer';
-  const isReadonly = () => role() === 'viewer' || role() === 'print'; // no delete/status on the reg table
+  const isReadonly = () => ['viewer', 'print', 'staff'].includes(role()); // no delete/status on the reg table
 
   const esc = (s) =>
     String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
@@ -56,10 +56,10 @@
 
   // Which views each role may see (and the loader for each).
   const VIEWS = {
-    registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer', 'print'], load: () => loadRegistrations() },
+    registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer', 'print', 'staff'], load: () => loadRegistrations() },
     messages:      { el: 'viewMessages',      roles: ['admin', 'viewer'], load: () => loadMessages() },
     archived:      { el: 'viewArchived',      roles: ['admin', 'viewer'], load: () => loadArchived() },
-    idcards:       { el: 'viewIdcards',       roles: ['admin', 'print'],  load: () => loadCards() },
+    idcards:       { el: 'viewIdcards',       roles: ['admin', 'print', 'staff'],  load: () => loadCards() },
     meals:         { el: 'viewMeals',         roles: ['admin'],           load: () => loadMeals() },
     checkins:      { el: 'viewCheckins',      roles: ['admin'],           load: () => loadCheckins() },
     import:        { el: 'viewImport',        roles: ['admin'],           load: () => {} },
@@ -89,7 +89,7 @@
   // Load every view the current role can access (keeps tab badges accurate).
   function reloadAll() {
     const r = role();
-    if (r === 'print') { loadRegistrations(); return; } // print: registrations + ID cards only
+    if (r === 'print' || r === 'staff') { loadRegistrations(); return; } // staff/print: registrations + ID cards
     if (VIEWS.registrations.roles.includes(r)) { loadRegistrations(); loadMessages(); loadArchived(); }
     if (r === 'admin') { loadMeals(); }
     if (VIEWS.hotels.roles.includes(r)) { loadHotels(); loadHotelBookings(); }
@@ -99,9 +99,11 @@
   function applyRoleUI() {
     const r = role();
     const sub = document.querySelector('.admin-header .brand__sub');
-    if (sub) sub.textContent = r === 'viewer' ? 'Read-only' : r === 'hotel' ? 'Hotel Team' : r === 'print' ? 'ID Cards' : 'Registrations';
+    if (sub) sub.textContent = r === 'viewer' ? 'Read-only' : r === 'hotel' ? 'Hotel Team' : (r === 'print' || r === 'staff') ? 'Help Desk' : 'Registrations';
     const brandName = document.querySelector('.admin-header .brand__name');
-    if (brandName) brandName.textContent = r === 'hotel' ? 'Hotel Admin' : r === 'print' ? 'ID Card Printing' : 'Conclave Admin';
+    if (brandName) brandName.textContent = r === 'hotel' ? 'Hotel Admin' : (r === 'print' || r === 'staff') ? 'Help Desk' : 'Conclave Admin';
+    // Scanner link for staff + admin (gate goes straight to /scan on login).
+    if ($('scannerBtn')) $('scannerBtn').hidden = !(r === 'admin' || r === 'staff');
 
     let firstAllowed = null;
     document.querySelectorAll('.admin-tab').forEach((t) => {
@@ -2029,6 +2031,67 @@
     } catch (e) { alert(e.message); }
     finally { btn.disabled = false; btn.textContent = t; }
   });
+
+  /* ============================================================
+     ON-SPOT REGISTRATION (staff + admin)
+     ============================================================ */
+  function osToggleMethod() {
+    const m = $('osMethod').value;
+    if ($('osShotWrap')) $('osShotWrap').hidden = !(m === 'UPI' || m === 'Bank');
+    if ($('osCashWrap')) $('osCashWrap').hidden = m !== 'Cash';
+  }
+  function openOnspot() {
+    ['osName', 'osOrg', 'osPhone', 'osDesignation', 'osCity', 'osRef', 'osCashBy'].forEach((id) => { if ($(id)) $(id).value = ''; });
+    if ($('osShot')) $('osShot').value = '';
+    if ($('osMethod')) $('osMethod').value = '';
+    osToggleMethod();
+    $('osErr').hidden = true;
+    $('osModal').hidden = false;
+    setTimeout(() => $('osName').focus(), 30);
+  }
+  const onspotBtn = $('onspotBtn');
+  if (onspotBtn) onspotBtn.addEventListener('click', openOnspot);
+  if ($('osMethod')) $('osMethod').addEventListener('change', osToggleMethod);
+  document.querySelectorAll('[data-close-os]').forEach((el) => el.addEventListener('click', () => { $('osModal').hidden = true; }));
+
+  async function saveOnspot(thenPrint) {
+    const err = $('osErr'); err.hidden = true;
+    const fullName = $('osName').value.trim().toUpperCase();
+    const organization = $('osOrg').value.trim().toUpperCase();
+    const designation = $('osDesignation').value.trim().toUpperCase();
+    const city = $('osCity').value.trim().toUpperCase();
+    const mobile = $('osPhone').value.replace(/\D/g, '');
+    const method = $('osMethod').value;
+    const cashBy = $('osCashBy').value.trim().toUpperCase();
+    const ref = $('osRef').value.trim();
+    if (!fullName) { err.textContent = 'Name is required.'; err.hidden = false; return; }
+    if (mobile && !/^\d{10}$/.test(mobile)) { err.textContent = 'Phone must be 10 digits, or leave it blank.'; err.hidden = false; return; }
+    if (!method) { err.textContent = 'Choose a payment method.'; err.hidden = false; return; }
+    const file = $('osShot').files && $('osShot').files[0];
+    if ((method === 'UPI' || method === 'Bank') && !file) { err.textContent = 'Upload the payment screenshot.'; err.hidden = false; return; }
+    if (method === 'Cash' && !cashBy) { err.textContent = 'Enter who received the cash.'; err.hidden = false; return; }
+
+    const fd = new FormData();
+    fd.append('fullName', fullName); fd.append('organization', organization); fd.append('designation', designation);
+    fd.append('city', city); fd.append('mobile', mobile); fd.append('paymentMethod', method);
+    if (method === 'Cash') fd.append('cashCollectedBy', cashBy);
+    else { fd.append('referenceNo', ref); if (file) fd.append('screenshot', file); }
+
+    const btns = [$('osSaveBtn'), $('osSavePrintBtn')]; btns.forEach((b) => { b.disabled = true; });
+    try {
+      const res = await api('/api/registrations/onspot', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not register.');
+      const reg = Object.assign({ organization, designation, city, mobile, status: 'Confirmed', cardPrintedAt: null, source: 'onspot' }, data.registration);
+      records.unshift(reg);
+      $('osModal').hidden = true;
+      renderCards(); renderStats();
+      if (thenPrint) printCards([reg]);
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { btns.forEach((b) => { b.disabled = false; }); }
+  }
+  if ($('osSaveBtn')) $('osSaveBtn').addEventListener('click', () => saveOnspot(false));
+  if ($('osSavePrintBtn')) $('osSavePrintBtn').addEventListener('click', () => saveOnspot(true));
 
   /* ============================================================
      BOOT — auto-login if a token exists
