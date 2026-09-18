@@ -326,15 +326,62 @@ app.post('/api/admin/login', wrap(async (req, res) => {
     return res.json({ ok: true, role: 'gate', token: auth.sign('gate') });
   }
 
+  // Dynamic users created from the admin panel (e.g. 'print' operators).
+  if (!adminOk && !viewerOk && !hotelOk && !gateOk) {
+    let u = null;
+    try { u = await store.findAdminUserByUsername(idStr); } catch (e) { u = null; }
+    if (u && auth.verifyPassword(pwStr, u.passwordHash)) {
+      loginAttempts.delete(key);
+      return res.json({ ok: true, role: u.role, uid: u.id, token: auth.sign(u.role, { uid: u.id }) });
+    }
+  }
+
   loginNoteFail(key);
   res.status(401).json({ ok: false, error: 'Invalid credentials' });
+}));
+
+/* ---- Admin user management (create 'print' operators, etc.) ---- */
+const RESERVED_IDS = [ADMIN_ID, VIEWER_ID, HOTEL_ID, GATE_ID].map((s) => String(s).toLowerCase());
+
+app.get('/api/admin/users', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  res.json({ ok: true, users: await store.listAdminUsers() });
+}));
+
+app.post('/api/admin/users', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const b = req.body || {};
+  const username = String(b.username || '').trim();
+  const password = String(b.password || '');
+  const label = String(b.label || '').trim();
+  const role = 'print'; // only print operators are created from the panel for now
+  if (!/^[a-zA-Z0-9._-]{3,32}$/.test(username)) {
+    return res.status(400).json({ ok: false, error: 'Username: 3–32 letters, numbers, dot, dash or underscore.' });
+  }
+  if (RESERVED_IDS.includes(username.toLowerCase())) {
+    return res.status(400).json({ ok: false, error: 'That username is reserved. Choose another.' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ ok: false, error: 'Password must be at least 6 characters.' });
+  }
+  try {
+    const user = await store.addAdminUser({ username, passwordHash: auth.hashPassword(password), label, role });
+    res.json({ ok: true, user });
+  } catch (e) {
+    if (e && e.code === 'DUPLICATE') return res.status(409).json({ ok: false, error: e.message });
+    throw e;
+  }
+}));
+
+app.delete('/api/admin/users/:id', auth.middleware, auth.requireRole('admin'), wrap(async (req, res) => {
+  const removed = await store.deleteAdminUser(req.params.id);
+  if (!removed) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.json({ ok: true, deleted: true });
 }));
 
 // Logout — tokens are stateless; the client clears its own session.
 app.post('/api/admin/logout', auth.middleware, (req, res) => res.json({ ok: true }));
 
-// Registrations (active list) — admin + viewer only (not the hotel role)
-app.get('/api/registrations', auth.middleware, auth.requireRole('admin', 'viewer'), wrap(async (req, res) => {
+// Registrations (active list) — admin + viewer + print (for ID cards)
+app.get('/api/registrations', auth.middleware, auth.requireRole('admin', 'viewer', 'print'), wrap(async (req, res) => {
   res.json({ ok: true, registrations: await store.listRegistrations() });
 }));
 
@@ -568,8 +615,8 @@ app.delete('/api/hotel-bookings/:id/purge', ...hotelTeam, wrap(async (req, res) 
  * ------------------------------------------------------------------ */
 const adminOnly = [auth.middleware, auth.requireRole('admin')];
 
-// Edit a registrant (fill designation/city, correct details).
-app.patch('/api/registrations/:id', ...adminOnly, wrap(async (req, res) => {
+// Edit a registrant (fill designation/city, correct details). Admin + print.
+app.patch('/api/registrations/:id', auth.middleware, auth.requireRole('admin', 'print'), wrap(async (req, res) => {
   const b = req.body || {};
   const allowed = ['fullName', 'mobile', 'email', 'organization', 'gstNumber', 'designation', 'city'];
   const fields = {};
@@ -638,8 +685,8 @@ app.post('/api/registrations/bulk-import', ...adminOnly, wrap(async (req, res) =
   res.json({ ok: true, report });
 }));
 
-// Mark one or more delegates' ID cards as printed.
-app.post('/api/registrations/mark-printed', ...adminOnly, wrap(async (req, res) => {
+// Mark one or more delegates' ID cards as printed. Admin + print.
+app.post('/api/registrations/mark-printed', auth.middleware, auth.requireRole('admin', 'print'), wrap(async (req, res) => {
   const ids = Array.isArray((req.body || {}).ids) ? req.body.ids : [];
   if (!ids.length) return res.status(400).json({ ok: false, error: 'No ids' });
   const result = await store.markCardPrinted(ids);

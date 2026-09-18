@@ -177,3 +177,20 @@ alter table meal_redemptions alter column redeemed_at set default now();
 
 create index if not exists meal_redemptions_reg_idx  on meal_redemptions (registration_id);
 create index if not exists meal_redemptions_meal_idx on meal_redemptions (meal_id);
+
+-- ============================================================
+--  ADMIN USERS — extra logins created from the admin panel
+--  (e.g. 'print' operators who print ID cards). Passwords are
+--  stored as scrypt hashes, never plaintext.
+-- ============================================================
+create table if not exists admin_users (
+  id            uuid primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  username      text unique not null,
+  password_hash text not null,
+  label         text,
+  role          text not null default 'print',
+  active        boolean not null default true
+);
+alter table admin_users alter column id set default gen_random_uuid();
+alter table admin_users alter column created_at set default now();

@@ -78,6 +78,7 @@
         <button class="admin-tab" data-view="meals" hidden>Meals &amp; Events</button>
         <button class="admin-tab" data-view="checkins" hidden>Check-ins</button>
         <button class="admin-tab" data-view="import" hidden>Import</button>
+        <button class="admin-tab" data-view="users" hidden>Users</button>
         <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
         <button class="admin-tab" data-view="hotelBookings" hidden>Hotel Bookings <span class="tab-badge" id="hbBadge" hidden>0</span></button>
       </nav>
@@ -270,8 +271,9 @@
             <label>Card size (inches)
               <span class="ps-custom"><input type="number" id="psCardW" step="0.1" min="1" value="3.5" /> × <input type="number" id="psCardH" step="0.1" min="1" value="5" /></span>
             </label>
-            <label>Top margin (mm) <span class="cell-muted">from paper top</span><input type="number" id="psTop" step="1" value="0" /></label>
-            <label class="card-align__check"><input type="checkbox" id="psCenter" checked /> Center on page</label>
+            <label class="card-align__check"><input type="checkbox" id="psCenterV" /> Center vertically</label>
+            <label id="psTopWrap">Top margin (mm) <span class="cell-muted">from paper top</span><input type="number" id="psTop" step="1" value="0" /></label>
+            <label class="card-align__check"><input type="checkbox" id="psCenter" checked /> Center horizontally</label>
             <label id="psLeftWrap" hidden>Left margin (mm)<input type="number" id="psLeft" step="1" value="0" /></label>
           </div>
           <div class="card-align__row">
@@ -401,6 +403,28 @@
           <div id="importReport" class="import-report" hidden></div>
         </div>
       </div><!-- /viewImport -->
+
+      <!-- ===== USERS (print operators) VIEW ===== -->
+      <div id="viewUsers" hidden>
+        <p class="archived-note">Create <strong>ID-card printing</strong> logins for your team. Each person signs in with their own username, sees only <strong>Registrations</strong> and <strong>ID Cards</strong>, and sets their <strong>own printer settings</strong> on their own device. They can print and edit card details but <strong>cannot</strong> delete anyone, import, or touch hotels / enquiries.</p>
+        <div class="hotel-admin-add">
+          <h3>Add a print user</h3>
+          <div class="meal-admin-form">
+            <input id="puName" placeholder="Name / label (optional)" />
+            <input id="puUser" placeholder="Username (login)" autocomplete="off" />
+            <input id="puPass" type="text" placeholder="Password" autocomplete="off" />
+            <button class="btn btn-primary" id="puAddBtn">Add User</button>
+          </div>
+          <p class="login-error" id="puAddErr" hidden></p>
+        </div>
+        <div class="table-wrap">
+          <table class="reg-table">
+            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="usersTbody"></tbody>
+          </table>
+          <div class="table-empty" id="usersEmpty" hidden>No print users yet — add one above.</div>
+        </div>
+      </div><!-- /viewUsers -->
 
       <!-- ===== HOTELS (management) VIEW ===== -->
       <div id="viewHotels" hidden>

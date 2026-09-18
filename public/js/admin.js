@@ -8,12 +8,15 @@
 (function () {
   const TOKEN_KEY = 'nepa_admin_token';
   const ROLE_KEY = 'nepa_admin_role';
+  const UID_KEY = 'nepa_admin_uid';
 
   /* ---------------- helpers ---------------- */
   const $ = (id) => document.getElementById(id);
   const token = () => sessionStorage.getItem(TOKEN_KEY);
   const role = () => sessionStorage.getItem(ROLE_KEY) || 'admin';
+  const uid = () => sessionStorage.getItem(UID_KEY) || '';
   const isViewer = () => role() === 'viewer';
+  const isReadonly = () => role() === 'viewer' || role() === 'print'; // no delete/status on the reg table
 
   const esc = (s) =>
     String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
@@ -53,13 +56,14 @@
 
   // Which views each role may see (and the loader for each).
   const VIEWS = {
-    registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer'], load: () => loadRegistrations() },
+    registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer', 'print'], load: () => loadRegistrations() },
     messages:      { el: 'viewMessages',      roles: ['admin', 'viewer'], load: () => loadMessages() },
     archived:      { el: 'viewArchived',      roles: ['admin', 'viewer'], load: () => loadArchived() },
-    idcards:       { el: 'viewIdcards',       roles: ['admin'],           load: () => loadCards() },
+    idcards:       { el: 'viewIdcards',       roles: ['admin', 'print'],  load: () => loadCards() },
     meals:         { el: 'viewMeals',         roles: ['admin'],           load: () => loadMeals() },
     checkins:      { el: 'viewCheckins',      roles: ['admin'],           load: () => loadCheckins() },
     import:        { el: 'viewImport',        roles: ['admin'],           load: () => {} },
+    users:         { el: 'viewUsers',         roles: ['admin'],           load: () => loadUsers() },
     hotels:        { el: 'viewHotels',        roles: ['admin', 'hotel'],  load: () => loadHotels() },
     hotelBookings: { el: 'viewHotelBookings', roles: ['admin', 'hotel'],  load: () => loadHotelBookings() },
   };
@@ -77,12 +81,14 @@
     loginScreen.hidden = true;
     dashboard.hidden = false;
     applyRoleUI();
+    reinitPrintSettings();
     reloadAll();
   }
 
   // Load every view the current role can access (keeps tab badges accurate).
   function reloadAll() {
     const r = role();
+    if (r === 'print') { loadRegistrations(); return; } // print: registrations + ID cards only
     if (VIEWS.registrations.roles.includes(r)) { loadRegistrations(); loadMessages(); loadArchived(); }
     if (r === 'admin') { loadMeals(); }
     if (VIEWS.hotels.roles.includes(r)) { loadHotels(); loadHotelBookings(); }
@@ -92,9 +98,9 @@
   function applyRoleUI() {
     const r = role();
     const sub = document.querySelector('.admin-header .brand__sub');
-    if (sub) sub.textContent = r === 'viewer' ? 'Read-only' : r === 'hotel' ? 'Hotel Team' : 'Registrations';
+    if (sub) sub.textContent = r === 'viewer' ? 'Read-only' : r === 'hotel' ? 'Hotel Team' : r === 'print' ? 'ID Cards' : 'Registrations';
     const brandName = document.querySelector('.admin-header .brand__name');
-    if (brandName) brandName.textContent = r === 'hotel' ? 'Hotel Admin' : 'Conclave Admin';
+    if (brandName) brandName.textContent = r === 'hotel' ? 'Hotel Admin' : r === 'print' ? 'ID Card Printing' : 'Conclave Admin';
 
     let firstAllowed = null;
     document.querySelectorAll('.admin-tab').forEach((t) => {
@@ -131,6 +137,7 @@
       if (!res.ok || !data.ok) throw new Error(data.error || 'Invalid credentials');
       sessionStorage.setItem(TOKEN_KEY, data.token);
       sessionStorage.setItem(ROLE_KEY, data.role || 'admin');
+      if (data.uid) sessionStorage.setItem(UID_KEY, data.uid); else sessionStorage.removeItem(UID_KEY);
       $('adminPassword').value = '';
       showDashboard();
     } catch (err) {
@@ -146,6 +153,7 @@
     catch (e) { /* ignore */ }
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(ROLE_KEY);
+    sessionStorage.removeItem(UID_KEY);
     showLogin();
   }
   $('logoutBtn').addEventListener('click', handleLogout);
@@ -249,7 +257,7 @@
       const badge = `<span class="status-badge status-badge--${confirmed ? 'confirmed' : 'pending'}">${confirmed ? 'Confirmed' : 'Pending'}</span>`;
       // Viewer sees just the badge; admin gets an explicit action so it's
       // obvious what clicking does ("Click to confirm" / "Undo").
-      const statusCell = isViewer()
+      const statusCell = isReadonly()
         ? badge
         : `<div class="status-set">
              ${badge}
@@ -257,7 +265,7 @@
                ? `<button class="status-action status-action--undo" data-toggle="${esc(r.id)}" title="Revert to Pending">Undo</button>`
                : `<button class="status-action status-action--confirm" data-toggle="${esc(r.id)}">Click to confirm</button>`}
            </div>`;
-      const actionsCell = isViewer()
+      const actionsCell = isReadonly()
         ? '<span class="cell-muted">—</span>'
         : `<button class="btn-delete" data-delete="${esc(r.id)}" title="Delete">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
@@ -850,12 +858,15 @@
      from their own laptop/printer, so per-device settings = per-user settings. */
   const IN = 25.4;
   const PAPER = { A4: { w: 210, h: 297 }, A5: { w: 148, h: 210 }, A6: { w: 105, h: 148 }, Letter: { w: 216, h: 279 }, B4: { w: 250, h: 353 } };
-  const PRINT_KEY = 'nepa_card_print';
-  const printSettings = {
+  // Settings are keyed per user so each operator keeps their own printer setup
+  // (even if they share a device); falls back to role for the built-in admin.
+  const printKey = () => 'nepa_card_print_' + (uid() || role());
+  const PS_DEFAULTS = {
     paper: 'Card35', pageW: 210, pageH: 297, orient: 'portrait',
-    cardW: 3.5, cardH: 5, top: 0, center: true, left: 0,
+    cardW: 3.5, cardH: 5, top: 0, center: true, left: 0, centerV: false,
     x: 0, y: 0, scale: 100, tpl: false, locked: false,
   };
+  const printSettings = Object.assign({}, PS_DEFAULTS);
 
   function cardMm() { return { w: (Number(printSettings.cardW) || 3.5) * IN, h: (Number(printSettings.cardH) || 5) * IN }; }
   function pageDims() {
@@ -872,21 +883,33 @@
     const hz = printSettings.center
       ? `--card-left:50%;--card-ml:calc(${c.w}mm / -2)`
       : `--card-left:${Number(printSettings.left) || 0}mm;--card-ml:0mm`;
+    // Vertical: either centered on the selected paper (dynamic) or a manual top margin.
+    const topMm = printSettings.centerV ? Math.max(0, (pg.h - c.h) / 2) : (Number(printSettings.top) || 0);
     return `--page-w:${pg.w}mm;--page-h:${pg.h}mm;--card-w:${c.w}mm;--card-h:${c.h}mm;` +
-      `--card-top:${Number(printSettings.top) || 0}mm;${hz};--fs:${c.h / 353};` +
+      `--card-top:${topMm}mm;${hz};--fs:${c.h / 353};` +
       `--nx:${Number(printSettings.x) || 0}mm;--ny:${Number(printSettings.y) || 0}mm;--scale:${(Number(printSettings.scale) || 100) / 100}`;
   }
   function applyVars(el) { el.setAttribute('style', varsStyle()); }
 
   function loadPrintSettings() {
-    try { const s = JSON.parse(localStorage.getItem(PRINT_KEY) || 'null'); if (s) Object.assign(printSettings, s); }
+    Object.assign(printSettings, PS_DEFAULTS); // reset, then load this user's saved settings
+    try { const s = JSON.parse(localStorage.getItem(printKey()) || 'null'); if (s) Object.assign(printSettings, s); }
     catch (e) { /* ignore */ }
   }
-  function savePrintSettings() { try { localStorage.setItem(PRINT_KEY, JSON.stringify(printSettings)); } catch (e) { /* ignore */ } }
+  // Re-load settings for the current user (called after login).
+  function reinitPrintSettings() {
+    if (!$('psPaper')) return;
+    loadPrintSettings();
+    fillPrintUI();
+    applyLockUI();
+  }
+  function savePrintSettings() { try { localStorage.setItem(printKey(), JSON.stringify(printSettings)); } catch (e) { /* ignore */ } }
 
   function togglePaperExtras() {
     if ($('psCustom')) $('psCustom').hidden = $('psPaper').value !== 'Custom';
     if ($('psLeftWrap')) $('psLeftWrap').hidden = !!($('psCenter') && $('psCenter').checked);
+    // Top margin only applies when NOT vertically centered.
+    if ($('psTopWrap')) $('psTopWrap').hidden = !!($('psCenterV') && $('psCenterV').checked);
   }
 
   function readPrintUI() {
@@ -898,6 +921,7 @@
     if (g('psCardW')) printSettings.cardW = Number(g('psCardW').value) || 3.5;
     if (g('psCardH')) printSettings.cardH = Number(g('psCardH').value) || 5;
     if (g('psTop')) printSettings.top = Number(g('psTop').value) || 0;
+    if (g('psCenterV')) printSettings.centerV = g('psCenterV').checked;
     if (g('psCenter')) printSettings.center = g('psCenter').checked;
     if (g('psLeft')) printSettings.left = Number(g('psLeft').value) || 0;
     if (g('alignX')) printSettings.x = Number(g('alignX').value) || 0;
@@ -911,13 +935,14 @@
     const set = (id, v) => { const el = $(id); if (el) { if (el.type === 'checkbox') el.checked = !!v; else el.value = v; } };
     set('psPaper', printSettings.paper); set('psCustomW', printSettings.pageW); set('psCustomH', printSettings.pageH);
     set('psOrient', printSettings.orient); set('psCardW', printSettings.cardW); set('psCardH', printSettings.cardH);
-    set('psTop', printSettings.top); set('psCenter', printSettings.center); set('psLeft', printSettings.left);
+    set('psTop', printSettings.top); set('psCenterV', printSettings.centerV);
+    set('psCenter', printSettings.center); set('psLeft', printSettings.left);
     set('alignX', printSettings.x); set('alignY', printSettings.y); set('alignScale', printSettings.scale);
     set('alignTemplate', printSettings.tpl);
     togglePaperExtras();
   }
 
-  const PS_FIELDS = ['psPaper', 'psCustomW', 'psCustomH', 'psOrient', 'psCardW', 'psCardH', 'psTop', 'psCenter', 'psLeft', 'alignX', 'alignY', 'alignScale', 'alignTemplate'];
+  const PS_FIELDS = ['psPaper', 'psCustomW', 'psCustomH', 'psOrient', 'psCardW', 'psCardH', 'psTop', 'psCenterV', 'psCenter', 'psLeft', 'alignX', 'alignY', 'alignScale', 'alignTemplate'];
   function applyLockUI() {
     const locked = !!printSettings.locked;
     PS_FIELDS.forEach((id) => { const el = $(id); if (el) el.disabled = locked; });
@@ -1561,6 +1586,73 @@
       alert(`Registered ${data.registration.fullName} — ${data.registration.regId}.`);
     } catch (e) { err.textContent = e.message; err.hidden = false; }
     finally { mrSaveBtn.disabled = false; mrSaveBtn.textContent = t; }
+  });
+
+  /* ============================================================
+     USERS — create / list / delete print operators (admin only)
+     ============================================================ */
+  let adminUsers = [];
+  async function loadUsers() {
+    if (!$('usersTbody')) return;
+    try {
+      const res = await api('/api/admin/users');
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load users');
+      adminUsers = data.users || [];
+      renderUsers();
+    } catch (err) { if ($('puAddErr')) { $('puAddErr').textContent = err.message; $('puAddErr').hidden = false; } }
+  }
+
+  function renderUsers() {
+    const tbody = $('usersTbody'); if (!tbody) return;
+    if ($('usersEmpty')) $('usersEmpty').hidden = adminUsers.length > 0;
+    tbody.innerHTML = adminUsers.map((u) => `
+      <tr>
+        <td>${u.label ? esc(u.label) : '<span class="cell-muted">—</span>'}</td>
+        <td class="cell-name">${esc(u.username)}</td>
+        <td><span class="meal-badge meal-badge--meal">${esc(u.role || 'print')}</span></td>
+        <td class="cell-muted">${esc(fmtDate(u.createdAt))}</td>
+        <td><button class="btn-delete" data-userdelete="${esc(u.id)}" title="Remove user">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7" stroke-linecap="round"/></svg>
+        </button></td>
+      </tr>`).join('');
+  }
+
+  const puAddBtn = $('puAddBtn');
+  if (puAddBtn) puAddBtn.addEventListener('click', async () => {
+    const err = $('puAddErr'); err.hidden = true;
+    const username = $('puUser').value.trim();
+    const password = $('puPass').value;
+    const label = $('puName').value.trim();
+    if (!username) { err.textContent = 'Username is required.'; err.hidden = false; return; }
+    if (password.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.hidden = false; return; }
+    puAddBtn.disabled = true;
+    try {
+      const res = await api('/api/admin/users', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, label }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not add user.');
+      $('puUser').value = ''; $('puPass').value = ''; $('puName').value = '';
+      loadUsers();
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { puAddBtn.disabled = false; }
+  });
+
+  const usersTbody = $('usersTbody');
+  if (usersTbody) usersTbody.addEventListener('click', async (e) => {
+    const del = e.target.closest('[data-userdelete]');
+    if (!del) return;
+    const id = del.dataset.userdelete;
+    const u = adminUsers.find((x) => x.id === id);
+    if (!confirm(`Remove login "${u ? u.username : ''}"? They will no longer be able to sign in.`)) return;
+    try {
+      const res = await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not remove.');
+      adminUsers = adminUsers.filter((x) => x.id !== id);
+      renderUsers();
+    } catch (err) { alert(err.message); }
   });
 
   /* ============================================================
