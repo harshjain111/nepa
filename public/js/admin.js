@@ -994,13 +994,21 @@
     const rows = filteredCards();
     if ($('cardEmpty')) $('cardEmpty').hidden = rows.length > 0;
     const miss = '<span class="cell-missing">—</span>';
-    tbody.innerHTML = rows.map((r) => `
+    tbody.innerHTML = rows.map((r) => {
+      const methodCell = r.paymentMethod ? `<span class="pill pill--method">${esc(r.paymentMethod)}</span>` : miss;
+      const payCell = r.screenshotUrl
+        ? `<button class="link-view" data-view="${esc(r.screenshotUrl)}">View</button>`
+        : (r.note ? `<span class="cell-muted" style="font-size:.76rem">${esc(r.note)}</span>`
+          : (r.referenceNo ? `<span class="cell-muted">${esc(r.referenceNo)}</span>` : miss));
+      return `
       <tr>
         <td class="card-check-col"><input type="checkbox" data-cardcheck="${esc(r.id)}" ${selectedCards.has(r.id) ? 'checked' : ''} /></td>
         <td class="cell-name">${esc(r.fullName)}</td>
         <td>${r.organization ? esc(r.organization) : miss}</td>
         <td>${r.designation ? esc(r.designation) : miss}</td>
         <td>${r.city ? esc(r.city) : miss}</td>
+        <td>${methodCell}</td>
+        <td>${payCell}</td>
         <td class="cell-muted">${esc(r.regId)}</td>
         <td class="cell-muted">${r.cardPrintedAt ? esc(fmtDate(r.cardPrintedAt)) : '—'}</td>
         <td>
@@ -1010,7 +1018,8 @@
             <button class="status-action status-action--undo" data-cardedit="${esc(r.id)}">✎ Edit</button>
           </div>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
     updatePrintBtn();
     const head = $('cardHeadCheck');
     if (head) head.checked = rows.length > 0 && rows.every((r) => selectedCards.has(r.id));
@@ -1065,6 +1074,8 @@
     const prev = e.target.closest('[data-cardpreview]');
     const prn = e.target.closest('[data-cardprint]');
     const ed = e.target.closest('[data-cardedit]');
+    const view = e.target.closest('[data-view]');
+    if (view) { openLightbox(view.dataset.view); return; }
     if (chk) { const id = chk.dataset.cardcheck; if (chk.checked) selectedCards.add(id); else selectedCards.delete(id); updatePrintBtn(); return; }
     if (prev) { openCardPreview(prev.dataset.cardpreview); return; }
     if (prn) { const r = records.find((x) => x.id === prn.dataset.cardprint); if (r) printCards([r]); return; }
@@ -1572,7 +1583,8 @@
   }
   function closeManual() { $('manualModal').hidden = true; }
   const manualRegBtn = $('manualRegBtn');
-  if (manualRegBtn) manualRegBtn.addEventListener('click', openManual);
+  // The Registrations page uses the SAME on-spot form as the ID Cards page.
+  if (manualRegBtn) manualRegBtn.addEventListener('click', () => openOnspot());
   document.querySelectorAll('[data-close-manual]').forEach((el) => el.addEventListener('click', closeManual));
 
   const mrSaveBtn = $('mrSaveBtn');
@@ -2154,6 +2166,7 @@
       records.unshift(reg);
       closeOnspot();
       renderCards(); renderStats();
+      if (typeof renderTable === 'function') renderTable(); // reflect it on the Registrations page too
       if (thenPrint) printCards([reg]);
     } catch (e) { err.textContent = e.message; err.hidden = false; }
     finally { btns.forEach((b) => { b.disabled = false; }); }
