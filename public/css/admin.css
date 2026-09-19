@@ -5,6 +5,10 @@
 
 .admin-body { background: var(--ivory-2); }
 
+/* Dashboard */
+.dash-section-title { margin: 24px 0 10px; font-family: var(--font-display, 'Cormorant Garamond', serif); color: var(--green); font-size: 1.35rem; }
+.dash-totals td { font-weight: 700; border-top: 2px solid var(--gold-soft); background: rgba(245,236,214,.55); }
+
 /* ===================== LOGIN ===================== */
 .login-screen {
   min-height: 100vh;

@@ -72,7 +72,8 @@
     <main class="container admin-main">
       <!-- View tabs -->
       <nav class="admin-tabs" id="adminTabs">
-        <button class="admin-tab is-active" data-view="registrations">Registrations</button>
+        <button class="admin-tab is-active" data-view="dashboard" hidden>Dashboard</button>
+        <button class="admin-tab" data-view="registrations">Registrations</button>
         <button class="admin-tab" data-view="messages">Enquiries <span class="tab-badge" id="msgBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="archived">Archived <span class="tab-badge" id="archivedBadge" hidden>0</span></button>
         <button class="admin-tab" data-view="idcards" hidden>ID Cards</button>
@@ -84,6 +85,48 @@
         <button class="admin-tab" data-view="hotels" hidden>Hotels</button>
         <button class="admin-tab" data-view="hotelBookings" hidden>Hotel Bookings <span class="tab-badge" id="hbBadge" hidden>0</span></button>
       </nav>
+
+      <!-- ===== DASHBOARD VIEW ===== -->
+      <div id="viewDashboard" hidden>
+        <p class="archived-note">Live overview — total registrations, delegate details, and how many delegate passes are still left to register per company.</p>
+        <section class="stat-grid">
+          <div class="stat-card"><span class="stat-card__label">Total Delegates</span><span class="stat-card__value" id="dashDelegates">0</span><span class="stat-card__sub">excludes exhibitors</span></div>
+          <div class="stat-card"><span class="stat-card__label">Exhibitors</span><span class="stat-card__value" id="dashExhibitors">0</span></div>
+          <div class="stat-card"><span class="stat-card__label">Party Passes Paid</span><span class="stat-card__value" id="dashPaid">0</span><span class="stat-card__sub" id="dashPaidSub">across companies</span></div>
+          <div class="stat-card"><span class="stat-card__label">Registered (party)</span><span class="stat-card__value" id="dashRegistered">0</span></div>
+          <div class="stat-card stat-card--accent"><span class="stat-card__label">Remaining Passes</span><span class="stat-card__value" id="dashRemaining">0</span><span class="stat-card__sub" id="dashRemainingSub">still to register</span></div>
+        </section>
+
+        <section class="breakdown-grid">
+          <div class="breakdown-card"><h3>Delegates by source</h3><ul id="dashBySource"></ul></div>
+          <div class="breakdown-card"><h3>By fee type</h3><ul id="dashByFee"></ul></div>
+          <div class="breakdown-card"><h3>By status</h3><ul id="dashByStatus"></ul></div>
+        </section>
+
+        <h3 class="dash-section-title">Remaining to register — by company</h3>
+        <section class="toolbar toolbar--cards">
+          <div class="toolbar__filters">
+            <input type="search" id="dashSearch" class="toolbar__search" placeholder="Search company…" />
+            <select id="dashFilter" class="toolbar__select" aria-label="Filter companies">
+              <option value="remaining">Remaining first</option>
+              <option value="pending">Only with passes left</option>
+              <option value="done">Only fully registered</option>
+              <option value="nocount">Only need accountant count</option>
+              <option value="name">Company A–Z</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" id="dashExportBtn">Export to Excel</button>
+        </section>
+
+        <section class="table-wrap">
+          <table class="reg-table">
+            <thead><tr><th>Company</th><th>Paid</th><th>Registered</th><th>Remaining</th><th>Status</th></tr></thead>
+            <tbody id="dashTbody"></tbody>
+            <tfoot><tr id="dashTotals" class="dash-totals"></tr></tfoot>
+          </table>
+          <div class="table-empty" id="dashEmpty" hidden>No companies match.</div>
+        </section>
+      </div><!-- /viewDashboard -->
 
       <!-- ===== REGISTRATIONS VIEW ===== -->
       <div id="viewRegistrations">

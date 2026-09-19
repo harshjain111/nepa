@@ -59,6 +59,7 @@
 
   // Which views each role may see (and the loader for each).
   const VIEWS = {
+    dashboard:     { el: 'viewDashboard',     roles: ['admin', 'viewer'], load: () => loadDashboard() },
     registrations: { el: 'viewRegistrations', roles: ['admin', 'viewer', 'print', 'staff'], load: () => loadRegistrations() },
     messages:      { el: 'viewMessages',      roles: ['admin', 'viewer'], load: () => loadMessages() },
     archived:      { el: 'viewArchived',      roles: ['admin', 'viewer'], load: () => loadArchived() },
@@ -94,6 +95,7 @@
     const r = role();
     if (r === 'print' || r === 'staff') { loadRegistrations(); return; } // staff/print: registrations + ID cards
     if (VIEWS.registrations.roles.includes(r)) { loadRegistrations(); loadMessages(); loadArchived(); }
+    if (VIEWS.dashboard.roles.includes(r)) { loadDashboard(); }
     if (r === 'admin') { loadMeals(); }
     if (VIEWS.hotels.roles.includes(r)) { loadHotels(); loadHotelBookings(); }
   }
@@ -239,6 +241,107 @@
     document.querySelector('[data-status-confirmed]').textContent = confirmed;
     document.querySelector('[data-status-pending]').textContent = pending;
   }
+
+  /* ============================================================
+     DASHBOARD (admin/viewer) — totals, delegate details, remaining per company
+     ============================================================ */
+  let dashParties = [];
+  async function loadDashboard() {
+    if (!$('viewDashboard')) return;
+    try {
+      if (!records.length) { await loadRegistrations(); }
+      const res = await api('/api/parties');
+      const data = await res.json();
+      dashParties = (res.ok && data.ok) ? (data.parties || []) : [];
+      renderDashboard();
+    } catch (e) { /* non-fatal */ }
+  }
+
+  function renderDashboard() {
+    if (!$('dashTbody')) return;
+    const delegates = records.filter((r) => !isExhibitor(r));
+    const exhibitors = records.filter(isExhibitor);
+    const withCount = dashParties.filter((p) => p.paidCount != null);
+    const noCount = dashParties.length - withCount.length;
+    const totalPaid = withCount.reduce((s, p) => s + (Number(p.paidCount) || 0), 0);
+    const totalReg = withCount.reduce((s, p) => s + (Number(p.filled) || 0), 0);
+    const totalRemaining = withCount.reduce((s, p) => s + Math.max(0, (Number(p.paidCount) || 0) - (Number(p.filled) || 0)), 0);
+    const n = (x) => Number(x || 0).toLocaleString('en-IN');
+    $('dashDelegates').textContent = n(delegates.length);
+    $('dashExhibitors').textContent = n(exhibitors.length);
+    $('dashPaid').textContent = n(totalPaid);
+    $('dashRegistered').textContent = n(totalReg);
+    $('dashRemaining').textContent = n(totalRemaining);
+    if ($('dashPaidSub')) $('dashPaidSub').textContent = `${withCount.length} companies${noCount ? ` · ${noCount} need count` : ''}`;
+
+    // delegate breakdowns (exhibitors excluded)
+    const tally = (arr, keyFn) => { const m = {}; arr.forEach((x) => { const k = keyFn(x) || '—'; m[k] = (m[k] || 0) + 1; }); return m; };
+    const liList = (m) => Object.entries(m).sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `<li><span>${esc(k)}</span><strong>${v}</strong></li>`).join('')
+      || '<li><span class="cell-muted">None</span><strong>0</strong></li>';
+    const srcLabel = { web: 'Website', helpdesk: 'Help desk (party)', onspot: 'On-spot', 'offline-import': 'Imported', manual: 'Manual' };
+    $('dashBySource').innerHTML = liList(tally(delegates, (r) => srcLabel[r.source] || r.source || 'Website'));
+    $('dashByFee').innerHTML = liList(tally(delegates, (r) => r.feeType || '—'));
+    $('dashByStatus').innerHTML = liList(tally(delegates, (r) => r.status || '—'));
+
+    renderDashTable();
+  }
+
+  function dashRows() {
+    const q = ($('dashSearch').value || '').trim().toLowerCase();
+    const mode = $('dashFilter').value;
+    let rows = dashParties.map((p) => {
+      const paid = p.paidCount == null ? null : (Number(p.paidCount) || 0);
+      const reg = Number(p.filled) || 0;
+      return { name: p.name, paid, reg, remaining: paid == null ? null : Math.max(0, paid - reg) };
+    });
+    if (q) rows = rows.filter((r) => String(r.name || '').toLowerCase().includes(q));
+    if (mode === 'pending') rows = rows.filter((r) => r.remaining != null && r.remaining > 0);
+    else if (mode === 'done') rows = rows.filter((r) => r.remaining != null && r.remaining === 0);
+    else if (mode === 'nocount') rows = rows.filter((r) => r.paid == null);
+    if (mode === 'name') rows.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    else rows.sort((a, b) => (b.remaining || 0) - (a.remaining || 0) || String(a.name).localeCompare(String(b.name)));
+    return rows;
+  }
+
+  function renderDashTable() {
+    const tb = $('dashTbody'); if (!tb) return;
+    const rows = dashRows();
+    if ($('dashEmpty')) $('dashEmpty').hidden = rows.length > 0;
+    const dash = '<span class="cell-muted">—</span>';
+    tb.innerHTML = rows.map((r) => {
+      let status;
+      if (r.paid == null) status = '<span class="pill pill--no">Need count</span>';
+      else if (r.remaining === 0) status = '<span class="pill pill--yes">Complete</span>';
+      else status = `<span class="pill pill--method">${r.remaining} left</span>`;
+      return `<tr>
+        <td class="cell-name">${esc(r.name)}</td>
+        <td>${r.paid == null ? dash : r.paid}</td>
+        <td>${r.reg}</td>
+        <td>${r.remaining == null ? dash : `<strong>${r.remaining}</strong>`}</td>
+        <td>${status}</td>
+      </tr>`;
+    }).join('');
+    const counted = rows.filter((r) => r.paid != null);
+    const tp = counted.reduce((s, r) => s + r.paid, 0);
+    const trg = counted.reduce((s, r) => s + r.reg, 0);
+    const trem = counted.reduce((s, r) => s + r.remaining, 0);
+    if ($('dashTotals')) $('dashTotals').innerHTML = `<td>Total · ${rows.length} companies</td><td>${tp}</td><td>${trg}</td><td><strong>${trem}</strong></td><td></td>`;
+  }
+
+  if ($('dashSearch')) $('dashSearch').addEventListener('input', renderDashTable);
+  if ($('dashFilter')) $('dashFilter').addEventListener('change', renderDashTable);
+  if ($('dashExportBtn')) $('dashExportBtn').addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') { alert('Excel library not loaded.'); return; }
+    const rows = dashRows().map((r) => ({
+      Company: r.name, Paid: r.paid == null ? '' : r.paid, Registered: r.reg,
+      Remaining: r.remaining == null ? '' : r.remaining,
+      Status: r.paid == null ? 'Need count' : (r.remaining === 0 ? 'Complete' : `${r.remaining} left`),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Remaining by company');
+    XLSX.writeFile(wb, `NEPA-remaining-by-company-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  });
 
   /* ---------- filtering ---------- */
   function filtered() {
