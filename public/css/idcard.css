@@ -69,8 +69,8 @@
   position: absolute;
   left: 50%;
   top: 59.5%;             /* QR CENTRE (% of card height) */
-  width: 19%;             /* % of card width; stays square (fits the blank zone) */
-  height: 19%;            /* fallback for browsers that ignore aspect-ratio */
+  width: 22%;             /* % of card width; stays square (fits the blank zone) */
+  height: 22%;            /* fallback for browsers that ignore aspect-ratio */
   aspect-ratio: 1 / 1;
   padding: 0.8%;          /* transparent quiet zone */
   box-sizing: border-box;
@@ -110,7 +110,7 @@
 /* Vertical CENTRE of each line as a % of card height, and font size scaled by
    --fs (= card height / B4 353mm) so any paper size keeps the same layout.
    Tweak the top % (and the QR top above) to fine-tune placement. */
-.idcard__name        { top: 69.7%; font-size: calc(37pt * var(--fs, 1)); font-weight: 800; }
+.idcard__name        { top: 69.7%; font-size: calc(32pt * var(--fs, 1)); font-weight: 700; }
 .idcard__company     { top: 74.5%; font-size: calc(22pt * var(--fs, 1)); font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
 .idcard__designation { top: 79.0%; font-size: calc(22pt * var(--fs, 1)); font-weight: 500; text-transform: uppercase; }
 .idcard__city        { top: 83.6%; font-size: calc(22pt * var(--fs, 1)); font-weight: 500; text-transform: uppercase; }
