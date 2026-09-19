@@ -45,6 +45,9 @@
   /* ---------------- state ---------------- */
   let records = [];
   let messages = [];
+  // Exhibitors are registered without payment and tracked separately from
+  // delegates (they get a pass but no meals). Identify them either way.
+  const isExhibitor = (r) => r && (r.source === 'exhibitor' || r.feeType === 'Exhibitor');
 
   /* ============================================================
      LOGIN
@@ -205,23 +208,27 @@
   }
 
   function renderStats() {
-    const total = records.length;
-    const members = records.filter((r) => r.nepaMember).length;
-    const early = records.filter((r) => r.feeType === 'Early Bird').length;
-    const spot = records.filter((r) => r.feeType === 'Spot').length;
-    const revenue = records.reduce((s, r) => s + (Number(r.totalAmount) || 0), 0);
-    const confirmed = records.filter((r) => r.status === 'Confirmed').length;
+    // Exhibitors are tracked separately and must NOT inflate the delegate stats.
+    const delegates = records.filter((r) => !isExhibitor(r));
+    const exhibitors = records.filter(isExhibitor);
+    const total = delegates.length;
+    const members = delegates.filter((r) => r.nepaMember).length;
+    const early = delegates.filter((r) => r.feeType === 'Early Bird').length;
+    const spot = delegates.filter((r) => r.feeType === 'Spot').length;
+    const revenue = delegates.reduce((s, r) => s + (Number(r.totalAmount) || 0), 0);
+    const confirmed = delegates.filter((r) => r.status === 'Confirmed').length;
     const pending = total - confirmed;
 
     countUp($('statTotal'), total);
+    if ($('statExhibitors')) countUp($('statExhibitors'), exhibitors.length);
     countUp($('statMembers'), members);
     $('statFeeSplit').textContent = `${early} / ${spot}`;
     $('statRevenue').textContent = inr(revenue);
     countUp($('statConfirmed'), confirmed);
     $('statPending').textContent = `${pending} pending`;
 
-    // breakdown — payment method
-    const byMethod = (m) => records.filter((r) => r.paymentMethod === m).length;
+    // breakdown — payment method (delegates only)
+    const byMethod = (m) => delegates.filter((r) => r.paymentMethod === m).length;
     document.querySelector('[data-method-upi]').textContent = byMethod('UPI');
     document.querySelector('[data-method-bank]').textContent = byMethod('Bank');
     document.querySelector('[data-method-cash]').textContent = byMethod('Cash');

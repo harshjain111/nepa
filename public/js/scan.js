@@ -237,6 +237,9 @@
       const when = data.lastAt ? new Date(data.lastAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '';
       showResult('already', isEvent ? '✕ Already attended' : '✕ Already availed', name, metaBits, `${esc(meal.name)}${isEvent ? ' — attended' : ' taken'}${when ? ' at ' + esc(when) : ''}`);
       buzz([80, 60, 80]);
+    } else if (data.status === 'exhibitor') {
+      showResult('already', '✕ Exhibitor — no meals', name, metaBits, `${esc(meal.name)} is for delegates only. Exhibitors are not entitled to meals / lunch.`);
+      buzz([80, 60, 80]);
     } else if (data.status === 'notfound') {
       showResult('warn', 'Not a valid delegate QR', '', '', 'This code is not a registered delegate.');
       buzz([200]);
