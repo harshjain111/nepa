@@ -772,6 +772,34 @@ async function handleOnspot(req, res, err) {
   res.json({ ok: true, registration: record });
 }
 
+// Exhibitor registration (help desk) — no money involved, just issues a pass.
+app.post('/api/registrations/exhibitor', auth.middleware, auth.requireRole('admin', 'staff', 'print'), wrap(async (req, res) => {
+  const b = req.body || {};
+  const fullName = upper(b.fullName);
+  const organization = upper(b.organization);
+  const designation = upper(b.designation);
+  const city = upper(b.city);
+  const mobile = String(b.mobile || '').replace(/\D/g, '');
+  if (!fullName) return res.status(400).json({ ok: false, error: 'Name is required' });
+  if (!organization) return res.status(400).json({ ok: false, error: 'Company name is required' });
+  if (mobile && !MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Phone must be 10 digits (or leave it blank)' });
+  let record;
+  try {
+    record = await store.addRegistration({
+      fullName, mobile: mobile || null, email: null, organization: organization || null,
+      designation: designation || null, city: city || null, gstNumber: null, nepaMember: false,
+      feeType: 'Exhibitor', delegateFee: 0, membershipFee: 0, subtotal: 0, gstRate: 0, gstAmount: 0,
+      totalAmount: 0, paymentMethod: 'Exhibitor', referenceNo: null, screenshotUrl: null, note: null,
+      source: 'exhibitor', registeredBy: whoami(req),
+    });
+  } catch (e) {
+    if (e && e.code === 'DUPLICATE_MOBILE') return res.status(409).json({ ok: false, error: 'That phone is already registered.' });
+    throw e;
+  }
+  if (record && record.id) { try { await store.setRegistrationStatus(record.id, 'Confirmed'); } catch (e) { /* non-fatal */ } }
+  res.json({ ok: true, registration: record });
+}));
+
 app.post('/api/registrations/manual', ...adminOnly, wrap(async (req, res) => {
   const b = req.body || {};
   const fullName = (b.fullName || '').trim();

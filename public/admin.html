@@ -243,6 +243,7 @@
           </div>
           <div class="card-toolbar-actions">
             <button class="btn btn-primary" id="onspotBtn">＋ On-spot register</button>
+            <button class="btn btn-primary" id="exhibitorBtn">＋ Exhibitor pass</button>
             <button class="btn btn-ghost" id="cardAlignBtn" title="Paper size, scale &amp; position">⚙ Print settings</button>
             <button class="btn btn-ghost" id="cardSelectAllBtn">Select all</button>
             <button class="btn btn-primary" id="cardPrintBtn">Print selected (0)</button>
@@ -743,6 +744,54 @@
       <button class="btn btn-ghost" data-close-os>Cancel</button>
       <button class="btn btn-ghost" id="osSaveBtn">Save</button>
       <button class="btn btn-primary" id="osSavePrintBtn">Save &amp; Print card</button>
+    </footer>
+  </div>
+
+  <!-- ===================== EXHIBITOR REGISTRATION (full-page, no payment) ===================== -->
+  <div class="os-screen" id="exModal" hidden>
+    <header class="os-screen__bar">
+      <button class="os-screen__close" data-close-ex aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+      </button>
+      <div class="os-screen__titles">
+        <span class="eyebrow">Exhibitor registration</span>
+        <h2 class="os-screen__title">New Exhibitor</h2>
+      </div>
+      <div class="os-amount">PASS<small>no payment</small></div>
+    </header>
+
+    <div class="os-screen__body">
+      <form class="os-form" id="exForm" autocomplete="off" onsubmit="return false">
+        <div class="os-field">
+          <label for="exName">Full name <span class="req">*</span></label>
+          <input type="text" id="exName" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="Exhibitor's full name" />
+        </div>
+        <div class="os-field">
+          <label for="exOrg">Company / organisation <span class="req">*</span></label>
+          <input type="text" id="exOrg" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="Company name" />
+        </div>
+        <div class="os-row">
+          <div class="os-field">
+            <label for="exPhone">Phone <span class="opt">optional</span></label>
+            <input type="tel" id="exPhone" class="os-input" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="10-digit mobile" />
+          </div>
+          <div class="os-field">
+            <label for="exCity">City <span class="opt">optional</span></label>
+            <input type="text" id="exCity" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="City" />
+          </div>
+        </div>
+        <div class="os-field">
+          <label for="exDesignation">Designation <span class="opt">optional</span></label>
+          <input type="text" id="exDesignation" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="e.g. Manager" />
+        </div>
+        <p class="login-error" id="exErr" hidden></p>
+      </form>
+    </div>
+
+    <footer class="os-screen__actions">
+      <button class="btn btn-ghost" data-close-ex>Cancel</button>
+      <button class="btn btn-ghost" id="exSaveBtn">Save</button>
+      <button class="btn btn-primary" id="exSavePrintBtn">Save &amp; Print pass</button>
     </footer>
   </div>
 

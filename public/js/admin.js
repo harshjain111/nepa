@@ -2207,6 +2207,57 @@
   if ($('osSavePrintBtn')) $('osSavePrintBtn').addEventListener('click', () => saveOnspot(true));
 
   /* ============================================================
+     EXHIBITOR REGISTRATION (staff + admin) — no payment, just a pass
+     ============================================================ */
+  function openExhibitor() {
+    ['exName', 'exOrg', 'exPhone', 'exDesignation', 'exCity'].forEach((id) => { if ($(id)) $(id).value = ''; });
+    if ($('exErr')) $('exErr').hidden = true;
+    $('exModal').hidden = false;
+    document.body.classList.add('os-open');
+    setTimeout(() => $('exName').focus(), 30);
+  }
+  function closeExhibitor() { $('exModal').hidden = true; document.body.classList.remove('os-open'); }
+  if ($('exhibitorBtn')) $('exhibitorBtn').addEventListener('click', openExhibitor);
+  document.querySelectorAll('[data-close-ex]').forEach((el) => el.addEventListener('click', closeExhibitor));
+  ['exName', 'exOrg', 'exDesignation', 'exCity'].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener('input', () => {
+      const s = el.selectionStart; el.value = el.value.toUpperCase();
+      try { el.setSelectionRange(s, s); } catch (e) { /* ignore */ }
+    });
+  });
+
+  async function saveExhibitor(thenPrint) {
+    const err = $('exErr'); err.hidden = true;
+    const fullName = $('exName').value.trim().toUpperCase();
+    const organization = $('exOrg').value.trim().toUpperCase();
+    const designation = $('exDesignation').value.trim().toUpperCase();
+    const city = $('exCity').value.trim().toUpperCase();
+    const mobile = $('exPhone').value.replace(/\D/g, '');
+    if (!fullName) { err.textContent = 'Name is required.'; err.hidden = false; return; }
+    if (!organization) { err.textContent = 'Company name is required.'; err.hidden = false; return; }
+    if (mobile && !/^\d{10}$/.test(mobile)) { err.textContent = 'Phone must be 10 digits, or leave it blank.'; err.hidden = false; return; }
+    const btns = [$('exSaveBtn'), $('exSavePrintBtn')]; btns.forEach((b) => { b.disabled = true; });
+    try {
+      const res = await api('/api/registrations/exhibitor', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, organization, designation, city, mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not register.');
+      const reg = Object.assign({ organization, designation, city, mobile, status: 'Confirmed', cardPrintedAt: null, source: 'exhibitor' }, data.registration);
+      records.unshift(reg);
+      closeExhibitor();
+      renderCards(); renderStats();
+      if (typeof renderTable === 'function') renderTable();
+      if (thenPrint) printCards([reg]);
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { btns.forEach((b) => { b.disabled = false; }); }
+  }
+  if ($('exSaveBtn')) $('exSaveBtn').addEventListener('click', () => saveExhibitor(false));
+  if ($('exSavePrintBtn')) $('exSavePrintBtn').addEventListener('click', () => saveExhibitor(true));
+
+  /* ============================================================
      BOOT — auto-login if a token exists
      ============================================================ */
   if (token()) showDashboard();
