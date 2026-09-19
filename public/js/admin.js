@@ -1005,8 +1005,8 @@
         <td class="cell-muted">${r.cardPrintedAt ? esc(fmtDate(r.cardPrintedAt)) : '—'}</td>
         <td>
           <div class="status-set">
+            <button class="status-action status-action--confirm card-reprint-btn" data-cardprint="${esc(r.id)}">${r.cardPrintedAt ? '🖨 Reprint' : '🖨 Print'}</button>
             <button class="status-action" data-cardpreview="${esc(r.id)}">Preview</button>
-            <button class="status-action status-action--confirm" data-cardprint="${esc(r.id)}">Print</button>
             <button class="status-action status-action--undo" data-cardedit="${esc(r.id)}">✎ Edit</button>
           </div>
         </td>

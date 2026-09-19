@@ -228,11 +228,11 @@
 
       <!-- ===== ID CARDS VIEW ===== -->
       <div id="viewIdcards" hidden>
-        <p class="archived-note">Search a delegate to print their ID card, or print in bulk. The card background is <strong>pre-printed</strong> (3.5 × 5 in) — this prints only the name, company, designation, city and a unique QR onto it. Set the fields with the ✎ Edit button on each row. Open <strong>⚙ Print settings</strong> to choose your paper, position and scale, and print a test page to check alignment.</p>
+        <p class="archived-note"><strong>To reprint a card:</strong> search the delegate by <strong>name or phone number</strong> below and press <strong>🖨 Reprint</strong> on their row — reprinting never creates a new registration or uses another delegate's pass. The card background is <strong>pre-printed</strong> (3.5 × 5 in) — this prints only the name, company, designation, city and a unique QR onto it. Set the fields with the ✎ Edit button on each row. Open <strong>⚙ Print settings</strong> to choose your paper, position and scale, and print a test page to check alignment.</p>
 
         <section class="toolbar toolbar--cards">
           <div class="toolbar__filters">
-            <input type="search" id="cardSearch" class="toolbar__search" placeholder="Search name, mobile, company…" />
+            <input type="search" id="cardSearch" class="toolbar__search" placeholder="Search name / phone / company to reprint…" inputmode="search" />
             <select id="cardFilter" class="toolbar__select" aria-label="Filter cards">
               <option value="">All delegates</option>
               <option value="ready">Ready (has designation + city)</option>

@@ -253,6 +253,8 @@
 .status-action--confirm:hover { filter: brightness(.96); }
 .status-action--undo { background: none; color: var(--muted); text-decoration: underline; padding: 2px 4px; }
 .status-action--undo:hover { color: var(--sienna); }
+/* Reprint is the primary action on a delegate row — make it the obvious target. */
+.card-reprint-btn { font-size: .82rem; padding: 8px 18px; }
 
 .link-view { color: var(--green); font-weight: 600; cursor: pointer; background: none; border: 0; font-family: var(--font-body); font-size: .84rem; text-decoration: underline; }
 .link-view:hover { color: var(--sienna); }
