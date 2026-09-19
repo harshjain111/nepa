@@ -741,8 +741,8 @@ async function handleOnspot(req, res, err) {
   if (!fullName) return res.status(400).json({ ok: false, error: 'Name is required' });
   if (mobile && !MOBILE_RE.test(mobile)) return res.status(400).json({ ok: false, error: 'Phone must be 10 digits (or leave it blank)' });
   if (!VALID_METHODS.includes(paymentMethod)) return res.status(400).json({ ok: false, error: 'Choose a payment method' });
-  if ((paymentMethod === 'UPI' || paymentMethod === 'Bank') && !req.file) {
-    return res.status(400).json({ ok: false, error: 'Upload the payment screenshot for UPI / Bank' });
+  if ((paymentMethod === 'UPI' || paymentMethod === 'Bank') && !req.file && !referenceNo) {
+    return res.status(400).json({ ok: false, error: 'Attach a payment screenshot or enter the transaction ID for UPI / Bank' });
   }
   if (paymentMethod === 'Cash' && !cashCollectedBy) {
     return res.status(400).json({ ok: false, error: 'Enter who received the cash' });

@@ -285,7 +285,7 @@
           <td>${esc(r.feeType)}</td>
           <td class="cell-amount">${inr(r.totalAmount)}</td>
           <td><span class="pill pill--method">${esc(r.paymentMethod)}</span></td>
-          <td>${r.referenceNo ? esc(r.referenceNo) : '<span class="cell-muted">—</span>'}</td>
+          <td>${r.referenceNo ? esc(r.referenceNo) : '<span class="cell-muted">—</span>'}${r.note ? `<br><span class="cell-muted" style="font-size:.76rem">${esc(r.note)}</span>` : ''}</td>
           <td>${shot}</td>
           <td class="cell-muted">${esc(fmtDate(r.createdAt))}</td>
           <td>${statusCell}</td>
@@ -2094,19 +2094,33 @@
     if ($('osShotWrap')) $('osShotWrap').hidden = !(m === 'UPI' || m === 'Bank');
     if ($('osCashWrap')) $('osCashWrap').hidden = m !== 'Cash';
   }
+  function osSetMethod(m) {
+    if ($('osMethod')) $('osMethod').value = m || '';
+    document.querySelectorAll('[data-osmethod]').forEach((b) => b.classList.toggle('is-active', b.dataset.osmethod === m));
+    osToggleMethod();
+  }
   function openOnspot() {
     ['osName', 'osOrg', 'osPhone', 'osDesignation', 'osCity', 'osRef', 'osCashBy'].forEach((id) => { if ($(id)) $(id).value = ''; });
     if ($('osShot')) $('osShot').value = '';
-    if ($('osMethod')) $('osMethod').value = '';
-    osToggleMethod();
+    osSetMethod('');
     $('osErr').hidden = true;
     $('osModal').hidden = false;
+    document.body.classList.add('os-open');
     setTimeout(() => $('osName').focus(), 30);
   }
+  function closeOnspot() { $('osModal').hidden = true; document.body.classList.remove('os-open'); }
   const onspotBtn = $('onspotBtn');
   if (onspotBtn) onspotBtn.addEventListener('click', openOnspot);
-  if ($('osMethod')) $('osMethod').addEventListener('change', osToggleMethod);
-  document.querySelectorAll('[data-close-os]').forEach((el) => el.addEventListener('click', () => { $('osModal').hidden = true; }));
+  document.querySelectorAll('[data-osmethod]').forEach((b) => b.addEventListener('click', () => osSetMethod(b.dataset.osmethod)));
+  document.querySelectorAll('[data-close-os]').forEach((el) => el.addEventListener('click', closeOnspot));
+  // Force UPPERCASE at input level (not just CSS) so what's shown matches what's stored.
+  ['osName', 'osOrg', 'osDesignation', 'osCity', 'osCashBy'].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener('input', () => {
+      const s = el.selectionStart; el.value = el.value.toUpperCase();
+      try { el.setSelectionRange(s, s); } catch (e) { /* ignore */ }
+    });
+  });
 
   async function saveOnspot(thenPrint) {
     const err = $('osErr'); err.hidden = true;
@@ -2122,7 +2136,7 @@
     if (mobile && !/^\d{10}$/.test(mobile)) { err.textContent = 'Phone must be 10 digits, or leave it blank.'; err.hidden = false; return; }
     if (!method) { err.textContent = 'Choose a payment method.'; err.hidden = false; return; }
     const file = $('osShot').files && $('osShot').files[0];
-    if ((method === 'UPI' || method === 'Bank') && !file) { err.textContent = 'Upload the payment screenshot.'; err.hidden = false; return; }
+    if ((method === 'UPI' || method === 'Bank') && !file && !ref) { err.textContent = 'Attach a payment screenshot or enter the transaction ID.'; err.hidden = false; return; }
     if (method === 'Cash' && !cashBy) { err.textContent = 'Enter who received the cash.'; err.hidden = false; return; }
 
     const fd = new FormData();
@@ -2138,7 +2152,7 @@
       if (!res.ok || !data.ok) throw new Error(data.error || 'Could not register.');
       const reg = Object.assign({ organization, designation, city, mobile, status: 'Confirmed', cardPrintedAt: null, source: 'onspot' }, data.registration);
       records.unshift(reg);
-      $('osModal').hidden = true;
+      closeOnspot();
       renderCards(); renderStats();
       if (thenPrint) printCards([reg]);
     } catch (e) { err.textContent = e.message; err.hidden = false; }

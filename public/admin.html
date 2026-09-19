@@ -666,43 +666,82 @@
   </div>
 
   <!-- ===================== ON-SPOT REGISTER MODAL ===================== -->
-  <div class="edit-modal" id="osModal" hidden>
-    <div class="edit-modal__overlay" data-close-os></div>
-    <div class="edit-modal__card">
-      <button class="lightbox__close" data-close-os aria-label="Close">
+  <div class="os-screen" id="osModal" hidden>
+    <header class="os-screen__bar">
+      <button class="os-screen__close" data-close-os aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
       </button>
-      <h3>On-spot registration</h3>
-      <p class="edit-modal__sub" id="osAmount">Delegate fee: ₹11,800 (₹10,000 + 18% GST)</p>
-      <div class="field"><label for="osName">Name *</label><input type="text" id="osName" style="text-transform:uppercase" autocomplete="off" /></div>
-      <div class="field"><label for="osOrg">Company name</label><input type="text" id="osOrg" style="text-transform:uppercase" autocomplete="off" /></div>
-      <div class="field"><label for="osPhone">Phone</label><input type="text" id="osPhone" maxlength="10" inputmode="numeric" autocomplete="off" /></div>
-      <div class="field"><label for="osDesignation">Designation <span class="cell-muted">(optional)</span></label><input type="text" id="osDesignation" style="text-transform:uppercase" autocomplete="off" /></div>
-      <div class="field"><label for="osCity">City <span class="cell-muted">(optional)</span></label><input type="text" id="osCity" style="text-transform:uppercase" autocomplete="off" /></div>
-      <div class="field"><label for="osMethod">Payment method *</label>
-        <select id="osMethod" class="toolbar__select">
-          <option value="">Select…</option>
-          <option value="UPI">UPI</option>
-          <option value="Bank">Bank Transfer</option>
-          <option value="Cash">Cash</option>
-        </select>
+      <div class="os-screen__titles">
+        <span class="eyebrow">On-spot registration</span>
+        <h2 class="os-screen__title">New Delegate</h2>
       </div>
-      <div class="field" id="osShotWrap" hidden>
-        <label for="osShot">Payment screenshot *</label>
-        <input type="file" id="osShot" accept="image/*" />
-        <div class="field" style="margin-top:8px"><label for="osRef">Reference no. <span class="cell-muted">(optional)</span></label><input type="text" id="osRef" autocomplete="off" /></div>
-      </div>
-      <div class="field" id="osCashWrap" hidden>
-        <label for="osCashBy">Cash received by *</label>
-        <input type="text" id="osCashBy" style="text-transform:uppercase" placeholder="Name of staff who took the cash" autocomplete="off" />
-      </div>
-      <p class="login-error" id="osErr" hidden></p>
-      <div class="edit-modal__actions">
-        <button class="btn btn-ghost" data-close-os>Cancel</button>
-        <button class="btn btn-ghost" id="osSaveBtn">Save</button>
-        <button class="btn btn-primary" id="osSavePrintBtn">Save &amp; Print</button>
-      </div>
+      <div class="os-amount" id="osAmount">₹11,800<small>₹10,000 + 18% GST</small></div>
+    </header>
+
+    <div class="os-screen__body">
+      <form class="os-form" id="osForm" autocomplete="off" onsubmit="return false">
+        <div class="os-field">
+          <label for="osName">Full name <span class="req">*</span></label>
+          <input type="text" id="osName" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="Delegate's full name" />
+        </div>
+        <div class="os-field">
+          <label for="osOrg">Company / organisation</label>
+          <input type="text" id="osOrg" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="Company name" />
+        </div>
+        <div class="os-row">
+          <div class="os-field">
+            <label for="osPhone">Phone</label>
+            <input type="tel" id="osPhone" class="os-input" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="10-digit mobile" />
+          </div>
+          <div class="os-field">
+            <label for="osCity">City <span class="opt">optional</span></label>
+            <input type="text" id="osCity" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="City" />
+          </div>
+        </div>
+        <div class="os-field">
+          <label for="osDesignation">Designation <span class="opt">optional</span></label>
+          <input type="text" id="osDesignation" class="os-input" style="text-transform:uppercase" autocomplete="off" placeholder="e.g. Director" />
+        </div>
+
+        <div class="os-field">
+          <label>Payment method <span class="req">*</span></label>
+          <div class="os-methods" role="group" aria-label="Payment method">
+            <button type="button" class="os-method" data-osmethod="UPI">
+              <span class="os-method__icon">📱</span><span class="os-method__name">UPI</span>
+            </button>
+            <button type="button" class="os-method" data-osmethod="Bank">
+              <span class="os-method__icon">🏦</span><span class="os-method__name">Bank</span>
+            </button>
+            <button type="button" class="os-method" data-osmethod="Cash">
+              <span class="os-method__icon">💵</span><span class="os-method__name">Cash</span>
+            </button>
+          </div>
+          <input type="hidden" id="osMethod" value="" />
+        </div>
+
+        <div class="os-field os-panel" id="osShotWrap" hidden>
+          <label>Payment proof <span class="req">*</span></label>
+          <p class="os-hint">Attach a screenshot <b>or</b> enter the transaction ID — at least one is required.</p>
+          <label for="osShot" class="os-sublabel">Payment screenshot</label>
+          <input type="file" id="osShot" class="os-file" accept="image/*" capture="environment" />
+          <label for="osRef" class="os-sublabel">Transaction / UTR ID</label>
+          <input type="text" id="osRef" class="os-input" autocomplete="off" placeholder="e.g. UPI ref or bank UTR" />
+        </div>
+
+        <div class="os-field os-panel" id="osCashWrap" hidden>
+          <label for="osCashBy">Cash received by <span class="req">*</span></label>
+          <input type="text" id="osCashBy" class="os-input" style="text-transform:uppercase" placeholder="Name of staff who took the cash" autocomplete="off" />
+        </div>
+
+        <p class="login-error" id="osErr" hidden></p>
+      </form>
     </div>
+
+    <footer class="os-screen__actions">
+      <button class="btn btn-ghost" data-close-os>Cancel</button>
+      <button class="btn btn-ghost" id="osSaveBtn">Save</button>
+      <button class="btn btn-primary" id="osSavePrintBtn">Save &amp; Print card</button>
+    </footer>
   </div>
 
   <!-- Print target: everything else is hidden when printing -->
