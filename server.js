@@ -721,7 +721,9 @@ app.post('/api/registrations/onspot', auth.middleware, auth.requireRole('admin',
   upload.single('screenshot')(req, res, (err) => {
     handleOnspot(req, res, err).catch((e) => {
       console.error('onspot failed:', e);
-      if (!res.headersSent) res.status(500).json({ ok: false, error: 'Could not save. Please try again.' });
+      // Surface the real cause to the (authenticated admin) operator so an issue
+      // at the desk can be diagnosed on the spot instead of a generic message.
+      if (!res.headersSent) res.status(500).json({ ok: false, error: 'Could not save: ' + (e && e.message ? e.message : 'unknown error') });
     });
   });
 });
