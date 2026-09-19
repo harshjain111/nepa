@@ -899,10 +899,37 @@
   }
   function applyVars(el) { el.setAttribute('style', varsStyle()); }
 
+  // Keep every numeric setting in a sane range. A corrupted saved value (e.g. a
+  // near-zero card width or a huge scale) otherwise makes pageDims tiny / the
+  // scale huge, which blows the card + QR up to full page. Clamping only touches
+  // out-of-range values, so valid per-user setups are left exactly as they are.
+  // Keep a value only if it's a finite number within a sensible range; anything
+  // out of range is treated as corruption and reset to the default. Values that
+  // are already valid pass through untouched, so working setups are unaffected.
+  function saneNum(v, min, max, dflt) {
+    const n = Number(v);
+    return (Number.isFinite(n) && n >= min && n <= max) ? n : dflt;
+  }
+  function sanitizePrintSettings() {
+    printSettings.cardW = saneNum(printSettings.cardW, 1, 12, PS_DEFAULTS.cardW);
+    printSettings.cardH = saneNum(printSettings.cardH, 1, 15, PS_DEFAULTS.cardH);
+    printSettings.pageW = saneNum(printSettings.pageW, 20, 1200, PS_DEFAULTS.pageW);
+    printSettings.pageH = saneNum(printSettings.pageH, 20, 1200, PS_DEFAULTS.pageH);
+    printSettings.scale = saneNum(printSettings.scale, 25, 300, PS_DEFAULTS.scale);
+    printSettings.top   = saneNum(printSettings.top, 0, 2000, PS_DEFAULTS.top);
+    printSettings.left  = saneNum(printSettings.left, -500, 2000, PS_DEFAULTS.left);
+    printSettings.x     = saneNum(printSettings.x, -200, 200, PS_DEFAULTS.x);
+    printSettings.y     = saneNum(printSettings.y, -200, 200, PS_DEFAULTS.y);
+  }
   function loadPrintSettings() {
     Object.assign(printSettings, PS_DEFAULTS); // reset, then load this user's saved settings
-    try { const s = JSON.parse(localStorage.getItem(printKey()) || 'null'); if (s) Object.assign(printSettings, s); }
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(printKey()) || 'null'); if (raw) Object.assign(printSettings, raw); }
     catch (e) { /* ignore */ }
+    const before = JSON.stringify([printSettings.cardW, printSettings.cardH, printSettings.pageW, printSettings.pageH, printSettings.scale, printSettings.top, printSettings.left, printSettings.x, printSettings.y]);
+    sanitizePrintSettings(); // repair any corrupted saved value before it's used
+    const after = JSON.stringify([printSettings.cardW, printSettings.cardH, printSettings.pageW, printSettings.pageH, printSettings.scale, printSettings.top, printSettings.left, printSettings.x, printSettings.y]);
+    if (raw && before !== after) savePrintSettings(); // persist the repair (only if something was out of range)
   }
   // Re-load settings for the current user (called after login).
   function reinitPrintSettings() {
@@ -936,6 +963,7 @@
     if (g('alignY')) printSettings.y = Number(g('alignY').value) || 0;
     if (g('alignScale')) printSettings.scale = Number(g('alignScale').value) || 100;
     if (g('alignTemplate')) printSettings.tpl = g('alignTemplate').checked;
+    sanitizePrintSettings();   // never let a typed value go out of range
     savePrintSettings(); togglePaperExtras();
   }
 
@@ -1187,7 +1215,11 @@
     // scale the whole page down to fit the modal so its position is visible
     const pxPerMm = 3.7795;
     const maxW = 300; const maxH = 380;
-    const scale = Math.min(maxW / (pg.w * pxPerMm), maxH / (pg.h * pxPerMm));
+    let scale = Math.min(maxW / (pg.w * pxPerMm), maxH / (pg.h * pxPerMm));
+    // Guard against a bad page dimension producing a non-finite / runaway scale
+    // (which would blow the card + QR up to full page). Preview only ever shrinks.
+    if (!Number.isFinite(scale) || scale <= 0) scale = 0.5;
+    scale = Math.min(scale, 1);
     page.style.transformOrigin = 'top left';
     page.style.transform = `scale(${scale})`;
     stage.style.width = (pg.w * pxPerMm * scale) + 'px';
