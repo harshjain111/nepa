@@ -2029,6 +2029,12 @@
       if (up.includes('ACTION TO BE TAKEN')) { section = 'action'; continue; }
       if (up.includes('PAYMENT NOT RECEIVED') || up.includes('SUSPENSE')) { section = 'ignore'; continue; }
       if (up === 'NAME OF PARTIES') continue;
+      // Skip running page totals & accounting notes that live in column A but
+      // are NOT parties (e.g. "TOTAL C/F >>>>>", "TOTAL B/F", "TOTAL OF
+      // ALLOCATION", "CASH PAYMENT RECEIVED", "PAYMENT MADE TO MAYFAIR").
+      if (up.includes('>>>')) continue;
+      if (/^TOTAL\b/.test(up) && /(B\/F|C\/F|ALLOCATION|BROUGHT|CARRIED)/.test(up)) continue;
+      if (up === 'CASH PAYMENT RECEIVED' || up === 'PAYMENT MADE TO MAYFAIR') continue;
       if (!section || section === 'ignore') continue;
       const f = row[5];
       let paidCount = null;
