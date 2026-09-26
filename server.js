@@ -929,7 +929,7 @@ app.delete('/api/redemptions/:id', auth.middleware, auth.requireRole('admin', 'g
 }));
 
 // Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
-const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html', '/scan': 'scan.html' };
+const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html', '/scan': 'scan.html', '/souvenir': 'souvenir.html' };
 for (const [route, file] of Object.entries(PAGES)) {
   app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
 }
@@ -940,6 +940,13 @@ for (const [route, file] of Object.entries(PAGES)) {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`NEPA Conclave server running on http://localhost:${PORT}  [store: ${store.backend}, uploads: ${uploads.backend}]`);
+  }).on('error', (err) => {
+    if (err.code !== 'EADDRINUSE') throw err;
+    console.error(`
+Port ${PORT} is already in use — the server is probably already running in another terminal.`);
+    console.error(`Stop that one (Ctrl + C there), or run on another port:  $env:PORT=3001; npm run dev
+`);
+    process.exit(1);
   });
 }
 

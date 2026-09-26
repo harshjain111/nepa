@@ -1,0 +1,289 @@
+/* ============================================================
+   souvenir.css — Souvenir flipbook page (/souvenir) and the
+   homepage "Souvenir" teaser section.
+   ============================================================ */
+
+/* ---------- Reader ---------- */
+/* The book gets as much of the screen as possible: no page banner, full
+   browser width, and on wide screens the full height below the header —
+   the control bar floats over the book's bottom edge and fades out while
+   you read. On upright screens (phones, portrait tablets) the book is
+   width-bound, so the bar sits below it instead. */
+.souvenir-reader {
+  --sv-bar-h: 56px;
+  background: var(--ivory);
+  padding: calc(var(--header-h) + 10px) 0 32px;
+}
+.sv-wrap { padding: 0 16px; }
+.page-souvenir .floating-register { display: none !important; }
+
+.sv-reader {
+  --page-ratio: 0.7414;            /* 1038 / 1400 — matches souvenir.js */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sv-stage {
+  position: relative;
+  width: 100%;
+  height: min(calc(100vh - var(--header-h) - 22px), calc((100vw - 32px) / var(--page-ratio)));
+  height: min(calc(100svh - var(--header-h) - 22px), calc((100vw - 32px) / var(--page-ratio)));
+  min-height: 320px;
+}
+@media (max-aspect-ratio: 1/1) {
+  /* Upright screens: leave room for the bar below the book. */
+  .sv-stage {
+    height: min(calc(100vh - var(--header-h) - var(--sv-bar-h) - 36px), calc((100vw - 32px) / var(--page-ratio)));
+    height: min(calc(100svh - var(--header-h) - var(--sv-bar-h) - 36px), calc((100vw - 32px) / var(--page-ratio)));
+    margin-bottom: calc(var(--sv-bar-h) + 10px);
+  }
+}
+@media (max-width: 639px) {
+  /* Phones: edge to edge. */
+  .sv-wrap { padding: 0 6px; }
+  .sv-stage {
+    height: min(calc(100vh - var(--header-h) - var(--sv-bar-h) - 36px), calc((100vw - 12px) / var(--page-ratio)));
+    height: min(calc(100svh - var(--header-h) - var(--sv-bar-h) - 36px), calc((100vw - 12px) / var(--page-ratio)));
+  }
+}
+
+.sv-book { width: 100%; height: 100%; }
+.sv-book .stf__parent { margin: 0 auto; }
+.sv-book .stf__block {
+  filter: drop-shadow(0 26px 38px rgba(31, 61, 46, 0.28)) drop-shadow(0 6px 10px rgba(31, 61, 46, 0.12));
+}
+
+.sv-page {
+  background: #F3EBD8;
+  overflow: hidden;
+}
+.sv-page img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.sv-page.is-loaded img { opacity: 1; }
+/* Soft loading shimmer until the page image arrives. */
+.sv-page:not(.is-loaded) {
+  background:
+    linear-gradient(110deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 70%) 0 0 / 250% 100%,
+    #F3EBD8;
+  animation: sv-shimmer 1.6s linear infinite;
+}
+@keyframes sv-shimmer { to { background-position: -250% 0, 0 0; } }
+
+/* Spine shading — makes a spread read as a bound book. */
+.sv-page.--left::after,
+.sv-page.--right::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 7%;
+  pointer-events: none;
+}
+.sv-page.--left::after  { right: 0; background: linear-gradient(to left, rgba(0,0,0,.22), rgba(0,0,0,0)); }
+.sv-page.--right::after { left: 0;  background: linear-gradient(to right, rgba(0,0,0,.22), rgba(0,0,0,0)); }
+.sv-page.--hard::after { display: none; }
+.sv-book .--portrait .sv-page::after { display: none; }
+
+/* Side arrows */
+.sv-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border-radius: 50%;
+  border: 1px solid rgba(197, 162, 83, .55);
+  background: rgba(251, 246, 234, .92);
+  color: var(--green);
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: background .25s ease, opacity .25s ease, transform .25s ease;
+}
+.sv-arrow svg { width: 20px; height: 20px; }
+.sv-arrow:hover:not(:disabled) { background: var(--mustard); border-color: var(--mustard); }
+.sv-arrow:disabled { opacity: 0; pointer-events: none; }
+.sv-arrow--prev { left: 6px; }
+.sv-arrow--next { right: 6px; }
+@media (max-width: 639px) {
+  .sv-arrow { width: 36px; height: 36px; margin-top: -18px; opacity: .85; }
+  .sv-arrow--prev { left: 2px; }
+  .sv-arrow--next { right: 2px; }
+}
+
+/* Control bar */
+.sv-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 6;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(820px, calc(100% - 24px));
+  min-height: var(--sv-bar-h);
+  padding: 8px 12px 8px 22px;
+  border: 1px solid rgba(197, 162, 83, .45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px -14px rgba(20, 38, 28, .45);
+  transition: opacity .45s ease, transform .45s ease;
+}
+/* Fades away while reading on wide screens; any mouse move / tap brings it back. */
+.sv-reader.is-idle .sv-bar {
+  opacity: 0;
+  transform: translate(-50%, 14px);
+  pointer-events: none;
+}
+@media (max-aspect-ratio: 1/1) {
+  .sv-bar { bottom: calc(-1 * var(--sv-bar-h) - 10px); }
+  .sv-reader.is-idle .sv-bar { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
+}
+.sv-title {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--green);
+  padding-right: 16px;
+  border-right: 1px solid rgba(197, 162, 83, .45);
+}
+@media (max-width: 719px) { .sv-title { display: none; } }
+.sv-count {
+  flex: 0 0 auto;
+  min-width: 10.5em;
+  font-family: var(--font-display);
+  font-size: .95rem;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.sv-range {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--mustard);
+  cursor: pointer;
+}
+.sv-tools { display: flex; gap: 6px; }
+.sv-tool {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+  transition: background .25s ease, border-color .25s ease;
+}
+.sv-tool svg { width: 19px; height: 19px; }
+.sv-tool:hover { background: rgba(197, 162, 83, .14); border-color: rgba(197, 162, 83, .5); }
+.sv-tool[hidden] { display: none; }
+@media (max-width: 479px) {
+  .sv-bar { gap: 10px; padding: 8px 8px 8px 16px; }
+  .sv-title {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--green);
+  padding-right: 16px;
+  border-right: 1px solid rgba(197, 162, 83, .45);
+}
+@media (max-width: 719px) { .sv-title { display: none; } }
+.sv-count { min-width: 0; font-size: .85rem; }
+}
+
+@media (hover: none) { .sv-hint__keys { display: none; } }
+.sv-hint {
+  margin: 0;
+  font-size: .9rem;
+  font-style: italic;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Full screen: dark reading room, book fills the screen. */
+.sv-reader.is-fullscreen {
+  justify-content: center;
+  padding: 16px;
+  background: radial-gradient(ellipse at center, #2A4A39 0%, var(--green) 55%, #13261C 100%);
+}
+.sv-reader.is-fullscreen .sv-stage { height: calc(100vh - 32px); margin-bottom: 0; }
+.sv-reader.is-fullscreen .sv-bar { bottom: 14px; }
+.sv-reader.is-fullscreen .sv-hint { display: none; }
+
+/* No-JS-library fallback: plain stack of pages. */
+.sv-reader--fallback .sv-stage { height: auto; margin-bottom: 0; }
+.sv-reader--fallback .sv-book { display: grid; gap: 16px; max-width: 620px; margin: 0 auto; }
+.sv-reader--fallback .sv-page { aspect-ratio: 1038 / 1400; }
+.sv-reader--fallback .sv-arrow,
+.sv-reader--fallback .sv-bar,
+.sv-reader--fallback .sv-hint { display: none; }
+
+/* ---------- Homepage teaser ---------- */
+.souvenir-teaser__grid {
+  display: grid;
+  gap: 40px;
+  align-items: center;
+}
+@media (min-width: 860px) {
+  .souvenir-teaser__grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 72px; }
+}
+.souvenir-teaser__book {
+  position: relative;
+  display: block;
+  width: min(340px, 78vw);
+  margin: 0 auto;
+  perspective: 1400px;
+}
+.souvenir-teaser__book img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px 6px 6px 2px;
+  transform: rotateY(-14deg) rotateX(2deg);
+  transform-origin: left center;
+  box-shadow:
+    18px 26px 40px -12px rgba(31, 61, 46, .45),
+    inset 6px 0 10px -4px rgba(0,0,0,.4);
+  transition: transform .8s cubic-bezier(.2,.7,.2,1);
+}
+/* Page edges peeking out behind the cover */
+.souvenir-teaser__book::before {
+  content: '';
+  position: absolute;
+  inset: 1.5% -2.5% 1.5% 4%;
+  border-radius: 2px 5px 5px 2px;
+  background: repeating-linear-gradient(to right, #f4ecd9 0 2px, #e3d7bb 2px 3px);
+  transform: rotateY(-14deg) rotateX(2deg) translateZ(-8px);
+  transform-origin: left center;
+  transition: transform .8s cubic-bezier(.2,.7,.2,1);
+}
+.souvenir-teaser__book:hover img,
+.souvenir-teaser__book:focus-visible img { transform: rotateY(-26deg) rotateX(2deg); }
+.souvenir-teaser__copy h2 { margin-top: 0; }
+.souvenir-teaser__copy p { color: var(--muted); }
+.souvenir-teaser__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+@media (max-width: 859px) {
+  .souvenir-teaser__copy { text-align: center; }
+  .souvenir-teaser__actions { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .souvenir-teaser__book img, .souvenir-teaser__book::before { transition: none; }
+}
