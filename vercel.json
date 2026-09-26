@@ -10,6 +10,7 @@
     { "source": "/register", "destination": "/register.html" },
     { "source": "/hotel", "destination": "/hotel.html" },
     { "source": "/scan", "destination": "/scan.html" },
+    { "source": "/souvenir", "destination": "/souvenir.html" },
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }

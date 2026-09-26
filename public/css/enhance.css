@@ -1202,7 +1202,7 @@ h1, h2, h3, h4 {
 /* ==========================================================
    HEADER NAV — de-clutter: tighter spacing, real CTA buttons
    (not link-styled), and collapse to the hamburger by 1024px
-   so the item-heavy bar never overlaps.
+   so the item-heavy bar never overlaps (1279px — see "Header fit").
    ========================================================== */
 .nav { gap: 22px; }
 
@@ -1227,7 +1227,7 @@ h1, h2, h3, h4 {
 }
 .nav__cta--hotel:hover { background: rgba(255,255,255,.12); border-color: var(--gold-bright); }
 
-@media (max-width: 1024px) {
+@media (max-width: 1279px) {
   .nav {
     position: fixed; inset: var(--header-h) 0 auto 0;
     flex-direction: column; align-items: stretch; gap: 0;
@@ -1268,3 +1268,17 @@ a.is-closed {
 .reg-closed__sub { font-size: .9rem; }
 .reg-closed__sub a { color: var(--green-2, #2F5D3A); font-weight: 600; }
 .reg-closed .btn { margin-top: 20px; }
+
+/* ============================================================
+   Header fit — keep the "Sampark 2026" lockup from being
+   squeezed under the nav: the brand never shrinks, the header
+   row is a little wider than the page column, and nav spacing
+   tightens on laptop widths before collapsing to the menu.
+   ============================================================ */
+.site-header .container { max-width: 1340px; }
+.brand { flex-shrink: 0; }
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .nav { gap: 17px; }
+  .nav a:not(.btn) { letter-spacing: .1em; }
+  .nav a.btn { padding: 9px 14px; }
+}
