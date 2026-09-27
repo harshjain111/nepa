@@ -125,6 +125,9 @@ app.use(express.json({ limit: '4mb' })); // headroom for bulk Excel imports
 // Local-disk uploads (no-op on Vercel, where Blob serves absolute URLs).
 app.use('/uploads', express.static(uploads.UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR, {
+  // Don't 301 "/gallery" → "/gallery/" (the photo folder) — let the clean-URL
+  // page route below serve gallery.html instead.
+  redirect: false,
   setHeaders(res, filePath) {
     // Heavy media rarely changes → cache a week (big repeat-visit win).
     if (/\.(?:mp4|jpe?g|png|gif|svg|webp|woff2?|ico)$/i.test(filePath)) {
@@ -929,7 +932,7 @@ app.delete('/api/redemptions/:id', auth.middleware, auth.requireRole('admin', 'g
 }));
 
 // Clean URLs for the static sub-pages (Vercel mirrors these via vercel.json rewrites)
-const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html', '/scan': 'scan.html', '/souvenir': 'souvenir.html' };
+const PAGES = { '/admin': 'admin.html', '/sponsorship': 'sponsorship.html', '/people': 'people.html', '/register': 'register.html', '/hotel': 'hotel.html', '/scan': 'scan.html', '/souvenir': 'souvenir.html', '/gallery': 'gallery.html' };
 for (const [route, file] of Object.entries(PAGES)) {
   app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
 }

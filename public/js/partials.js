@@ -15,6 +15,7 @@
     { href: '/sponsorship', label: 'Sponsorship', path: '/sponsorship' },
     { href: '/people', label: 'Council', path: '/people' },
     { href: '/souvenir', label: 'Souvenir', path: '/souvenir' },
+    { href: '/gallery', label: 'Gallery', path: '/gallery' },
     { href: '/#contact', label: 'Contact' },
   ];
   const here = location.pathname.replace(/\.html$/, '') || '/';
@@ -71,6 +72,7 @@
             <li><a href="/sponsorship">Sponsorship</a></li>
             <li><a href="/people">Council &amp; Committee</a></li>
             <li><a href="/souvenir">Souvenir 2026</a></li>
+            <li><a href="/gallery">Photo Gallery</a></li>
             <li><a href="/#contact">Contact Us</a></li>
           </ul>
         </div>

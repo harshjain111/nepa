@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Gallery · National Edible Oil Conclave 2026</title>
+  <meta name="description" content="Photographs from Sampark — the 1st National Edible Oil Conclave 2026, Mayfair Spring Valley Resort, Guwahati." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.nepaconnect.in/gallery" />
+
+  <!-- Favicon / app icons -->
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/img/icon-192.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#1F3D2E" />
+
+  <!-- Open Graph / social preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="National Edible Oil Conclave 2026" />
+  <meta property="og:locale" content="en_IN" />
+  <meta property="og:url" content="https://www.nepaconnect.in/gallery" />
+  <meta property="og:title" content="Photo Gallery · National Edible Oil Conclave 2026" />
+  <meta property="og:description" content="Photographs from Sampark — the 1st National Edible Oil Conclave 2026, Guwahati." />
+  <meta property="og:image" content="https://www.nepaconnect.in/img/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.nepaconnect.in/img/og.jpg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="fetch" href="/gallery/photos.json" crossorigin />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/home.css" />
+  <link rel="stylesheet" href="/css/enhance.css" />
+  <link rel="stylesheet" href="/css/gallery.css" />
+</head>
+<body class="page-gallery">
+  <!-- header injected by partials.js -->
+
+  <section class="page-hero gallery-hero">
+    <div class="container">
+      <h1 class="reveal">Photo Gallery</h1>
+      <p class="reveal" data-delay="1">Moments from Sampark 2026 — the 1st National Edible Oil Conclave, Guwahati · 19–20 September 2026.</p>
+      <span class="gallery-count reveal" data-delay="2" id="galleryCount" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <div class="gallery-grid" id="galleryGrid" aria-label="Conclave photographs"><!-- tiles injected by gallery.js --></div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="glb" id="galleryLightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+    <div class="glb__top">
+      <span class="glb__count" id="glbCount"></span>
+      <div class="glb__tools">
+        <a class="glb__btn" id="glbDownload" href="#" download aria-label="Download photo" title="Download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <button type="button" class="glb__btn" id="glbClose" aria-label="Close" title="Close (Esc)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="glb__stage" id="glbStage">
+      <img class="glb__img" id="glbImg" alt="" />
+      <span class="glb__spinner" aria-hidden="true"></span>
+    </div>
+    <button type="button" class="glb__arrow glb__arrow--prev" id="glbPrev" aria-label="Previous photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button type="button" class="glb__arrow glb__arrow--next" id="glbNext" aria-label="Next photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- footer, floating CTA, modal & credit bar injected by partials.js -->
+  <script src="/js/partials.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/enhance.js"></script>
+  <script src="/js/gallery.js"></script>
+</body>
+</html>
