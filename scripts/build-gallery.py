@@ -7,7 +7,9 @@ into web-friendly copies for the /gallery page:
   public/gallery/photos.json          manifest read by gallery.js
 
 Re-run after adding/removing photos:  python scripts/build-gallery.py
-(needs Pillow:  pip install pillow). Existing outputs are reused.
+(needs Pillow:  pip install pillow). Existing outputs are reused, and
+the originals can be deleted afterwards — the manifest is built from
+large/, so to remove a photo delete its thumbs/ + large/ copies.
 """
 import json
 from pathlib import Path
@@ -21,7 +23,6 @@ EXTS = {'.jpg', '.jpeg', '.png', '.webp'}
 for d, _, _ in SIZES:
     d.mkdir(exist_ok=True)
 
-photos = []
 sources = sorted(p for p in ROOT.iterdir() if p.is_file() and p.suffix.lower() in EXTS)
 for i, src in enumerate(sources, 1):
     name = src.stem + '.webp'
@@ -34,10 +35,17 @@ for i, src in enumerate(sources, 1):
             copy = im.copy()
             copy.thumbnail((side, side), Image.LANCZOS)
             copy.save(out, 'WEBP', quality=q, method=6)
-    with Image.open(THUMBS / name) as t:
-        w, h = t.size
-    photos.append({'t': f'/gallery/thumbs/{name}', 'l': f'/gallery/large/{name}', 'w': w, 'h': h})
     print(f'[{i}/{len(sources)}] {src.name}')
+
+# Manifest = every photo that has both web copies (originals not required).
+photos = []
+for large in sorted(LARGE.glob('*.webp')):
+    thumb = THUMBS / large.name
+    if not thumb.exists():
+        continue
+    with Image.open(thumb) as t:
+        w, h = t.size
+    photos.append({'t': f'/gallery/thumbs/{large.name}', 'l': f'/gallery/large/{large.name}', 'w': w, 'h': h})
 
 (ROOT / 'photos.json').write_text(json.dumps(photos, separators=(',', ':')))
 print(f'Wrote {len(photos)} photos to photos.json')
