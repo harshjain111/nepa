@@ -1,0 +1,145 @@
+/* ============================================================
+   gallery.css — Photo gallery page (/gallery): a dense,
+   phone-style square grid of every photo + a full-screen
+   lightbox viewer.
+   ============================================================ */
+
+.page-gallery .floating-register { display: none !important; }
+
+/* ---------- Hero (compact — the photos are the page) ---------- */
+.gallery-hero { padding: calc(var(--header-h) + 40px) 0 30px; }
+.gallery-hero p { margin-bottom: 10px; }
+.gallery-count {
+  display: inline-block;
+  font-size: .72rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ---------- Grid ---------- */
+.gallery-section { background: var(--ivory); padding: 3px 3px 56px; }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+@media (min-width: 640px)  { .gallery-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; } }
+@media (min-width: 960px)  { .gallery-grid { grid-template-columns: repeat(5, 1fr); } .gallery-section { padding: 6px 6px 72px; } }
+@media (min-width: 1280px) { .gallery-grid { grid-template-columns: repeat(6, 1fr); gap: 6px; } }
+
+.g-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: var(--ivory-2);
+}
+.g-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity .5s ease, transform .6s ease;
+}
+.g-tile img.is-loaded { opacity: 1; }
+@media (hover: hover) {
+  .g-tile:hover img { transform: scale(1.04); }
+}
+.g-tile:focus-visible { outline: 2px solid var(--mustard); outline-offset: -2px; }
+
+.gallery-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 48px 16px; }
+
+/* ---------- Lightbox ---------- */
+.glb {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(10, 20, 14, .96);
+  display: flex;
+  flex-direction: column;
+  color: var(--ivory);
+  animation: glbIn .25s ease;
+}
+.glb[hidden] { display: none; }
+@keyframes glbIn { from { opacity: 0; } to { opacity: 1; } }
+
+.glb__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 10px 18px;
+  flex: none;
+}
+.glb__count { font-size: .8rem; letter-spacing: .18em; color: var(--gold-soft); }
+.glb__tools { display: flex; gap: 6px; }
+.glb__btn, .glb__arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--ivory);
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.glb__btn svg, .glb__arrow svg { width: 22px; height: 22px; }
+.glb__btn:hover, .glb__arrow:hover { background: rgba(251, 246, 234, .12); }
+
+.glb__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  touch-action: pan-y pinch-zoom;
+}
+/* Absolutely filling the stage gives the image a definite box, so
+   object-fit: contain shows the whole photo at any screen size. */
+.glb__img {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  max-width: none;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity .2s ease;
+}
+.glb.is-loading .glb__img { opacity: .35; }
+.glb__spinner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(216, 192, 138, .3);
+  border-top-color: var(--gold-soft);
+  border-radius: 50%;
+  animation: glbSpin .8s linear infinite;
+  display: none;
+}
+.glb.is-loading .glb__spinner { display: block; }
+@keyframes glbSpin { to { transform: rotate(360deg); } }
+
+.glb__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(10, 20, 14, .4);
+}
+.glb__arrow--prev { left: 12px; }
+.glb__arrow--next { right: 12px; }
+@media (max-width: 639px) {
+  /* Phones: swipe instead of arrows. */
+  .glb__arrow { display: none; }
+  .glb__img { left: 0; width: 100%; height: calc(100% - 12px); }
+}
